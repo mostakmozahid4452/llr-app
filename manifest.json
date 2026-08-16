@@ -1,7 +1,7 @@
 {
-  "name": "SHL I&A — Lesson Learned Repository",
-  "short_name": "LLR",
-  "description": "Shanta Holdings Limited — Inspection & Analysis Lesson Learned Repository",
+  "name": "SHL QA — Lesson Learned Repository",
+  "short_name": "QA LLR",
+  "description": "Shanta Holdings Limited — QA / Inspection & Analysis Lesson Learned Repository",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

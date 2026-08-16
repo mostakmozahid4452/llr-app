@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>SHL I&A — Lesson Learned Repository</title>
+<title>SHL QA — Lesson Learned Repository</title>
 
 <!-- PWA: installable on Android & iOS -->
 <link rel="manifest" href="manifest.json">
@@ -11,7 +11,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="SHL LLR">
+<meta name="apple-mobile-web-app-title" content="QA LLR">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="icon-192.png">
 
@@ -397,7 +397,7 @@ header{
     <div class="brand-text">
       <h1 contenteditable="true" id="titleText" spellcheck="false">Lesson Learned Repository</h1>
       <div class="subtitle" contenteditable="true" id="subtitleText" spellcheck="false">Shanta Holdings Limited — Inspection &amp; Analysis</div>
-      <div class="created-by" contenteditable="true" id="createdByText" spellcheck="false">Created by: —</div>
+      <div class="created-by" id="createdByText" spellcheck="false">Developed by: Md. Mostak Mozahid</div>
     </div>
   </div>
   <div class="header-actions">
@@ -410,6 +410,7 @@ header{
         <button id="exportJson">🗂 JSON (full backup)</button>
         <button id="exportExcel">📊 Excel (.xlsx)</button>
         <button id="exportPdf">🖨 Print / Save as PDF</button>
+        <button id="exportFullApp">🌐 সম্পূর্ণ App (HTML ফাইল)</button>
       </div>
     </div>
     <div class="dropdown-wrap">
@@ -991,7 +992,7 @@ updateBackupBanner();
 function applySettings(){
   document.getElementById('titleText').textContent = settings.title || 'Lesson Learned Repository';
   document.getElementById('subtitleText').textContent = settings.subtitle || 'Shanta Holdings Limited — Inspection & Analysis';
-  document.getElementById('createdByText').textContent = 'Created by: ' + (settings.createdBy || '—');
+  // createdByText is fixed/non-editable — always "Developed by: Md. Mostak Mozahid", ignores settings.createdBy
   const logoMark = document.getElementById('logoMark');
   const initials = document.getElementById('logoInitials');
   if(settings.logo){
@@ -1018,11 +1019,10 @@ document.getElementById('logoInput').addEventListener('change', (e) => {
   };
   reader.readAsDataURL(file);
 });
-['titleText','subtitleText','createdByText'].forEach(id => {
+['titleText','subtitleText'].forEach(id => {
   document.getElementById(id).addEventListener('blur', () => {
     settings.title = document.getElementById('titleText').textContent.trim();
     settings.subtitle = document.getElementById('subtitleText').textContent.trim();
-    settings.createdBy = document.getElementById('createdByText').textContent.replace(/^Created by:\s*/,'').trim();
     persist();
     cloudSaveSettings();
   });
@@ -1514,6 +1514,26 @@ document.getElementById('exportJson').addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
+document.getElementById('exportFullApp').addEventListener('click', async () => {
+  try{
+    // Fetch the original static source of this page (not the live-rendered DOM,
+    // so the backup opens clean — Add/Edit form etc. start fresh, not mid-edit).
+    const res = await fetch(location.href, { cache: 'no-store' });
+    const htmlText = await res.text();
+    const blob = new Blob([htmlText], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `SHL_QA_LLR_App_${new Date().toISOString().slice(0,10)}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+    alert('✅ পুরো App-এর HTML ফাইল ডাউনলোড হয়ে গেছে। এই ফাইলটা খুললে cloud sync অন থাকবে (Firebase config এর ভেতরেই আছে), তাই এটাও একটা কাজ করা কপি হিসেবেই থাকবে — শুধু আলাদাভাবে হোস্ট না করা পর্যন্ত ইনস্টলযোগ্য PWA হিসেবে কাজ করবে না।');
+  }catch(e){
+    console.error('Full app export failed', e);
+    alert('⚠️ এই ফিচারটা ইন্টারনেট সংযোগ ছাড়া কাজ করবে না (পেজের সোর্স আবার fetch করতে হয়)। ইন্টারনেট থাকা অবস্থায় আবার চেষ্টা করুন।');
+  }
+});
+
 const XLSX_CHUNK = 30000; // stay under Excel's ~32,767 char per-cell limit
 function toChunks(str){
   if(!str) return [];
@@ -1570,7 +1590,7 @@ document.getElementById('exportPdf').addEventListener('click', () => {
     <h1>${esc(settings.title || 'Lesson Learned Repository')}</h1>
     <div class="print-subtitle">${esc(settings.subtitle||'')}</div>
     <div class="print-divider"></div>
-    <div class="print-created">Created by: ${esc(settings.createdBy||'—')}</div>
+    <div class="print-created">Developed by: Md. Mostak Mozahid</div>
     <div class="print-date">Exported: ${new Date().toLocaleDateString()}</div>
   </div></div>`;
 
