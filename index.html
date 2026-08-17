@@ -757,49 +757,77 @@ function startCloudSync(){
 // ---- Offline Action/Rectification suggestion engine ----
 // Built-in knowledge base, categorized. Used as a cold-start suggestion source
 // alongside the user's own past entries (which act as the "learned memory").
+// Keywords include both English and common Bengali/Banglish terms so suggestions
+// still match when the observation is written in Bengali or mixed language.
 const SUGGESTION_KB = [
-  // Civil Engineering
-  {type:'dont', category:'Civil Engineering', keywords:['rebar','reinforcement','cover block','concrete cover'], suggestion:'Cover blocks/spacers to be provided as per drawing before every casting; add mandatory pre-pour inspection checklist item for reinforcement cover.'},
-  {type:'dont', category:'Civil Engineering', keywords:['honeycomb','vibration','compaction'], suggestion:'Ensure proper vibration/compaction during casting per approved method statement; increase vibrator points near congested rebar zones.'},
-  {type:'dont', category:'Civil Engineering', keywords:['curing','crack','shrinkage'], suggestion:'Enforce minimum curing period as per specification with curing compound/ponding; monitor with a curing log.'},
-  {type:'dont', category:'Civil Engineering', keywords:['leveling','level','slope','drainage'], suggestion:'Re-check level/slope with survey instrument before proceeding; correct as per approved drawing tolerance.'},
-  {type:'dont', category:'Civil Engineering', keywords:['formwork','shuttering','deflection'], suggestion:'Formwork to be checked and approved by site engineer before casting; add additional props/bracing where deflection risk is high.'},
-  {type:'dont', category:'Civil Engineering', keywords:['waterproofing','leak','seepage'], suggestion:'Apply waterproofing as per approved system with proper lapping/termination; conduct flood/ponding test before handover.'},
-  {type:'dont', category:'Civil Engineering', keywords:['welding','structural steel','bolt'], suggestion:'Structural welds/bolted connections to be inspected as per QA/QC checklist; NDT to be performed on critical joints.'},
-  {type:'dont', category:'Civil Engineering', keywords:['brickwork','masonry','mortar'], suggestion:'Rebuild affected portion as per approved bond pattern and mortar mix ratio; enforce curing of masonry work.'},
-  {type:'do', category:'Civil Engineering', keywords:['rebar','spacing','labeling','tagging'], suggestion:'Standardize as best practice; include in method statement / induction training for future similar work.'},
-  {type:'do', category:'Civil Engineering', keywords:['curing','compaction','formwork'], suggestion:'Document as best practice; share with other project teams and add to the internal SOP.'},
-  {type:'do', category:'Civil Engineering', keywords:['waterproofing','drainage','level'], suggestion:'Adopt as standard procedure across similar work fronts; brief supervisors for replication.'},
+  // ---------------- Civil Engineering ----------------
+  {type:'dont', category:'Civil Engineering', keywords:['rebar','reinforcement','cover block','concrete cover','রড','রিবার','রিইনফোর্সমেন্ট','কভার ব্লক'], suggestion:'Cover blocks/spacers to be provided as per drawing before every casting; add mandatory pre-pour inspection checklist item for reinforcement cover.'},
+  {type:'dont', category:'Civil Engineering', keywords:['honeycomb','vibration','compaction','হানিকম্ব','ভাইব্রেশন','কম্প্যাকশন'], suggestion:'Ensure proper vibration/compaction during casting per approved method statement; increase vibrator points near congested rebar zones.'},
+  {type:'dont', category:'Civil Engineering', keywords:['curing','crack','shrinkage','কিউরিং','ক্র্যাক','ফাটল'], suggestion:'Enforce minimum curing period as per specification with curing compound/ponding; monitor with a curing log.'},
+  {type:'dont', category:'Civil Engineering', keywords:['leveling','level','slope','drainage','লেভেল','ঢাল','ড্রেনেজ'], suggestion:'Re-check level/slope with survey instrument before proceeding; correct as per approved drawing tolerance.'},
+  {type:'dont', category:'Civil Engineering', keywords:['formwork','shuttering','deflection','ফর্মওয়ার্ক','শাটারিং'], suggestion:'Formwork to be checked and approved by site engineer before casting; add additional props/bracing where deflection risk is high.'},
+  {type:'dont', category:'Civil Engineering', keywords:['waterproofing','leak','seepage','লিক','পানি চুয়ানো','সিপেজ','ওয়াটারপ্রুফিং'], suggestion:'Apply waterproofing as per approved system with proper lapping/termination; conduct flood/ponding test before handover.'},
+  {type:'dont', category:'Civil Engineering', keywords:['welding','structural steel','bolt','ওয়েল্ডিং','বোল্ট'], suggestion:'Structural welds/bolted connections to be inspected as per QA/QC checklist; NDT to be performed on critical joints.'},
+  {type:'dont', category:'Civil Engineering', keywords:['brickwork','masonry','mortar','ইটের কাজ','মেসনরি','মর্টার'], suggestion:'Rebuild affected portion as per approved bond pattern and mortar mix ratio; enforce curing of masonry work.'},
+  {type:'do', category:'Civil Engineering', keywords:['rebar','spacing','labeling','tagging','রড','স্পেসিং'], suggestion:'Standardize as best practice; include in method statement / induction training for future similar work.'},
+  {type:'do', category:'Civil Engineering', keywords:['curing','compaction','formwork','কিউরিং','ফর্মওয়ার্ক'], suggestion:'Document as best practice; share with other project teams and add to the internal SOP.'},
+  {type:'do', category:'Civil Engineering', keywords:['waterproofing','drainage','level','ওয়াটারপ্রুফিং','ড্রেনেজ'], suggestion:'Adopt as standard procedure across similar work fronts; brief supervisors for replication.'},
 
-  // Project Management
-  {type:'dont', category:'Project Management', keywords:['delay','schedule','sequence','coordination'], suggestion:'Revise work sequence/logic in the programme; hold weekly coordination meeting between trades to avoid clashes.'},
-  {type:'dont', category:'Project Management', keywords:['material','shortage','delivery','procurement'], suggestion:'Update material procurement lead-time tracker; place order with a buffer-stock policy for critical items.'},
-  {type:'dont', category:'Project Management', keywords:['manpower','labor','labour'], suggestion:'Revise manpower histogram/loading plan; coordinate with subcontractor for adequate resource allocation.'},
-  {type:'dont', category:'Project Management', keywords:['drawing','revision','approval','rfi'], suggestion:'Track drawing revision status centrally; raise RFI early and follow up for timely approval before work starts.'},
-  {type:'dont', category:'Project Management', keywords:['permit','inspection request'], suggestion:'Submit inspection request/permit in advance as per the approved lead time to avoid work stoppage.'},
-  {type:'dont', category:'Project Management', keywords:['documentation','record','log','checklist'], suggestion:'Introduce a standard checklist/log for this activity and assign clear ownership for record-keeping.'},
-  {type:'do', category:'Project Management', keywords:['coordination','planning','sequence'], suggestion:'Continue and document this coordination approach as a best practice for future phases.'},
-  {type:'do', category:'Project Management', keywords:['procurement','material','tracking'], suggestion:'Standardize this tracking method across other packages/projects.'},
+  // ---------------- Structural Design ----------------
+  {type:'dont', category:'Structural Design', keywords:['structural design','load calculation','column','beam','slab thickness','structural drawing','স্ট্রাকচারাল','কলাম','বিম','লোড ক্যালকুলেশন','স্ল্যাব'], suggestion:'Escalate to the structural engineer/design consultant immediately for review; halt work at the affected location until written design clearance is received.'},
+  {type:'dont', category:'Structural Design', keywords:['design mismatch','clash','coordination drawing','স্ট্রাকচারাল মিসম্যাচ','ডিজাইন ক্ল্যাশ'], suggestion:'Raise a formal RFI/clash report to the design team; resolve via coordinated drawing before proceeding with execution.'},
+  {type:'do', category:'Structural Design', keywords:['structural detailing','rebar detailing','design compliance','স্ট্রাকচারাল ডিটেইলিং'], suggestion:'Recognize the site team for accurate structural detailing compliance; use as a training reference for other crews.'},
 
-  // Aesthetic Issue
-  {type:'dont', category:'Aesthetic Issue', keywords:['finish','finishing','paint','plaster'], suggestion:'Redo finishing as per approved sample/mock-up; enforce mock-up approval before full-scale application.'},
-  {type:'dont', category:'Aesthetic Issue', keywords:['alignment','misalign','uneven','joint line'], suggestion:'Re-align as per architectural drawing; use string line/laser for accurate joint alignment before fixing.'},
-  {type:'dont', category:'Aesthetic Issue', keywords:['tile','tiling','grout','color','colour','shade'], suggestion:'Use approved batch/shade of material; re-lay affected area following approved pattern and grout line.'},
-  {type:'dont', category:'Aesthetic Issue', keywords:['stain','damage','scratch','protection'], suggestion:'Provide protective covering to finished surfaces during ongoing work; touch-up or replace damaged pieces.'},
-  {type:'do', category:'Aesthetic Issue', keywords:['finish','mockup','mock-up','sample'], suggestion:'Continue mock-up-first approach as standard practice for future finishing works.'},
+  // ---------------- Architecture ----------------
+  {type:'dont', category:'Architecture', keywords:['architectural drawing','design deviation','setback','building code','space planning','আর্কিটেকচারাল','ডিজাইন ডেভিয়েশন','সেটব্যাক'], suggestion:"Verify execution strictly against the approved architectural drawing; raise a formal deviation request and obtain the architect's written approval before proceeding."},
+  {type:'dont', category:'Architecture', keywords:['ventilation','natural light','room layout','egress','ভেন্টিলেশন','প্রাকৃতিক আলো','লে-আউট'], suggestion:'Review layout against approved architectural intent and applicable building code; coordinate with architect for an approved correction.'},
+  {type:'do', category:'Architecture', keywords:['architectural compliance','design intent','natural light','আর্কিটেকচারাল কমপ্লায়েন্স'], suggestion:'Document as a good design-execution alignment example; share with the architecture team as a reference for future projects.'},
 
-  // Functioning Issue
-  {type:'dont', category:'Functioning Issue', keywords:['door','window','hinge','lock'], suggestion:'Adjust/replace hardware as per manufacturer guideline; test operation (open/close) before final handover.'},
-  {type:'dont', category:'Functioning Issue', keywords:['electrical','wiring','short circuit','mcb'], suggestion:'Rectify wiring as per approved drawing/standard; conduct testing & commissioning (megger/continuity) before energizing.'},
-  {type:'dont', category:'Functioning Issue', keywords:['plumbing','pipe','leak','pressure'], suggestion:'Conduct pressure test before covering; rectify joint/fitting as per approved method and re-test.'},
-  {type:'dont', category:'Functioning Issue', keywords:['hvac','ac','duct','ventilation'], suggestion:'Balance/commission the system as per design; verify airflow and temperature at test points before handover.'},
-  {type:'dont', category:'Functioning Issue', keywords:['lift','elevator','equipment','machine'], suggestion:'Coordinate with vendor for inspection/certification; ensure safety interlocks are tested before use.'},
-  {type:'do', category:'Functioning Issue', keywords:['testing','commissioning'], suggestion:'Maintain this testing/commissioning protocol as standard practice for all similar systems.'},
+  // ---------------- Project Management ----------------
+  {type:'dont', category:'Project Management', keywords:['delay','schedule','sequence','coordination','বিলম্ব','দেরি','সিডিউল'], suggestion:'Revise work sequence/logic in the programme; hold weekly coordination meeting between trades to avoid clashes.'},
+  {type:'dont', category:'Project Management', keywords:['material','shortage','delivery','procurement','মেটেরিয়াল সংকট','মালামাল কম'], suggestion:'Update material procurement lead-time tracker; place order with a buffer-stock policy for critical items.'},
+  {type:'dont', category:'Project Management', keywords:['manpower','labor','labour','জনবল','লেবার সংকট'], suggestion:'Revise manpower histogram/loading plan; coordinate with subcontractor for adequate resource allocation.'},
+  {type:'dont', category:'Project Management', keywords:['drawing','revision','approval','rfi','ড্রয়িং','অনুমোদন'], suggestion:'Track drawing revision status centrally; raise RFI early and follow up for timely approval before work starts.'},
+  {type:'dont', category:'Project Management', keywords:['permit','inspection request','পারমিট'], suggestion:'Submit inspection request/permit in advance as per the approved lead time to avoid work stoppage.'},
+  {type:'dont', category:'Project Management', keywords:['documentation','record','log','checklist','ডকুমেন্টেশন','রেকর্ড'], suggestion:'Introduce a standard checklist/log for this activity and assign clear ownership for record-keeping.'},
+  {type:'do', category:'Project Management', keywords:['coordination','planning','sequence','সমন্বয়','পরিকল্পনা'], suggestion:'Continue and document this coordination approach as a best practice for future phases.'},
+  {type:'do', category:'Project Management', keywords:['procurement','material','tracking','প্রকিউরমেন্ট'], suggestion:'Standardize this tracking method across other packages/projects.'},
+
+  // ---------------- Stakeholder Management ----------------
+  {type:'dont', category:'Stakeholder Management', keywords:['stakeholder','client complaint','consultant','communication gap','expectation','approval delay','স্টেকহোল্ডার','ক্লায়েন্ট','অভিযোগ'], suggestion:'Set up a structured stakeholder communication plan with a defined escalation matrix and response SLA; document all decisions in minutes of meeting.'},
+  {type:'do', category:'Stakeholder Management', keywords:['stakeholder engagement','client satisfaction','timely resolution','ক্লায়েন্ট সন্তুষ্টি'], suggestion:'Continue this communication cadence; formalize it as the standard stakeholder engagement protocol for the project.'},
+
+  // ---------------- Supplier Management ----------------
+  {type:'dont', category:'Supplier Management', keywords:['supplier','late delivery','wrong material','quality issue','specification mismatch','সাপ্লায়ার','সরবরাহ','ডেলিভারি'], suggestion:'Issue a non-conformance report (NCR) to the supplier; enforce inspection at source/pre-delivery for critical materials going forward.'},
+  {type:'do', category:'Supplier Management', keywords:['on-time delivery','supplier performance','reliable supplier','সময়মত ডেলিভারি'], suggestion:'Add the supplier to the approved/preferred vendor list; document performance for future procurement reference.'},
+
+  // ---------------- Vendor Management ----------------
+  {type:'dont', category:'Vendor Management', keywords:['vendor','subcontractor','non-compliance','safety violation','vendor performance','ভেন্ডর','সাব-কন্ট্রাক্টর'], suggestion:'Issue a formal warning/NCR to the vendor as per contract; conduct a performance review meeting and set a corrective-action timeline.'},
+  {type:'do', category:'Vendor Management', keywords:['vendor compliance','safety standard','quality standard','ভেন্ডর কমপ্লায়েন্স'], suggestion:'Recognize the vendor\'s performance formally; consider for the long-term/preferred vendor panel.'},
+
+  // ---------------- Real Estate Sector ----------------
+  {type:'dont', category:'Real Estate', keywords:['handover','snag list','defect list','unit inspection','sales commitment','হ্যান্ডওভার','ইউনিট','ডিফেক্ট'], suggestion:'Complete full snag-list rectification and joint inspection with the sales/CRM team before handover; obtain a signed handover checklist from the client.'},
+  {type:'do', category:'Real Estate', keywords:['smooth handover','zero snag','client satisfaction handover'], suggestion:'Document this handover process as the model workflow for future unit handovers.'},
+
+  // ---------------- Aesthetic Issue ----------------
+  {type:'dont', category:'Aesthetic Issue', keywords:['finish','finishing','paint','plaster','ফিনিশিং','রং','পেইন্ট','প্লাস্টার'], suggestion:'Redo finishing as per approved sample/mock-up; enforce mock-up approval before full-scale application.'},
+  {type:'dont', category:'Aesthetic Issue', keywords:['alignment','misalign','uneven','joint line','এলাইনমেন্ট','বাঁকা'], suggestion:'Re-align as per architectural drawing; use string line/laser for accurate joint alignment before fixing.'},
+  {type:'dont', category:'Aesthetic Issue', keywords:['tile','tiling','grout','color','colour','shade','টাইলস','গ্রাউট'], suggestion:'Use approved batch/shade of material; re-lay affected area following approved pattern and grout line.'},
+  {type:'dont', category:'Aesthetic Issue', keywords:['stain','damage','scratch','protection','দাগ','ক্ষতি','স্ক্র্যাচ'], suggestion:'Provide protective covering to finished surfaces during ongoing work; touch-up or replace damaged pieces.'},
+  {type:'do', category:'Aesthetic Issue', keywords:['finish','mockup','mock-up','sample','ফিনিশিং','মকআপ'], suggestion:'Continue mock-up-first approach as standard practice for future finishing works.'},
+
+  // ---------------- Functioning Issue ----------------
+  {type:'dont', category:'Functioning Issue', keywords:['door','window','hinge','lock','দরজা','জানালা'], suggestion:'Adjust/replace hardware as per manufacturer guideline; test operation (open/close) before final handover.'},
+  {type:'dont', category:'Functioning Issue', keywords:['electrical','wiring','short circuit','mcb','ইলেকট্রিক্যাল','ওয়্যারিং'], suggestion:'Rectify wiring as per approved drawing/standard; conduct testing & commissioning (megger/continuity) before energizing.'},
+  {type:'dont', category:'Functioning Issue', keywords:['plumbing','pipe','leak','pressure','প্লাম্বিং','পাইপ','লিক'], suggestion:'Conduct pressure test before covering; rectify joint/fitting as per approved method and re-test.'},
+  {type:'dont', category:'Functioning Issue', keywords:['hvac','ac','duct','ventilation','এসি','ভেন্টিলেশন'], suggestion:'Balance/commission the system as per design; verify airflow and temperature at test points before handover.'},
+  {type:'dont', category:'Functioning Issue', keywords:['lift','elevator','equipment','machine','লিফট'], suggestion:'Coordinate with vendor for inspection/certification; ensure safety interlocks are tested before use.'},
+  {type:'do', category:'Functioning Issue', keywords:['testing','commissioning','টেস্টিং','কমিশনিং'], suggestion:'Maintain this testing/commissioning protocol as standard practice for all similar systems.'},
 ];
 
 const STOPWORDS = new Set(['the','a','an','was','were','is','are','of','in','on','at','to','for','and','or','with','by','this','that','it','be','been','had','has','have','not','due','also','into','from','was','will']);
 function tokenize(str){
-  return (str||'').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(w => w.length > 2 && !STOPWORDS.has(w));
+  return (str||'').toLowerCase().split(/[^\p{L}\p{N}\p{M}]+/u).filter(w => w.length > 2 && !STOPWORDS.has(w));
 }
 
 // Returns up to 3 ranked suggestions for the Action/Rectification field,
@@ -841,15 +869,65 @@ function renderActionSuggestions(){
   const typeVal = (document.querySelector('input[name="ltype"]:checked') || {}).value || 'dont';
   if(descVal.length < 6){ box.innerHTML = ''; box.style.display = 'none'; return; }
   const suggestions = suggestActions(descVal, typeVal);
-  if(!suggestions.length){ box.innerHTML = ''; box.style.display = 'none'; return; }
   box.style.display = 'block';
-  box.innerHTML = `<div class="suggest-label">💡 Suggested rectification / action (ক্লিক করলে ফিল হবে):</div>` +
-    suggestions.map((s,i) => `<button type="button" class="suggest-chip" data-idx="${i}"><span class="suggest-tag">${esc(s.source)}</span>${esc(s.text.length>90 ? s.text.slice(0,90)+'…' : s.text)}</button>`).join('');
-  box.querySelectorAll('.suggest-chip').forEach((btn,i) => {
+  let html = '';
+  if(suggestions.length){
+    html += `<div class="suggest-label">💡 Suggested rectification / action (ক্লিক করলে ফিল হবে):</div>` +
+      suggestions.map((s,i) => `<button type="button" class="suggest-chip" data-idx="${i}"><span class="suggest-tag">${esc(s.source)}</span>${esc(s.text.length>90 ? s.text.slice(0,90)+'…' : s.text)}</button>`).join('');
+  } else {
+    html += `<div class="suggest-label">এই লেখার সাথে মিলে এমন কোনো offline suggestion পাওয়া যায়নি।</div>`;
+  }
+  html += `<button type="button" class="suggest-chip ai-suggest-btn" id="aiSuggestBtn" style="border-style:solid;font-weight:600;">🤖 AI দিয়ে Suggestion আনুন (ইন্টারনেট লাগবে)</button>`;
+  html += `<div id="aiSuggestStatus" style="font-size:11px;color:var(--text-mute);margin-top:4px;"></div>`;
+  box.innerHTML = html;
+  box.querySelectorAll('.suggest-chip[data-idx]').forEach((btn,i) => {
     btn.addEventListener('click', () => {
       document.getElementById('f_action').value = suggestions[i].text;
     });
   });
+  document.getElementById('aiSuggestBtn').addEventListener('click', () => fetchAISuggestion(descVal, typeVal));
+}
+
+let aiSuggestBusy = false;
+async function fetchAISuggestion(descVal, typeVal){
+  if(aiSuggestBusy) return;
+  aiSuggestBusy = true;
+  const btn = document.getElementById('aiSuggestBtn');
+  const status = document.getElementById('aiSuggestStatus');
+  btn.disabled = true;
+  btn.textContent = '⏳ AI suggestion আনা হচ্ছে…';
+  status.textContent = '';
+  try{
+    const typeContext = typeVal === 'dont'
+      ? 'a site QA observation describing an issue or non-conformance'
+      : 'a site QA observation describing a good practice worth replicating';
+    const promptText = `You are a senior QA/QC and construction inspection expert covering civil engineering, architecture, structural design, project management, stakeholder management, supplier management, vendor management, and real estate development. Given ${typeContext} at a construction site: "${descVal}". Reply with ONE concise, professional, actionable recommendation (1-2 sentences) for the "Rectification / Action Plan" field of a QA lesson-learned report. No preamble, no labels, just the recommendation text.`;
+    const url = 'https://text.pollinations.ai/' + encodeURIComponent(promptText) + '?model=openai';
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    let text = (await res.text()).trim();
+    text = text.replace(/^["'`]+|["'`]+$/g, '').trim();
+    if(!text) throw new Error('empty response');
+    const box = document.getElementById('actionSuggestions');
+    const aiChip = document.createElement('button');
+    aiChip.type = 'button';
+    aiChip.className = 'suggest-chip';
+    aiChip.innerHTML = `<span class="suggest-tag">🤖 AI</span>${esc(text.length>140 ? text.slice(0,140)+'…' : text)}`;
+    aiChip.addEventListener('click', () => { document.getElementById('f_action').value = text; });
+    btn.insertAdjacentElement('beforebegin', aiChip);
+    status.textContent = '✅ AI suggestion যোগ হয়েছে, ক্লিক করে fill করুন।';
+    btn.style.display = 'none';
+  }catch(e){
+    console.error('AI suggestion failed', e);
+    status.textContent = '⚠️ AI suggestion আনা যায়নি (ইন্টারনেট বা সার্ভার সমস্যা)। আবার চেষ্টা করুন।';
+    btn.disabled = false;
+    btn.textContent = '🤖 আবার চেষ্টা করুন';
+  }finally{
+    aiSuggestBusy = false;
+  }
 }
 
 function esc(s){ return (s||'').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
