@@ -1,0 +1,46 @@
+{
+  "name": "shl-llr-qa",
+  "version": "1.0.11",
+  "private": true,
+  "description": "SHL LLR-QA Lesson Learned Repository",
+  "main": "main.cjs",
+  "scripts": {
+    "sync-web": "node sync-web.cjs",
+    "start": "npm run sync-web && electron .",
+    "dist": "npm run sync-web && electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^37.2.6",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.shantaholdings.qa.llr",
+    "productName": "SHL LLR-QA",
+    "artifactName": "SHL_LLR-QA_Setup_v${version}.${ext}",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.cjs",
+      "web/**/*",
+      "build/icon.ico",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "SHL LLR-QA",
+      "uninstallDisplayName": "SHL LLR-QA"
+    }
+  }
+}
