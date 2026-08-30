@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>SHL QA — Lesson Learned Repository</title>
+<!-- Web/PWA patch v1.0.14: persistent Firebase login session -->
 <!-- v1.0.11: mobile/web login viewport + keyboard responsiveness fix -->
 <!-- v1.0.7: card view shows both uploaded photos side-by-side -->
 
@@ -1125,8 +1126,9 @@ if(CLOUD_ENABLED){
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     auth = firebase.auth();
-    // Do not persist authentication or Firestore content on the device in secure access mode.
-    auth.setPersistence(firebase.auth.Auth.Persistence.NONE).catch(e=>console.warn('Auth persistence setup failed',e));
+    // Keep the signed-in session on this device until the user explicitly logs out.
+    // This prevents repeated login after minimize/reopen, PWA relaunch, or browser restart.
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e=>console.warn('Auth persistence setup failed',e));
   }catch(e){
     console.error('Firebase init failed', e);
     db = null;
@@ -1423,15 +1425,21 @@ document.getElementById('submitAdminLogin').addEventListener('click', async()=>{
 });
 
 async function initSecureAccess(){
-  applyRoleUI(); showAccessGate(false);
+  applyRoleUI();
   if(!auth){
+    showAccessGate(false);
     document.getElementById('viewerLoginError').textContent='Firebase Authentication is not available.';
     return;
   }
+
   try{
-    await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
-    await auth.signOut(); // force the QA Compass-style access screen on every fresh app/page load
-  }catch(e){ console.warn('Secure auth initialization warning',e); }
+    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  }catch(e){
+    console.warn('Secure auth persistence warning',e);
+  }
+
+  // Restore an existing Firebase session automatically.
+  // If no valid session exists, the access gate will be shown by resolveSignedInUser().
   auth.onAuthStateChanged(resolveSignedInUser);
 }
 
