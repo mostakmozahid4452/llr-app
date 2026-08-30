@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>SHL QA — Lesson Learned Repository</title>
+<!-- v1.0.11: mobile/web login viewport + keyboard responsiveness fix -->
 <!-- v1.0.7: card view shows both uploaded photos side-by-side -->
 
 <!-- PWA: installable on Android & iOS -->
@@ -456,6 +457,74 @@ header{
 .access-back button{background:none;border:none;color:var(--text-mute);font-size:11.5px;cursor:pointer;}
 .access-foot{padding:11px 18px;border-top:1px solid var(--border);font-size:10.5px;color:var(--text-mute);text-align:center;background:#fafbfc;}
 @media(max-width:560px){.access-body{padding:20px}.access-brand{padding:28px 18px 20px}.access-row{flex-direction:column}.access-row .btn{justify-content:center}}
+
+/* ===== v1.0.11 Login viewport / mobile keyboard fix ===== */
+:root{--access-viewport-height:100dvh;}
+.access-gate{
+  height:var(--access-viewport-height,100dvh);
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  align-items:flex-start;
+  justify-content:center;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding-top:max(14px,env(safe-area-inset-top));
+  padding-right:max(14px,env(safe-area-inset-right));
+  padding-bottom:max(14px,env(safe-area-inset-bottom));
+  padding-left:max(14px,env(safe-area-inset-left));
+}
+.access-card{
+  flex:0 0 auto;
+  margin:auto 0;
+  max-width:520px;
+}
+.access-login.open{display:block;}
+.access-row input,.access-stack input{
+  font-size:16px; /* prevents mobile browser auto-zoom on focus */
+  scroll-margin-top:18px;
+  scroll-margin-bottom:160px;
+}
+@media(max-width:560px){
+  .access-card{width:100%;border-radius:16px;}
+  .access-brand{padding:20px 16px 16px;}
+  .access-logo{width:58px;height:58px;margin-bottom:10px;border-radius:13px;}
+  .access-brand h1{font-size:19px;line-height:1.25;}
+  .access-brand p{font-size:11px;line-height:1.35;}
+  .access-tagline{margin-top:6px;font-size:10px;}
+  .access-body{padding:14px;}
+  .access-section{padding:13px;margin-top:8px;}
+  .access-section-sub{margin-bottom:9px;}
+  .access-divider{margin:10px 0;}
+  .access-foot{padding:9px 12px;}
+  .access-back{margin-top:10px;}
+}
+@media(max-height:700px){
+  .access-gate{padding-top:8px;padding-bottom:8px;}
+  .access-card{margin:0;}
+  .access-brand{padding-top:14px;padding-bottom:12px;}
+  .access-logo{width:50px;height:50px;margin-bottom:8px;}
+  .access-brand h1{font-size:18px;}
+  .access-tagline{margin-top:4px;}
+  .access-body{padding-top:10px;padding-bottom:10px;}
+  .access-section{padding:11px;}
+  .access-section-sub{margin-bottom:7px;}
+  .access-divider{margin:7px 0;}
+  .access-foot{padding:7px 10px;}
+}
+body.access-keyboard-open .access-gate{align-items:flex-start;}
+body.access-keyboard-open .access-card{margin:0;}
+body.access-keyboard-open .access-brand{padding-top:10px;padding-bottom:9px;}
+body.access-keyboard-open .access-logo{width:42px;height:42px;margin-bottom:6px;}
+body.access-keyboard-open .access-brand h1{font-size:16px;}
+body.access-keyboard-open .access-brand p{font-size:10px;}
+body.access-keyboard-open .access-tagline{display:none;}
+body.access-keyboard-open .access-body{padding-top:9px;padding-bottom:9px;}
+body.access-keyboard-open .access-section{padding:10px;}
+body.access-keyboard-open .access-section-sub{margin-bottom:6px;}
+body.access-keyboard-open .access-divider{margin:6px 0;}
+body.access-keyboard-open .access-foot{display:none;}
+
 
 /* ===== AI assist ===== */
 .ai-assist{margin:-4px 0 12px;padding:10px 12px;border:1px solid rgba(184,134,59,.35);background:#fffdf8;border-radius:10px;}
@@ -1289,8 +1358,42 @@ function closeAdminLogin(){ document.getElementById('adminLoginOverlay').classLi
  document.getElementById('enterRepositoryBtn').addEventListener('click',()=>{
   document.getElementById('accessIntro').style.display='none';
   document.getElementById('accessLogin').classList.add('open');
-  setTimeout(()=>document.getElementById('viewerPassword').focus(),80);
+  // v1.0.11: do not auto-open the mobile keyboard; show the full login page first.
+  const gate=document.getElementById('accessGate');
+  if(gate) gate.scrollTo({top:0,behavior:'smooth'});
 });
+// v1.0.11: keep login fields visible when Android/iOS/browser keyboard changes the visual viewport.
+(function setupAccessViewportFix(){
+  const root=document.documentElement;
+  const gate=document.getElementById('accessGate');
+  const vv=window.visualViewport;
+  const setViewport=()=>{
+    const h=Math.max(260,Math.round(vv?vv.height:window.innerHeight));
+    root.style.setProperty('--access-viewport-height',h+'px');
+    const keyboardLikelyOpen=(window.innerHeight-h)>120 || h<520;
+    document.body.classList.toggle('access-keyboard-open',keyboardLikelyOpen && gate && !gate.classList.contains('hidden'));
+  };
+  setViewport();
+  window.addEventListener('resize',setViewport,{passive:true});
+  window.addEventListener('orientationchange',()=>setTimeout(setViewport,120),{passive:true});
+  if(vv){
+    vv.addEventListener('resize',setViewport,{passive:true});
+    vv.addEventListener('scroll',setViewport,{passive:true});
+  }
+  document.addEventListener('focusin',e=>{
+    if(!gate || gate.classList.contains('hidden'))return;
+    if(!e.target.matches('#viewerPassword,#gateAdminEmail,#gateAdminPassword'))return;
+    setTimeout(()=>{
+      setViewport();
+      e.target.scrollIntoView({block:'center',inline:'nearest',behavior:'smooth'});
+    },180);
+  });
+  document.addEventListener('focusout',e=>{
+    if(!e.target.matches('#viewerPassword,#gateAdminEmail,#gateAdminPassword'))return;
+    setTimeout(()=>{setViewport(); if(gate)gate.scrollTo({top:0,behavior:'smooth'});},180);
+  });
+})();
+
 document.getElementById('accessBackBtn').addEventListener('click',()=>showAccessGate(false));
 document.getElementById('viewerLoginBtn').addEventListener('click',loginViewer);
 document.getElementById('viewerPassword').addEventListener('keydown',e=>{if(e.key==='Enter')loginViewer();});
