@@ -1,0 +1,43 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'web/**'
+      - 'android/**'
+      - '.github/workflows/build-android.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Sync web into Android assets
+        run: |
+          rm -rf android/app/src/main/assets
+          mkdir -p android/app/src/main/assets
+          cp -R web/. android/app/src/main/assets/
+
+      - name: Build installable debug APK
+        working-directory: android
+        run: gradle assembleDebug
+
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk SHL_QA_LLR_v1.0.10.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SHL_QA_LLR_Android_v1.0.10
+          path: SHL_QA_LLR_v1.0.10.apk
