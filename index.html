@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>SHL QA — Lesson Learned Repository</title>
-<!-- Web/PWA patch v1.0.14: persistent Firebase login session -->
+<!-- Cross-platform patch v1.0.15: persistent login + explicit Viewer Logout -->
 <!-- v1.0.11: mobile/web login viewport + keyboard responsiveness fix -->
 <!-- v1.0.7: card view shows both uploaded photos side-by-side -->
 
@@ -422,6 +422,8 @@ header{
 .role-badge{font-size:11px;padding:6px 10px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--text-mute);font-weight:600;}
 .role-badge.admin{background:var(--green-bg);border-color:rgba(31,138,76,.35);color:var(--green);}
 .admin-only.role-hidden{display:none!important;}
+.viewer-only{display:none!important;}
+.viewer-only.viewer-visible{display:inline-flex!important;}
 .auth-help{font-size:11.5px;color:var(--text-mute);line-height:1.5;margin-top:8px;}
 .auth-error{font-size:12px;color:var(--red);min-height:18px;margin-top:8px;}
 .role-badge.viewer{background:#eef6ff;border-color:#bfd7ef;color:#315f86;}
@@ -688,6 +690,7 @@ body.access-keyboard-open .access-foot{display:none;}
     <button class="btn btn-ghost btn-sm info-btn" id="aboutBtn">ℹ About</button>
     <button class="btn btn-ghost btn-sm admin-only" id="settingsBtn">⚙ Settings</button>
     <span class="role-badge" id="roleBadge">Locked</span>
+    <button class="btn btn-ghost btn-sm viewer-only" id="viewerLogoutBtn">↪ Logout</button>
     <button class="btn btn-ghost btn-sm" id="adminLoginBtn">↪ Logout</button>
     <button class="btn btn-gold admin-only" id="addBtn">+ নতুন Lesson</button>
   </div>
@@ -1278,7 +1281,12 @@ function applyRoleUI(){
     badge.classList.toggle('viewer', currentRole==='viewer');
   }
   const loginBtn = document.getElementById('adminLoginBtn');
-  if(loginBtn) loginBtn.textContent = currentRole==='viewer' ? '🔐 Switch to Admin' : '↪ Logout';
+  if(loginBtn){
+    loginBtn.textContent = currentRole==='viewer' ? '🔐 Admin Login' : '↪ Logout';
+    loginBtn.style.display = currentRole==='locked' ? 'none' : '';
+  }
+  const viewerLogoutBtn = document.getElementById('viewerLogoutBtn');
+  if(viewerLogoutBtn) viewerLogoutBtn.classList.toggle('viewer-visible', currentRole==='viewer');
   ['titleText','subtitleText'].forEach(id => { const el=document.getElementById(id); if(el) el.setAttribute('contenteditable', isAdmin ? 'true':'false'); });
   const logo = document.getElementById('logoMark'); if(logo) logo.style.cursor = isAdmin ? 'pointer':'default';
 }
@@ -1402,7 +1410,19 @@ document.getElementById('viewerPassword').addEventListener('keydown',e=>{if(e.ke
 document.getElementById('gateAdminLoginBtn').addEventListener('click',loginAdminFromGate);
 document.getElementById('gateAdminPassword').addEventListener('keydown',e=>{if(e.key==='Enter')loginAdminFromGate();});
 
-// In-app session button: Viewer may switch to Admin; Admin logs out.
+// Viewer has an explicit Logout button so persistent Viewer sessions can be ended at any time.
+document.getElementById('viewerLogoutBtn').addEventListener('click', async()=>{
+  if(currentRole!=='viewer') return;
+  try{
+    if(auth) await auth.signOut();
+    else lockRepository();
+  }catch(e){
+    console.error('Viewer logout failed',e);
+    alert('Logout failed. Please try again.');
+  }
+});
+
+// In-app session button: Viewer may open Admin Login; Admin logs out.
 document.getElementById('adminLoginBtn').addEventListener('click', async()=>{
   if(currentRole==='admin'){ if(auth) await auth.signOut(); return; }
   if(currentRole==='viewer'){ openAdminLogin(); return; }
