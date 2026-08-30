@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>SHL QA — Lesson Learned Repository</title>
+<!-- v1.0.7: card view shows both uploaded photos side-by-side -->
 
 <!-- PWA: installable on Android & iOS -->
 <link rel="manifest" href="manifest.json">
@@ -19,6 +20,7 @@
 <!-- Firebase (cloud sync so every teammate sees the same shared data) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <style>
 :root{
   --bg:#eef1f4;
@@ -183,9 +185,12 @@ header{
   overflow:hidden;cursor:pointer;transition:all .15s ease;
 }
 .lesson-card:hover{border-color:var(--gold-dim);transform:translateY(-2px);box-shadow:0 8px 20px rgba(20,25,35,0.1);}
-.card-photo{aspect-ratio:1/1;background:var(--bg);position:relative;overflow:hidden;}
-.card-photo img{width:100%;height:100%;object-fit:cover;}
-.card-photo .no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-mute);font-size:12px;}
+.card-photo{aspect-ratio:1/1;background:#111;position:relative;overflow:hidden;}
+.card-photo.single img{width:100%;height:100%;object-fit:contain;background:#111;padding:4px;}
+.card-photo.dual{display:grid;grid-template-columns:1fr 1fr;gap:3px;background:var(--border-strong);}
+.card-photo.dual .card-photo-item{min-width:0;min-height:0;background:#111;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.card-photo.dual .card-photo-item img{width:100%;height:100%;object-fit:contain;background:#111;padding:3px;}
+.card-photo .no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-mute);font-size:12px;background:var(--bg);}
 .badge{
   position:absolute;top:10px;left:10px;
   padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.3px;
@@ -273,6 +278,12 @@ header{
 .suggest-chip:hover{border-color:var(--gold-dim);color:var(--text);}
 .suggest-chip:last-child{margin-bottom:0;}
 .suggest-tag{display:inline-block;font-size:10px;font-weight:700;color:var(--gold);background:var(--gold-bg);padding:1px 7px;border-radius:8px;margin-right:6px;vertical-align:middle;}
+.offline-advice{margin-top:8px;padding:10px 11px;border:1px solid var(--border);border-radius:9px;background:var(--card);}
+.offline-advice-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:10.5px;color:var(--text-mute);margin-bottom:7px;}
+.offline-advice-row{font-size:11.5px;line-height:1.45;color:var(--text-dim);padding:6px 0;border-top:1px solid var(--border);}
+.offline-advice-row b{display:block;color:var(--navy);font-size:10.5px;text-transform:uppercase;letter-spacing:.25px;margin-bottom:2px;}
+.offline-advice-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.offline-disclaimer{font-size:10.5px;color:var(--text-mute);line-height:1.45;margin-top:9px;padding-top:7px;border-top:1px dashed var(--border-strong);}
 .backup-banner{display:none;align-items:center;gap:14px;background:var(--gold-bg);border-bottom:1px solid var(--gold-dim);padding:9px 24px;font-size:12.5px;color:var(--text-dim);}
 .backup-banner span{flex:1;line-height:1.5;}
 .banner-dismiss{background:none;border:none;font-size:18px;line-height:1;color:var(--text-mute);cursor:pointer;padding:0 4px;}
@@ -295,7 +306,7 @@ header{
   color:var(--text-mute);font-size:12px;overflow:hidden;background:var(--bg);
 }
 .photo-upload:hover{border-color:var(--gold-dim);}
-.photo-upload img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--bg);}
+.photo-upload img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#111;padding:4px;}
 .photo-upload input{display:none;}
 .photo-upload .remove-photo{
   position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:6px;
@@ -305,13 +316,34 @@ header{
   position:absolute;top:6px;right:36px;height:24px;padding:0 9px;border-radius:6px;
   background:rgba(20,25,35,0.65);color:#fff;border:none;font-size:11px;cursor:pointer;z-index:2;white-space:nowrap;
 }
+.photo-upload .view-photo{
+  position:absolute;top:6px;left:6px;height:24px;padding:0 9px;border-radius:6px;
+  background:rgba(20,25,35,0.65);color:#fff;border:none;font-size:11px;cursor:pointer;z-index:2;white-space:nowrap;
+}
+.photo-upload .photo-fit-note{
+  position:absolute;left:6px;bottom:6px;background:rgba(20,25,35,.62);color:#fff;padding:3px 7px;border-radius:8px;font-size:10px;z-index:2;pointer-events:none;
+}
+
+/* Full-screen image viewer: mouse-wheel zoom + drag + mobile pinch zoom */
+.image-lightbox{position:fixed;inset:0;background:rgba(5,9,15,.94);display:none;z-index:5000;overflow:hidden;touch-action:none;user-select:none;}
+.image-lightbox.open{display:block;}
+.lightbox-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none;}
+.lightbox-image{max-width:94vw;max-height:88vh;width:auto;height:auto;object-fit:contain;transform-origin:center center;will-change:transform;pointer-events:none;-webkit-user-drag:none;}
+.lightbox-topbar{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;z-index:3;background:linear-gradient(rgba(0,0,0,.62),transparent);color:#fff;}
+.lightbox-caption{font-size:12px;font-weight:600;opacity:.92;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lightbox-close{width:38px;height:38px;border:1px solid rgba(255,255,255,.25);border-radius:10px;background:rgba(0,0,0,.45);color:#fff;font-size:24px;cursor:pointer;display:grid;place-items:center;}
+.lightbox-controls{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:7px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.18);border-radius:14px;z-index:3;backdrop-filter:blur(5px);}
+.lightbox-controls button{width:38px;height:36px;padding:0;justify-content:center;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);color:#fff;border-radius:9px;font-size:17px;}
+.lightbox-controls .zoom-readout{min-width:54px;text-align:center;color:#fff;font-size:11px;font-weight:700;}
+.lightbox-hint{position:absolute;right:14px;bottom:18px;color:rgba(255,255,255,.72);font-size:10.5px;z-index:2;background:rgba(0,0,0,.34);padding:5px 8px;border-radius:8px;}
+@media(max-width:680px){.lightbox-hint{display:none}.lightbox-controls{bottom:12px}.lightbox-image{max-width:100vw;max-height:92vh}.image-lightbox{overscroll-behavior:none}}
 .modal-footer{
   padding:16px 24px 22px;display:flex;justify-content:space-between;gap:10px;
   border-top:1px solid var(--border);
 }
 .modal-footer .right{display:flex;gap:10px;}
 
-.detail-photo{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;background:var(--bg);}
+.detail-photo{width:100%;height:auto;max-height:62vh;object-fit:contain;border-radius:10px;background:#111;cursor:zoom-in;display:block;}
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;}
 .detail-item{background:var(--bg);border-radius:8px;padding:10px 12px;}
 .detail-item .k{font-size:11px;color:var(--text-mute);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;}
@@ -371,7 +403,7 @@ header{
   .print-photos{display:flex;gap:10px;margin:10px 0;}
   .print-photo-wrap{flex:1;}
   .print-photo-label{font-size:10px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:3px;}
-  .print-photos img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:6px;}
+  .print-photos img{width:100%;height:auto;max-height:90mm;object-fit:contain;border-radius:6px;background:#f5f5f5;}
   .print-tags{margin-top:8px;}
   .print-tags span{display:inline-block;font-size:10px;color:#666;background:#f2f2f2;padding:2px 8px;border-radius:10px;margin:0 4px 4px 0;}
 }
@@ -383,9 +415,170 @@ header{
   header{padding:14px 18px;}
   .row-2{grid-template-columns:1fr;}
 }
+
+/* ===== Role / Admin UI ===== */
+.role-badge{font-size:11px;padding:6px 10px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--text-mute);font-weight:600;}
+.role-badge.admin{background:var(--green-bg);border-color:rgba(31,138,76,.35);color:var(--green);}
+.admin-only.role-hidden{display:none!important;}
+.auth-help{font-size:11.5px;color:var(--text-mute);line-height:1.5;margin-top:8px;}
+.auth-error{font-size:12px;color:var(--red);min-height:18px;margin-top:8px;}
+.role-badge.viewer{background:#eef6ff;border-color:#bfd7ef;color:#315f86;}
+
+/* ===== Secure repository access gate ===== */
+.repository-locked > header,.repository-locked > .backup-banner,.repository-locked > .layout{display:none!important;}
+.access-gate{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:22px;background:linear-gradient(145deg,#eef1f4 0%,#f8fafc 55%,#f4ead9 100%);}
+.access-gate.hidden{display:none;}
+.access-card{width:min(520px,100%);background:#fff;border:1px solid var(--border);border-radius:20px;box-shadow:0 24px 70px rgba(28,43,58,.18);overflow:hidden;}
+.access-brand{padding:34px 28px 24px;text-align:center;background:linear-gradient(135deg,#1c2b3a 0%,#30475f 100%);color:#fff;}
+.access-logo{width:68px;height:68px;margin:0 auto 14px;border-radius:15px;background:linear-gradient(135deg,var(--gold-light),var(--gold-dim));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;box-shadow:0 0 0 4px rgba(255,255,255,.12);overflow:hidden;}
+.access-logo img{width:100%;height:100%;object-fit:contain;background:#fff;padding:5px;}
+.access-brand h1{font-size:22px;margin:0 0 5px;color:#fff;}
+.access-brand p{font-size:12px;color:#d9e1e9;margin:0;}
+.access-tagline{margin-top:9px;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#e5c88f;}
+.access-body{padding:26px 28px 28px;}
+.access-intro{text-align:center;}
+.access-intro p{font-size:13px;color:var(--text-dim);line-height:1.65;margin:0 0 18px;}
+.access-login{display:none;}
+.access-login.open{display:block;}
+.access-section{border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:12px;background:#fbfcfd;}
+.access-section-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.access-section-sub{font-size:11px;color:var(--text-mute);margin-bottom:12px;line-height:1.45;}
+.access-divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--text-mute);font-size:10px;text-transform:uppercase;letter-spacing:.7px;}
+.access-divider:before,.access-divider:after{content:'';height:1px;background:var(--border);flex:1;}
+.access-row{display:flex;gap:8px;align-items:stretch;}
+.access-row input{flex:1;min-width:0;background:#fff;border:1px solid var(--border);border-radius:9px;padding:11px 12px;font-size:13.5px;}
+.access-row input:focus{outline:none;border-color:var(--gold-dim);box-shadow:0 0 0 3px rgba(184,134,59,.10);}
+.access-stack{display:grid;gap:9px;}
+.access-stack input{width:100%;background:#fff;border:1px solid var(--border);border-radius:9px;padding:11px 12px;font-size:13.5px;}
+.access-stack input:focus{outline:none;border-color:var(--gold-dim);box-shadow:0 0 0 3px rgba(184,134,59,.10);}
+.access-error{font-size:11.5px;color:var(--red);min-height:17px;margin-top:7px;}
+.access-back{margin-top:14px;text-align:center;}
+.access-back button{background:none;border:none;color:var(--text-mute);font-size:11.5px;cursor:pointer;}
+.access-foot{padding:11px 18px;border-top:1px solid var(--border);font-size:10.5px;color:var(--text-mute);text-align:center;background:#fafbfc;}
+@media(max-width:560px){.access-body{padding:20px}.access-brand{padding:28px 18px 20px}.access-row{flex-direction:column}.access-row .btn{justify-content:center}}
+
+/* ===== AI assist ===== */
+.ai-assist{margin:-4px 0 12px;padding:10px 12px;border:1px solid rgba(184,134,59,.35);background:#fffdf8;border-radius:10px;}
+.ai-assist-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;}
+.ai-assist-title{font-size:11.5px;font-weight:700;color:var(--gold-dim);}
+.ai-assist-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.ai-btn{border:1px solid var(--border);background:var(--card);color:var(--text-dim);border-radius:999px;padding:6px 9px;font-size:11px;cursor:pointer;}
+.ai-btn:hover{border-color:var(--gold-dim);color:var(--gold-dim);background:var(--gold-bg);}
+.ai-btn:disabled{opacity:.55;cursor:wait;}
+.ai-status{font-size:11px;color:var(--text-mute);margin-top:7px;min-height:15px;}
+.ai-result{display:none;margin-top:9px;padding:10px;border:1px dashed var(--gold-dim);background:var(--gold-bg);border-radius:8px;font-size:12px;line-height:1.55;white-space:pre-wrap;}
+.ai-result.open{display:block;}
+.ai-result-actions{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;}
+.ai-result-actions button{padding:5px 9px;font-size:11px;}
+
+
+
+/* ===== Admin Settings + About ===== */
+.info-btn{display:inline-flex;align-items:center;gap:6px;}
+.settings-grid{display:grid;grid-template-columns:1fr;gap:18px;}
+.settings-card{border:1px solid var(--border);border-radius:12px;padding:16px;background:var(--card);}
+.settings-card h3{font-size:14px;color:var(--navy);margin-bottom:6px;}
+.settings-card .help{font-size:11.5px;color:var(--text-mute);line-height:1.5;margin-bottom:12px;}
+.settings-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;}
+.settings-status{font-size:12px;line-height:1.5;margin-top:8px;min-height:18px;color:var(--text-mute);}
+.settings-status.ok{color:var(--green);}
+.settings-status.err{color:var(--red);}
+.about-section{border:1px solid var(--border);border-radius:12px;padding:16px;background:var(--card);}
+.about-section h3{font-size:13px;color:var(--gold-dim);text-transform:uppercase;letter-spacing:.45px;margin-bottom:8px;}
+.about-section p{font-size:13.5px;line-height:1.75;color:var(--text-dim);white-space:pre-wrap;}
+.about-edit{display:none;}
+.about-modal.admin-editing .about-view{display:none;}
+.about-modal.admin-editing .about-edit{display:flex;flex-direction:column;gap:14px;}
+.about-meta{font-size:11.5px;color:var(--text-mute);line-height:1.6;padding-top:4px;}
+.welcome-logo-editor{display:flex;align-items:center;gap:14px;padding:12px;border:1px dashed var(--border-strong);border-radius:10px;background:var(--bg);margin-bottom:12px;}
+.welcome-logo-preview{width:74px;height:74px;flex:0 0 74px;border-radius:14px;background:linear-gradient(135deg,var(--gold-light),var(--gold-dim));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;overflow:hidden;border:1px solid var(--border);}
+.welcome-logo-preview img{width:100%;height:100%;object-fit:contain;background:#fff;padding:5px;}
+.welcome-logo-controls{display:flex;gap:8px;flex-wrap:wrap;}
+.welcome-settings-subhead{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.55px;color:var(--gold-dim);margin:8px 0 2px;padding-top:8px;border-top:1px solid var(--border);}
+.welcome-settings-subhead:first-of-type{border-top:none;padding-top:0;}
+@media(max-width:700px){
+  .settings-actions{flex-direction:column;}
+  .settings-actions .btn{justify-content:center;width:100%;}
+}
+
+
+/* ===== v1.0.10 Button hover visibility fix ===== */
+.btn{cursor:pointer;}
+.btn:hover{
+  background:var(--gold-bg);
+  border-color:var(--gold-dim);
+  color:var(--navy);
+}
+.btn-gold:hover,
+.btn.btn-gold:hover{
+  background:linear-gradient(135deg,var(--gold-dim),var(--gold));
+  border-color:transparent;
+  color:#fff;
+  filter:brightness(.98);
+  box-shadow:0 4px 12px rgba(138,106,47,.18);
+}
+.btn-ghost:hover,
+.btn.btn-ghost:hover{
+  background:var(--gold-bg);
+  border-color:var(--gold-dim);
+  color:var(--gold-dim);
+}
+.dropdown-menu button:hover{
+  background:var(--gold-bg);
+  color:var(--gold-dim);
+}
+.access-back button:hover{color:var(--gold-dim);}
+.lightbox-controls button:hover,
+.lightbox-close:hover{
+  background:rgba(255,255,255,.20);
+  color:#fff;
+  border-color:rgba(255,255,255,.35);
+}
+
 </style>
 </head>
-<body>
+<body class="repository-locked">
+
+<div class="access-gate" id="accessGate">
+  <div class="access-card">
+    <div class="access-brand">
+      <div class="access-logo" id="accessWelcomeLogo"><span id="accessWelcomeLogoText">SHL</span></div>
+      <h1 id="welcomeTitleText">QA Lesson Learned Repository</h1>
+      <p id="welcomeSubtitleText">Shanta Holdings Limited — Quality Assurance</p>
+      <div class="access-tagline" id="welcomeTaglineText">Setting Standards</div>
+    </div>
+    <div class="access-body">
+      <div class="access-intro" id="accessIntro">
+        <p id="welcomeIntroText">Authorized SHL QA users can enter the repository using Viewer or Admin access.</p>
+        <button class="btn btn-gold" id="enterRepositoryBtn" style="margin:0 auto;justify-content:center;min-width:190px;">Enter Repository</button>
+      </div>
+      <div class="access-login" id="accessLogin">
+        <div class="access-section">
+          <div class="access-section-title" id="welcomeViewerTitleText">Viewer Access</div>
+          <div class="access-section-sub" id="welcomeViewerSubtitleText">Enter the shared Viewer password to open the repository in read-only mode.</div>
+          <div class="access-row">
+            <input type="password" id="viewerPassword" autocomplete="current-password" placeholder="Viewer password">
+            <button class="btn btn-gold" id="viewerLoginBtn">Enter as Viewer</button>
+          </div>
+          <div class="access-error" id="viewerLoginError"></div>
+        </div>
+        <div class="access-divider" id="welcomeDividerText">or</div>
+        <div class="access-section">
+          <div class="access-section-title" id="welcomeAdminTitleText">Admin Access</div>
+          <div class="access-section-sub" id="welcomeAdminSubtitleText">Admin login requires both the registered email address and password.</div>
+          <div class="access-stack">
+            <input type="email" id="gateAdminEmail" autocomplete="username" placeholder="Admin email">
+            <input type="password" id="gateAdminPassword" autocomplete="current-password" placeholder="Admin password">
+            <button class="btn btn-gold" id="gateAdminLoginBtn" style="justify-content:center;">Admin Login</button>
+          </div>
+          <div class="access-error" id="gateAdminLoginError"></div>
+        </div>
+        <div class="access-back"><button id="accessBackBtn">← Back</button></div>
+      </div>
+    </div>
+    <div class="access-foot" id="welcomeFootText">Viewer = read only · Admin = full management access</div>
+  </div>
+</div>
 
 <header>
   <div class="brand">
@@ -402,9 +595,9 @@ header{
   </div>
   <div class="header-actions">
     <div class="storage-badge" id="storageBadge" data-tooltip="এই ফাইলটি অন্য কাউকে শেয়ার করলে সে শুধু খালি টেমপ্লেট দেখবে — আপনার ডেটা (lessons, ছবি) এই ব্রাউজারেই থাকে, ফাইলের ভেতরে সেভ হয় না। সবার সাথে শেয়ার করতে হলে Export করে JSON/Excel ফাইলটাও পাঠান, তারা Import দিয়ে লোড করে নিতে পারবে।">⚠ Browser storage only ℹ</div>
-    <button class="btn btn-ghost btn-sm" id="connectFolderBtn">📁 Storage ফোল্ডার সংযোগ</button>
+    <button class="btn btn-ghost btn-sm admin-only" id="connectFolderBtn">📁 Storage ফোল্ডার সংযোগ</button>
     <button class="btn btn-gold btn-sm" id="installAppBtn" style="display:none;">📲 App হিসেবে Install করুন</button>
-    <div class="dropdown-wrap">
+    <div class="dropdown-wrap admin-only">
       <button class="btn btn-ghost btn-sm" id="exportMenuBtn">⬇ Export ▾</button>
       <div class="dropdown-menu" id="exportMenu">
         <button id="exportJson">🗂 JSON (full backup)</button>
@@ -413,7 +606,7 @@ header{
         <button id="exportFullApp">🌐 সম্পূর্ণ App (HTML ফাইল)</button>
       </div>
     </div>
-    <div class="dropdown-wrap">
+    <div class="dropdown-wrap admin-only">
       <button class="btn btn-ghost btn-sm" id="importMenuBtn">⬆ Import ▾</button>
       <div class="dropdown-menu" id="importMenu">
         <button id="importJsonBtn">🗂 JSON (full backup)</button>
@@ -422,7 +615,11 @@ header{
     </div>
     <input type="file" id="importFile" accept="application/json" style="display:none;">
     <input type="file" id="importExcelFile" accept=".xlsx,.xls" style="display:none;">
-    <button class="btn btn-gold" id="addBtn">+ নতুন Lesson</button>
+    <button class="btn btn-ghost btn-sm info-btn" id="aboutBtn">ℹ About</button>
+    <button class="btn btn-ghost btn-sm admin-only" id="settingsBtn">⚙ Settings</button>
+    <span class="role-badge" id="roleBadge">Locked</span>
+    <button class="btn btn-ghost btn-sm" id="adminLoginBtn">↪ Logout</button>
+    <button class="btn btn-gold admin-only" id="addBtn">+ নতুন Lesson</button>
   </div>
 </header>
 
@@ -518,6 +715,24 @@ header{
         <label>Description</label>
         <textarea id="f_desc" placeholder="বিস্তারিত observation লিখুন"></textarea>
       </div>
+      <div class="ai-assist admin-only" id="aiAssist">
+        <div class="ai-assist-head">
+          <div class="ai-assist-title">✨ AI Writing & QA Assistant</div>
+          <button type="button" class="ai-btn" id="aiConfigBtn" title="Set the secure AI Worker URL">⚙ AI Setup</button>
+        </div>
+        <div class="ai-assist-actions">
+          <button type="button" class="ai-btn" data-ai-task="grammar">Fix Grammar</button>
+          <button type="button" class="ai-btn" data-ai-task="rewrite">Rewrite Professionally</button>
+          <button type="button" class="ai-btn" data-ai-task="concise">Make Concise</button>
+          <button type="button" class="ai-btn" data-ai-task="root_cause">Suggest Root Cause</button>
+          <button type="button" class="ai-btn" data-ai-task="rectification">Suggest Rectification</button>
+          <button type="button" class="ai-btn" data-ai-task="preventive">Suggest Preventive Action</button>
+          <button type="button" class="ai-btn" data-ai-task="qa_check">Suggest QA Verification</button>
+          <button type="button" class="ai-btn" data-ai-task="complete">Generate Complete Lesson</button>
+        </div>
+        <div class="ai-status" id="aiStatus">Free AI is optional. The advanced Offline Civil QA Engineer Assistant works even without internet.</div>
+        <div class="ai-result" id="aiResult"></div>
+      </div>
       <div class="suggest-box" id="actionSuggestions"></div>
 
       <div class="row-2">
@@ -588,9 +803,9 @@ header{
         <div class="crop-handle" data-dir="se"></div>
       </div>
     </div>
-    <div class="crop-hint">বক্সটা টেনে move করুন, কোণা ধরে টেনে resize/crop করুন — যতটুকু area রাখতে চান শুধু ততটুকু বক্সের ভেতরে রাখুন।</div>
+    <div class="crop-hint">ডিফল্টভাবে পুরো ছবি রাখা থাকে। প্রয়োজন হলে শুধু বক্স move/resize করে crop করুন; Full Image/Reset দিলে আবার পুরো ছবিতে ফিরে যাবে।</div>
     <div class="crop-footer">
-      <button class="btn btn-ghost btn-sm" id="cropResetBtn">↺ পুরো ছবি (Reset)</button>
+      <button class="btn btn-ghost btn-sm" id="cropResetBtn">↺ Full Image / Reset</button>
       <div style="flex:1"></div>
       <button class="btn btn-ghost" id="cropCancelBtn">Cancel</button>
       <button class="btn btn-gold" id="cropApplyBtn">Apply</button>
@@ -608,23 +823,216 @@ header{
     <div class="modal-footer">
       <div></div>
       <div class="right">
-        <button class="btn btn-ghost" id="editFromDetail">Edit</button>
+        <button class="btn btn-ghost admin-only" id="editFromDetail">Edit</button>
       </div>
     </div>
   </div>
 </div>
 
+<div class="overlay" id="adminLoginOverlay">
+  <div class="modal" style="max-width:430px;">
+    <div class="modal-header">
+      <h2>Admin Login</h2>
+      <button class="close-btn" id="closeAdminLogin">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Email</label><input type="email" id="adminEmail" autocomplete="username" placeholder="admin@company.com"></div>
+      <div class="field"><label>Password</label><input type="password" id="adminPassword" autocomplete="current-password" placeholder="Password"></div>
+      <div class="auth-error" id="adminLoginError"></div>
+      <div class="auth-help">Admin access requires the registered Admin email and password. Viewer users should log out and use the Viewer password from the start screen.</div>
+    </div>
+    <div class="modal-footer"><div></div><div class="right"><button class="btn btn-ghost" id="cancelAdminLogin">Cancel</button><button class="btn btn-gold" id="submitAdminLogin">Login</button></div></div>
+  </div>
+</div>
+
+
+<!-- Admin Security Settings -->
+<div class="overlay" id="settingsOverlay">
+  <div class="modal" style="max-width:760px;">
+    <div class="modal-header">
+      <h2>⚙ Admin Settings</h2>
+      <button class="close-btn" id="closeSettings">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="settings-grid">
+        <div class="settings-card">
+          <h3>Welcome Screen</h3>
+          <div class="help">Customize the start screen shown before login. The welcome logo is separate from the repository header logo. Save here to update Web, Android and Windows users through Firebase.</div>
+          <div class="welcome-logo-editor">
+            <div class="welcome-logo-preview" id="welcomeLogoPreview"><span id="welcomeLogoPreviewText">SHL</span></div>
+            <div style="flex:1;min-width:0;">
+              <div class="field" style="margin-bottom:8px;"><label>Welcome Screen Logo</label></div>
+              <div class="welcome-logo-controls">
+                <button type="button" class="btn btn-ghost btn-sm" id="uploadWelcomeLogoBtn">Upload Logo</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="useHeaderLogoBtn">Use Header Logo</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="removeWelcomeLogoBtn">Remove Logo</button>
+              </div>
+              <input type="file" id="welcomeLogoInput" accept="image/*" style="display:none;">
+              <div class="help" style="margin:7px 0 0;">PNG/JPG recommended. The app resizes the logo before saving.</div>
+            </div>
+          </div>
+          <div class="welcome-settings-subhead">Branding</div>
+          <div class="field"><label>Title</label><input type="text" id="welcomeTitleInput" placeholder="QA Lesson Learned Repository"></div>
+          <div class="field"><label>Subtitle / Company</label><input type="text" id="welcomeSubtitleInput" placeholder="Shanta Holdings Limited — Quality Assurance"></div>
+          <div class="field"><label>Tagline</label><input type="text" id="welcomeTaglineInput" placeholder="Setting Standards"></div>
+          <div class="welcome-settings-subhead">Start View</div>
+          <div class="field"><label>Intro Text</label><textarea id="welcomeIntroInput" style="min-height:72px"></textarea></div>
+          <div class="field"><label>Enter Button Text</label><input type="text" id="welcomeEnterButtonInput"></div>
+          <div class="welcome-settings-subhead">Viewer Access</div>
+          <div class="row-2">
+            <div class="field"><label>Section Title</label><input type="text" id="welcomeViewerTitleInput"></div>
+            <div class="field"><label>Password Placeholder</label><input type="text" id="welcomeViewerPlaceholderInput"></div>
+          </div>
+          <div class="field"><label>Helper Text</label><textarea id="welcomeViewerSubtitleInput" style="min-height:62px"></textarea></div>
+          <div class="field"><label>Viewer Button Text</label><input type="text" id="welcomeViewerButtonInput"></div>
+          <div class="welcome-settings-subhead">Admin Access</div>
+          <div class="row-2">
+            <div class="field"><label>Section Title</label><input type="text" id="welcomeAdminTitleInput"></div>
+            <div class="field"><label>Divider Text</label><input type="text" id="welcomeDividerInput"></div>
+          </div>
+          <div class="field"><label>Helper Text</label><textarea id="welcomeAdminSubtitleInput" style="min-height:62px"></textarea></div>
+          <div class="row-2">
+            <div class="field"><label>Email Placeholder</label><input type="text" id="welcomeAdminEmailPlaceholderInput"></div>
+            <div class="field"><label>Password Placeholder</label><input type="text" id="welcomeAdminPasswordPlaceholderInput"></div>
+          </div>
+          <div class="field"><label>Admin Button Text</label><input type="text" id="welcomeAdminButtonInput"></div>
+          <div class="welcome-settings-subhead">Footer & Navigation</div>
+          <div class="row-2">
+            <div class="field"><label>Back Button Text</label><input type="text" id="welcomeBackInput"></div>
+            <div class="field"><label>Footer Text</label><input type="text" id="welcomeFooterInput"></div>
+          </div>
+          <div class="settings-status" id="welcomeSettingsStatus"></div>
+          <div class="settings-actions">
+            <button class="btn btn-ghost" type="button" id="resetWelcomeDefaultsBtn">Restore Defaults</button>
+            <button class="btn btn-gold" type="button" id="saveWelcomeSettingsBtn">Save Welcome Screen</button>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Change Admin Password</h3>
+          <div class="help">For security, enter the current Admin password first. Your Admin email and UID remain unchanged.</div>
+          <div class="field"><label>Current Admin Password</label><input type="password" id="adminCurrentPassword" autocomplete="current-password" placeholder="Current password"></div>
+          <div class="field"><label>New Admin Password</label><input type="password" id="adminNewPassword" autocomplete="new-password" placeholder="New password"></div>
+          <div class="field"><label>Confirm New Password</label><input type="password" id="adminConfirmPassword" autocomplete="new-password" placeholder="Confirm new password"></div>
+          <div class="settings-status" id="adminPasswordStatus"></div>
+          <div class="settings-actions"><button class="btn btn-gold" id="changeAdminPasswordBtn">Change Admin Password</button></div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Change Viewer Password</h3>
+          <div class="help">Enter the current shared Viewer password, then set a new one. This uses a separate secure Firebase session and does not log the Admin out.</div>
+          <div class="field"><label>Current Viewer Password</label><input type="password" id="viewerCurrentPassword" autocomplete="current-password" placeholder="Current viewer password"></div>
+          <div class="field"><label>New Viewer Password</label><input type="password" id="viewerNewPassword" autocomplete="new-password" placeholder="New viewer password"></div>
+          <div class="field"><label>Confirm New Password</label><input type="password" id="viewerConfirmPassword" autocomplete="new-password" placeholder="Confirm new viewer password"></div>
+          <div class="settings-status" id="viewerPasswordStatus"></div>
+          <div class="settings-actions"><button class="btn btn-gold" id="changeViewerPasswordBtn">Change Viewer Password</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- About / Mission / Vision -->
+<div class="overlay" id="aboutOverlay">
+  <div class="modal about-modal" id="aboutModal" style="max-width:720px;">
+    <div class="modal-header">
+      <h2>ℹ About SHL QA LLR</h2>
+      <button class="close-btn" id="closeAbout">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="about-view" id="aboutView">
+        <div class="about-section"><h3>About the App</h3><p id="aboutAppText"></p></div>
+        <div class="about-section"><h3>Mission</h3><p id="aboutMissionText"></p></div>
+        <div class="about-section"><h3>Vision</h3><p id="aboutVisionText"></p></div>
+        <div class="about-meta">SHL QA — Lesson Learned Repository<br>Shanta Holdings Limited · Setting Standards</div>
+      </div>
+      <div class="about-edit admin-only" id="aboutEdit">
+        <div class="field"><label>About the App</label><textarea id="aboutAppInput" style="min-height:120px" placeholder="Describe the purpose and scope of this app..."></textarea></div>
+        <div class="field"><label>Mission</label><textarea id="aboutMissionInput" style="min-height:100px" placeholder="Write the mission..."></textarea></div>
+        <div class="field"><label>Vision</label><textarea id="aboutVisionInput" style="min-height:100px" placeholder="Write the vision..."></textarea></div>
+        <div class="settings-status" id="aboutSaveStatus"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div><button class="btn btn-ghost admin-only" id="editAboutBtn">✎ Edit About</button></div>
+      <div class="right">
+        <button class="btn btn-ghost" id="cancelAboutEdit" style="display:none;">Cancel</button>
+        <button class="btn btn-gold admin-only" id="saveAboutBtn" style="display:none;">Save About</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Full-screen viewer for lesson photos. Supports wheel zoom, drag, double-click and mobile pinch-to-zoom. -->
+<div class="image-lightbox" id="imageLightbox" aria-hidden="true">
+  <div class="lightbox-topbar">
+    <div class="lightbox-caption" id="lightboxCaption">Photo</div>
+    <button class="lightbox-close" id="lightboxClose" type="button" aria-label="Close image viewer">&times;</button>
+  </div>
+  <div class="lightbox-stage" id="lightboxStage">
+    <img class="lightbox-image" id="lightboxImage" alt="Lesson photo" draggable="false">
+  </div>
+  <div class="lightbox-controls">
+    <button type="button" id="zoomOutBtn" title="Zoom out">−</button>
+    <span class="zoom-readout" id="zoomReadout">100%</span>
+    <button type="button" id="zoomInBtn" title="Zoom in">+</button>
+    <button type="button" id="zoomResetBtn" title="Fit full image">↺</button>
+  </div>
+  <div class="lightbox-hint">Wheel / pinch to zoom · drag to move · double-click to zoom</div>
+</div>
+
 <script>
 const LOCAL_KEY = 'shl_lesson_learned_repo_v2';
 const SETTINGS_KEY = 'shl_lesson_learned_settings_v2';
-let lessons = JSON.parse(localStorage.getItem(LOCAL_KEY) || 'null') || [];
-let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null') || { logo:'', title:'', subtitle:'', createdBy:'' };
+let lessons = []; // secure mode: repository data is loaded only after authenticated access
+const DEFAULT_ABOUT = {
+  appOverview: 'SHL QA — Lesson Learned Repository is an internal knowledge platform for capturing, reviewing and sharing practical QA/QC lessons, good practices and recurring construction issues so teams can learn from past experience and improve future execution.',
+  mission: 'To capture practical construction lessons, standardize QA/QC knowledge, support better technical decisions and reduce recurrence of avoidable quality issues through shared learning.',
+  vision: 'To build a strong culture of continuous learning and quality excellence where proven lessons are easy to access, reuse and convert into better standards across Shanta Holdings Limited.'
+};
+const DEFAULT_WELCOME = {
+  welcomeLogo:'',
+  welcomeTitle:'QA Lesson Learned Repository',
+  welcomeSubtitle:'Shanta Holdings Limited — Quality Assurance',
+  welcomeTagline:'Setting Standards',
+  welcomeIntro:'Authorized SHL QA users can enter the repository using Viewer or Admin access.',
+  welcomeEnterButton:'Enter Repository',
+  welcomeViewerTitle:'Viewer Access',
+  welcomeViewerSubtitle:'Enter the shared Viewer password to open the repository in read-only mode.',
+  welcomeViewerPlaceholder:'Viewer password',
+  welcomeViewerButton:'Enter as Viewer',
+  welcomeDivider:'or',
+  welcomeAdminTitle:'Admin Access',
+  welcomeAdminSubtitle:'Admin login requires both the registered email address and password.',
+  welcomeAdminEmailPlaceholder:'Admin email',
+  welcomeAdminPasswordPlaceholder:'Admin password',
+  welcomeAdminButton:'Admin Login',
+  welcomeBack:'← Back',
+  welcomeFooter:'Viewer = read only · Admin = full management access'
+};
+let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null') || { logo:'', title:'', subtitle:'', createdBy:'', ...DEFAULT_ABOUT, ...DEFAULT_WELCOME };
+settings = { ...DEFAULT_ABOUT, ...DEFAULT_WELCOME, ...settings };
 let activeFilters = { type:'all', project:'all', trade:'all', severity:'all' };
 let searchTerm = '';
 let editingId = null;
 let currentDetailId = null;
 let dirHandle = null;
 let formState = { photo1:'', photo2:'' };
+let auth = null;
+let isAdmin = false;
+let currentRole = 'locked';
+const ADMIN_UID = 'aqPEtQSgnQb717FrSBZQVnU6weI2';
+const VIEWER_UID = 'XGEAk92tLAUbdYkNym0UxIpWWSi1';
+const VIEWER_EMAIL = 'viewer@gmail.com';
+let cloudUnsubs = [];
+let cloudSyncStarted = false;
+const AI_ENDPOINT_KEY = 'shl_llr_ai_endpoint_v1';
+const DEFAULT_AI_ENDPOINT = 'https://wispy-pine-d7bd.lessonlr.workers.dev/';
+// Always start from the verified Worker endpoint. This avoids an old/stale URL
+// previously saved in localStorage overriding the working endpoint.
+let aiEndpoint = DEFAULT_AI_ENDPOINT;
+try { localStorage.setItem(AI_ENDPOINT_KEY, DEFAULT_AI_ENDPOINT); } catch(e) {}
+let pendingAiSuggestion = null;
 
 // ================== CLOUD SYNC (Firebase Firestore) ==================
 // সবার ডেটা এক জায়গায় (shared) রাখার জন্য। firebaseConfig বসানোর পর
@@ -647,12 +1055,41 @@ if(CLOUD_ENABLED){
   try{
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
-    try{ db.enablePersistence({ synchronizeTabs: true }); }catch(e){ /* multi-tab or unsupported, ignore */ }
+    auth = firebase.auth();
+    // Do not persist authentication or Firestore content on the device in secure access mode.
+    auth.setPersistence(firebase.auth.Auth.Persistence.NONE).catch(e=>console.warn('Auth persistence setup failed',e));
   }catch(e){
     console.error('Firebase init failed', e);
     db = null;
   }
 }
+
+const WELCOME_SETTING_KEYS = Object.keys(DEFAULT_WELCOME);
+function publicWelcomePayload(){
+  const out={};
+  WELCOME_SETTING_KEYS.forEach(k=>out[k]=settings[k] ?? DEFAULT_WELCOME[k]);
+  return out;
+}
+async function loadPublicWelcomeSettings(){
+  if(!db)return;
+  try{
+    const doc=await db.collection('meta').doc('welcome').get();
+    if(doc.exists){
+      settings={...settings,...doc.data()};
+      try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}catch(e){}
+      renderWelcomeScreen();
+    }
+  }catch(e){
+    console.warn('Public welcome settings unavailable',e);
+  }
+}
+async function cloudSaveWelcomeSettings(){
+  if(!db || !isAdmin)return;
+  try{await db.collection('meta').doc('welcome').set(publicWelcomePayload());}
+  catch(e){console.error('cloudSaveWelcomeSettings failed',e);throw e;}
+}
+renderWelcomeScreen();
+loadPublicWelcomeSettings();
 
 function cloudBadgeUpdate(state){
   const badge = document.getElementById('storageBadge');
@@ -715,28 +1152,35 @@ async function cloudSaveSettings(){
   catch(e){ console.error('cloudSaveSettings failed', e); }
 }
 
+function stopCloudSync(){
+  cloudUnsubs.forEach(fn=>{ try{fn&&fn();}catch(e){} });
+  cloudUnsubs=[]; cloudSyncStarted=false; cloudReady=false;
+}
+
 function startCloudSync(){
-  if(!db) { cloudBadgeUpdate('disabled'); return; }
+  if(!db || currentRole==='locked') { cloudBadgeUpdate('disabled'); return; }
+  stopCloudSync();
+  cloudSyncStarted=true;
   cloudBadgeUpdate('connecting');
 
   db.collection('meta').doc('settings').get().then(doc => {
     if(doc.exists){
       settings = { ...settings, ...doc.data() };
       applySettings();
-    } else if(settings && (settings.title || settings.logo)){
-      cloudSaveSettings(); // seed cloud with whatever local settings already exist
+    } else if(isAdmin && settings && (settings.title || settings.logo)){
+      cloudSaveSettings(); // only Admin may seed cloud settings
     }
   }).catch(e => console.error(e));
 
-  db.collection('meta').doc('settings').onSnapshot(doc => {
+  cloudUnsubs.push(db.collection('meta').doc('settings').onSnapshot(doc => {
     if(doc.exists){
       settings = { ...settings, ...doc.data() };
       applySettings();
     }
-  });
+  }, err=>console.error('settings onSnapshot error',err)));
 
   let firstLoad = true;
-  db.collection('lessons').onSnapshot(snap => {
+  cloudUnsubs.push(db.collection('lessons').onSnapshot(snap => {
     cloudReady = true;
     cloudBadgeUpdate('live');
     if(suppressSnapshot && !firstLoad) return;
@@ -744,190 +1188,1583 @@ function startCloudSync(){
     snap.forEach(doc => cloudLessons.push(doc.data()));
     cloudLessons.sort((a,b) => new Date(b.date) - new Date(a.date));
     lessons = cloudLessons;
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(lessons));
+    localStorage.removeItem(LOCAL_KEY); // do not leave repository content readable in browser localStorage
     renderAll();
     firstLoad = false;
   }, err => {
     console.error('lessons onSnapshot error', err);
     cloudBadgeUpdate('offline');
-  });
+  }));
 }
+
+// ================== ROLE / SECURE ACCESS ==================
+function applyRoleUI(){
+  document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('role-hidden', !isAdmin));
+  const badge = document.getElementById('roleBadge');
+  if(badge){
+    badge.textContent = currentRole==='admin' ? 'Admin' : currentRole==='viewer' ? 'Viewer' : 'Locked';
+    badge.classList.toggle('admin', currentRole==='admin');
+    badge.classList.toggle('viewer', currentRole==='viewer');
+  }
+  const loginBtn = document.getElementById('adminLoginBtn');
+  if(loginBtn) loginBtn.textContent = currentRole==='viewer' ? '🔐 Switch to Admin' : '↪ Logout';
+  ['titleText','subtitleText'].forEach(id => { const el=document.getElementById(id); if(el) el.setAttribute('contenteditable', isAdmin ? 'true':'false'); });
+  const logo = document.getElementById('logoMark'); if(logo) logo.style.cursor = isAdmin ? 'pointer':'default';
+}
+function requireAdmin(){
+  if(isAdmin) return true;
+  alert('Viewer mode is read-only. Admin access is required for this action.');
+  return false;
+}
+function showAccessGate(showLogin=false){
+  document.body.classList.add('repository-locked');
+  document.getElementById('accessGate').classList.remove('hidden');
+  document.getElementById('accessIntro').style.display = showLogin ? 'none' : 'block';
+  document.getElementById('accessLogin').classList.toggle('open', showLogin);
+  document.getElementById('viewerLoginError').textContent='';
+  document.getElementById('gateAdminLoginError').textContent='';
+}
+function hideAccessGate(){
+  document.body.classList.remove('repository-locked');
+  document.getElementById('accessGate').classList.add('hidden');
+}
+function lockRepository(){
+  stopCloudSync();
+  currentRole='locked'; isAdmin=false; lessons=[];
+  localStorage.removeItem(LOCAL_KEY);
+  applyRoleUI(); renderAll(); showAccessGate(false);
+}
+function unlockRepository(role){
+  currentRole=role; isAdmin=role==='admin';
+  hideAccessGate(); applyRoleUI(); renderAll();
+  startCloudSync();
+  if(isAdmin) tryReconnect();
+}
+function resolveSignedInUser(user){
+  if(!user){ lockRepository(); return; }
+  if(user.uid===ADMIN_UID){ unlockRepository('admin'); return; }
+  if(user.uid===VIEWER_UID){ unlockRepository('viewer'); return; }
+  auth.signOut().finally(()=>lockRepository());
+}
+function friendlyAuthError(e){
+  const code=(e&&e.code)||'';
+  if(code.includes('invalid-credential')||code.includes('wrong-password')||code.includes('user-not-found')) return 'Email/password is incorrect.';
+  if(code.includes('too-many-requests')) return 'Too many failed attempts. Please wait a little and try again.';
+  if(code.includes('network')) return 'Internet connection is required for login.';
+  return 'Login failed. Please check the credentials and try again.';
+}
+async function loginViewer(){
+  const pw=document.getElementById('viewerPassword').value;
+  const err=document.getElementById('viewerLoginError'); err.textContent='';
+  if(!pw){err.textContent='Viewer password is required.';return;}
+  const btn=document.getElementById('viewerLoginBtn'); btn.disabled=true; btn.textContent='Checking…';
+  try{
+    const cred=await auth.signInWithEmailAndPassword(VIEWER_EMAIL,pw);
+    if(!cred.user || cred.user.uid!==VIEWER_UID){ await auth.signOut(); err.textContent='This password is not authorized for Viewer access.'; return; }
+    document.getElementById('viewerPassword').value='';
+  }catch(e){console.error(e);err.textContent=friendlyAuthError(e);}
+  finally{btn.disabled=false;btn.textContent='Enter as Viewer';}
+}
+async function loginAdminFromGate(){
+  const email=document.getElementById('gateAdminEmail').value.trim();
+  const pw=document.getElementById('gateAdminPassword').value;
+  const err=document.getElementById('gateAdminLoginError'); err.textContent='';
+  if(!email||!pw){err.textContent='Admin email and password are required.';return;}
+  const btn=document.getElementById('gateAdminLoginBtn'); btn.disabled=true; btn.textContent='Checking…';
+  try{
+    const cred=await auth.signInWithEmailAndPassword(email,pw);
+    if(!cred.user || cred.user.uid!==ADMIN_UID){ await auth.signOut(); err.textContent='This account is not authorized as Admin.'; return; }
+    document.getElementById('gateAdminPassword').value='';
+  }catch(e){console.error(e);err.textContent=friendlyAuthError(e);}
+  finally{btn.disabled=false;btn.textContent='Admin Login';}
+}
+function openAdminLogin(){
+  document.getElementById('adminLoginError').textContent='';
+  document.getElementById('adminLoginOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('adminEmail').focus(),50);
+}
+function closeAdminLogin(){ document.getElementById('adminLoginOverlay').classList.remove('open'); }
+
+// Welcome -> login screen
+ document.getElementById('enterRepositoryBtn').addEventListener('click',()=>{
+  document.getElementById('accessIntro').style.display='none';
+  document.getElementById('accessLogin').classList.add('open');
+  setTimeout(()=>document.getElementById('viewerPassword').focus(),80);
+});
+document.getElementById('accessBackBtn').addEventListener('click',()=>showAccessGate(false));
+document.getElementById('viewerLoginBtn').addEventListener('click',loginViewer);
+document.getElementById('viewerPassword').addEventListener('keydown',e=>{if(e.key==='Enter')loginViewer();});
+document.getElementById('gateAdminLoginBtn').addEventListener('click',loginAdminFromGate);
+document.getElementById('gateAdminPassword').addEventListener('keydown',e=>{if(e.key==='Enter')loginAdminFromGate();});
+
+// In-app session button: Viewer may switch to Admin; Admin logs out.
+document.getElementById('adminLoginBtn').addEventListener('click', async()=>{
+  if(currentRole==='admin'){ if(auth) await auth.signOut(); return; }
+  if(currentRole==='viewer'){ openAdminLogin(); return; }
+});
+document.getElementById('closeAdminLogin').addEventListener('click', closeAdminLogin);
+document.getElementById('cancelAdminLogin').addEventListener('click', closeAdminLogin);
+document.getElementById('adminLoginOverlay').addEventListener('click',e=>{ if(e.target.id==='adminLoginOverlay') closeAdminLogin(); });
+document.getElementById('submitAdminLogin').addEventListener('click', async()=>{
+  const email=document.getElementById('adminEmail').value.trim();
+  const password=document.getElementById('adminPassword').value;
+  const err=document.getElementById('adminLoginError'); err.textContent='';
+  if(!email||!password){err.textContent='Email and password are required.';return;}
+  try{
+    const cred = await auth.signInWithEmailAndPassword(email,password);
+    if(!cred.user || cred.user.uid !== ADMIN_UID){
+      await auth.signOut(); err.textContent='This account is not authorized as Admin.'; return;
+    }
+    document.getElementById('adminPassword').value=''; closeAdminLogin();
+  }catch(e){ console.error(e); err.textContent=friendlyAuthError(e); }
+});
+
+async function initSecureAccess(){
+  applyRoleUI(); showAccessGate(false);
+  if(!auth){
+    document.getElementById('viewerLoginError').textContent='Firebase Authentication is not available.';
+    return;
+  }
+  try{
+    await auth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+    await auth.signOut(); // force the QA Compass-style access screen on every fresh app/page load
+  }catch(e){ console.warn('Secure auth initialization warning',e); }
+  auth.onAuthStateChanged(resolveSignedInUser);
+}
+
+// ================== FREE AI ASSISTANT CLIENT ==================
+function aiContext(){
+  return {
+    type:(document.querySelector('input[name="ltype"]:checked')||{}).value||'dont',
+    item:document.getElementById('f_project').value.trim(),
+    trade:document.getElementById('f_trade').value,
+    title:document.getElementById('f_title').value.trim(),
+    description:document.getElementById('f_desc').value.trim(),
+    rootCause:document.getElementById('f_cause').value.trim(),
+    severity:document.getElementById('f_severity').value,
+    action:document.getElementById('f_action').value.trim()
+  };
+}
+function appendActionSection(label,text){
+  const el=document.getElementById('f_action'); const clean=String(text||'').trim(); if(!clean)return;
+  const lines=(el.value||'').split(/\n+/).filter(Boolean); const prefix=label+':';
+  const idx=lines.findIndex(x=>x.trim().toLowerCase().startsWith(prefix.toLowerCase()));
+  const line=`${label}: ${clean}`; if(idx>=0)lines[idx]=line; else lines.push(line); el.value=lines.join('\n');
+}
+function showAiSuggestion(task,result){
+  pendingAiSuggestion={task,result};
+  const box=document.getElementById('aiResult');
+  let body='';
+  if(task==='complete' && result && typeof result==='object'){
+    body=`Title: ${result.title||''}\n\nDescription: ${result.description||''}\n\nRoot Cause: ${result.rootCause||''}\n\nRectification: ${result.rectification||''}\n\nPreventive Action: ${result.preventiveAction||''}\n\nQA Verification: ${result.qaVerification||''}`;
+  }else body=String(result||'');
+  box.textContent=body;
+  const actions=document.createElement('div'); actions.className='ai-result-actions';
+  const accept=document.createElement('button'); accept.className='btn btn-gold btn-sm'; accept.type='button'; accept.textContent='✓ Accept Suggestion';
+  const dismiss=document.createElement('button'); dismiss.className='btn btn-ghost btn-sm'; dismiss.type='button'; dismiss.textContent='Dismiss';
+  actions.append(accept,dismiss); box.appendChild(actions); box.classList.add('open');
+  accept.onclick=()=>{
+    const r=pendingAiSuggestion?.result;
+    if(task==='grammar'||task==='rewrite'||task==='concise') document.getElementById('f_desc').value=String(r||'');
+    else if(task==='root_cause') document.getElementById('f_cause').value=String(r||'');
+    else if(task==='rectification') appendActionSection('Rectification',r);
+    else if(task==='preventive') appendActionSection('Preventive Action',r);
+    else if(task==='qa_check') appendActionSection('QA Verification',r);
+    else if(task==='complete'&&r&&typeof r==='object'){
+      if(r.title)document.getElementById('f_title').value=r.title;
+      if(r.description)document.getElementById('f_desc').value=r.description;
+      if(r.rootCause)document.getElementById('f_cause').value=r.rootCause;
+      const parts=[];
+      if(r.rectification)parts.push(`Rectification: ${r.rectification}`);
+      if(r.preventiveAction)parts.push(`Preventive Action: ${r.preventiveAction}`);
+      if(r.qaVerification)parts.push(`QA Verification: ${r.qaVerification}`);
+      if(parts.length)document.getElementById('f_action').value=parts.join('\n');
+      renderActionSuggestions();
+    }
+    box.classList.remove('open'); pendingAiSuggestion=null;
+  };
+  dismiss.onclick=()=>{box.classList.remove('open');pendingAiSuggestion=null;};
+}
+async function runAiTask(task){
+  if(!requireAdmin()) return;
+  const ctx=aiContext(); const text=ctx.description;
+  if(!text || text.length<5){ alert('Description লিখুন, তারপর AI suggestion নিন।'); return; }
+  const offline=suggestOfflineAdvice(text,ctx.type)[0]||null;
+  if(!aiEndpoint){
+    const fallback=offlineTaskSuggestion(task,ctx);
+    if(fallback){showAiSuggestion(task,fallback);document.getElementById('aiStatus').textContent='Offline Civil QA Engineer suggestion shown. Configure AI Worker for a second AI opinion.';return;}
+    document.getElementById('aiStatus').textContent='This writing task needs AI. Click “AI Setup”. Offline engineering Root Cause / Rectification / Prevention / QA Verification are still available below.';
+    return;
+  }
+  const status=document.getElementById('aiStatus'); const buttons=[...document.querySelectorAll('[data-ai-task]')];
+  buttons.forEach(b=>b.disabled=true); status.textContent='AI is reviewing the observation with Civil QA context…';
+  try{
+    const aiCtx={...ctx,offlineHint:offline?{category:offline.category,rootCause:offline.rootCause,rectification:offline.rectification,preventiveAction:offline.preventive,qaVerification:offline.verification}:null};
+    const res=await fetch(aiEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task,text,context:aiCtx})});
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok || !data.ok) throw new Error(data.error||`HTTP ${res.status}`);
+    showAiSuggestion(task,data.result); status.textContent='AI suggestion ready — compare with the offline Civil QA guidance and review before accepting.';
+  }catch(e){
+    console.error('AI request failed', e);
+    const fallback=offlineTaskSuggestion(task,ctx);
+    const reason=(e&&e.message)?e.message:'Unknown connection error';
+    if(fallback){
+      showAiSuggestion(task,fallback);
+      status.textContent=`AI connection failed (${reason}). Showing the offline Civil QA Engineer suggestion instead.`;
+    }else{
+      status.textContent=`AI connection failed (${reason}). Offline engineering suggestions still work.`;
+    }
+  }
+  finally{buttons.forEach(b=>b.disabled=false);}
+}
+document.querySelectorAll('[data-ai-task]').forEach(btn=>btn.addEventListener('click',()=>runAiTask(btn.dataset.aiTask)));
+document.getElementById('aiConfigBtn').addEventListener('click',()=>{
+  if(!requireAdmin())return;
+  const v=prompt('AI Worker URL (the verified URL is preconfigured). You can also use this to reset/test the endpoint.',aiEndpoint||DEFAULT_AI_ENDPOINT);
+  if(v!==null){
+    aiEndpoint=(v.trim()||DEFAULT_AI_ENDPOINT);
+    if(!/^https:\/\//i.test(aiEndpoint)) aiEndpoint='https://'+aiEndpoint.replace(/^\/+/, '');
+    if(!aiEndpoint.endsWith('/')) aiEndpoint += '/';
+    try{localStorage.setItem(AI_ENDPOINT_KEY,aiEndpoint);}catch(e){}
+    document.getElementById('aiStatus').textContent='AI Worker configured: '+aiEndpoint;
+  }
+});
+
 // ================== END CLOUD SYNC ==================
 
-// ---- Offline Action/Rectification suggestion engine ----
-// Built-in knowledge base, categorized. Used as a cold-start suggestion source
-// alongside the user's own past entries (which act as the "learned memory").
-// Keywords include both English and common Bengali/Banglish terms so suggestions
-// still match when the observation is written in Bengali or mixed language.
-const SUGGESTION_KB = [
-  // ---------------- Civil Engineering ----------------
-  {type:'dont', category:'Civil Engineering', keywords:['rebar','reinforcement','cover block','concrete cover','রড','রিবার','রিইনফোর্সমেন্ট','কভার ব্লক'], suggestion:'Cover blocks/spacers to be provided as per drawing before every casting; add mandatory pre-pour inspection checklist item for reinforcement cover.'},
-  {type:'dont', category:'Civil Engineering', keywords:['honeycomb','vibration','compaction','হানিকম্ব','ভাইব্রেশন','কম্প্যাকশন'], suggestion:'Ensure proper vibration/compaction during casting per approved method statement; increase vibrator points near congested rebar zones.'},
-  {type:'dont', category:'Civil Engineering', keywords:['curing','crack','shrinkage','কিউরিং','ক্র্যাক','ফাটল'], suggestion:'Enforce minimum curing period as per specification with curing compound/ponding; monitor with a curing log.'},
-  {type:'dont', category:'Civil Engineering', keywords:['leveling','level','slope','drainage','লেভেল','ঢাল','ড্রেনেজ'], suggestion:'Re-check level/slope with survey instrument before proceeding; correct as per approved drawing tolerance.'},
-  {type:'dont', category:'Civil Engineering', keywords:['formwork','shuttering','deflection','ফর্মওয়ার্ক','শাটারিং'], suggestion:'Formwork to be checked and approved by site engineer before casting; add additional props/bracing where deflection risk is high.'},
-  {type:'dont', category:'Civil Engineering', keywords:['waterproofing','leak','seepage','লিক','পানি চুয়ানো','সিপেজ','ওয়াটারপ্রুফিং'], suggestion:'Apply waterproofing as per approved system with proper lapping/termination; conduct flood/ponding test before handover.'},
-  {type:'dont', category:'Civil Engineering', keywords:['welding','structural steel','bolt','ওয়েল্ডিং','বোল্ট'], suggestion:'Structural welds/bolted connections to be inspected as per QA/QC checklist; NDT to be performed on critical joints.'},
-  {type:'dont', category:'Civil Engineering', keywords:['brickwork','masonry','mortar','ইটের কাজ','মেসনরি','মর্টার'], suggestion:'Rebuild affected portion as per approved bond pattern and mortar mix ratio; enforce curing of masonry work.'},
-  {type:'do', category:'Civil Engineering', keywords:['rebar','spacing','labeling','tagging','রড','স্পেসিং'], suggestion:'Standardize as best practice; include in method statement / induction training for future similar work.'},
-  {type:'do', category:'Civil Engineering', keywords:['curing','compaction','formwork','কিউরিং','ফর্মওয়ার্ক'], suggestion:'Document as best practice; share with other project teams and add to the internal SOP.'},
-  {type:'do', category:'Civil Engineering', keywords:['waterproofing','drainage','level','ওয়াটারপ্রুফিং','ড্রেনেজ'], suggestion:'Adopt as standard procedure across similar work fronts; brief supervisors for replication.'},
-
-  // ---------------- Structural Design ----------------
-  {type:'dont', category:'Structural Design', keywords:['structural design','load calculation','column','beam','slab thickness','structural drawing','স্ট্রাকচারাল','কলাম','বিম','লোড ক্যালকুলেশন','স্ল্যাব'], suggestion:'Escalate to the structural engineer/design consultant immediately for review; halt work at the affected location until written design clearance is received.'},
-  {type:'dont', category:'Structural Design', keywords:['design mismatch','clash','coordination drawing','স্ট্রাকচারাল মিসম্যাচ','ডিজাইন ক্ল্যাশ'], suggestion:'Raise a formal RFI/clash report to the design team; resolve via coordinated drawing before proceeding with execution.'},
-  {type:'do', category:'Structural Design', keywords:['structural detailing','rebar detailing','design compliance','স্ট্রাকচারাল ডিটেইলিং'], suggestion:'Recognize the site team for accurate structural detailing compliance; use as a training reference for other crews.'},
-
-  // ---------------- Architecture ----------------
-  {type:'dont', category:'Architecture', keywords:['architectural drawing','design deviation','setback','building code','space planning','আর্কিটেকচারাল','ডিজাইন ডেভিয়েশন','সেটব্যাক'], suggestion:"Verify execution strictly against the approved architectural drawing; raise a formal deviation request and obtain the architect's written approval before proceeding."},
-  {type:'dont', category:'Architecture', keywords:['ventilation','natural light','room layout','egress','ভেন্টিলেশন','প্রাকৃতিক আলো','লে-আউট'], suggestion:'Review layout against approved architectural intent and applicable building code; coordinate with architect for an approved correction.'},
-  {type:'do', category:'Architecture', keywords:['architectural compliance','design intent','natural light','আর্কিটেকচারাল কমপ্লায়েন্স'], suggestion:'Document as a good design-execution alignment example; share with the architecture team as a reference for future projects.'},
-
-  // ---------------- Project Management ----------------
-  {type:'dont', category:'Project Management', keywords:['delay','schedule','sequence','coordination','বিলম্ব','দেরি','সিডিউল'], suggestion:'Revise work sequence/logic in the programme; hold weekly coordination meeting between trades to avoid clashes.'},
-  {type:'dont', category:'Project Management', keywords:['material','shortage','delivery','procurement','মেটেরিয়াল সংকট','মালামাল কম'], suggestion:'Update material procurement lead-time tracker; place order with a buffer-stock policy for critical items.'},
-  {type:'dont', category:'Project Management', keywords:['manpower','labor','labour','জনবল','লেবার সংকট'], suggestion:'Revise manpower histogram/loading plan; coordinate with subcontractor for adequate resource allocation.'},
-  {type:'dont', category:'Project Management', keywords:['drawing','revision','approval','rfi','ড্রয়িং','অনুমোদন'], suggestion:'Track drawing revision status centrally; raise RFI early and follow up for timely approval before work starts.'},
-  {type:'dont', category:'Project Management', keywords:['permit','inspection request','পারমিট'], suggestion:'Submit inspection request/permit in advance as per the approved lead time to avoid work stoppage.'},
-  {type:'dont', category:'Project Management', keywords:['documentation','record','log','checklist','ডকুমেন্টেশন','রেকর্ড'], suggestion:'Introduce a standard checklist/log for this activity and assign clear ownership for record-keeping.'},
-  {type:'do', category:'Project Management', keywords:['coordination','planning','sequence','সমন্বয়','পরিকল্পনা'], suggestion:'Continue and document this coordination approach as a best practice for future phases.'},
-  {type:'do', category:'Project Management', keywords:['procurement','material','tracking','প্রকিউরমেন্ট'], suggestion:'Standardize this tracking method across other packages/projects.'},
-
-  // ---------------- Stakeholder Management ----------------
-  {type:'dont', category:'Stakeholder Management', keywords:['stakeholder','client complaint','consultant','communication gap','expectation','approval delay','স্টেকহোল্ডার','ক্লায়েন্ট','অভিযোগ'], suggestion:'Set up a structured stakeholder communication plan with a defined escalation matrix and response SLA; document all decisions in minutes of meeting.'},
-  {type:'do', category:'Stakeholder Management', keywords:['stakeholder engagement','client satisfaction','timely resolution','ক্লায়েন্ট সন্তুষ্টি'], suggestion:'Continue this communication cadence; formalize it as the standard stakeholder engagement protocol for the project.'},
-
-  // ---------------- Supplier Management ----------------
-  {type:'dont', category:'Supplier Management', keywords:['supplier','late delivery','wrong material','quality issue','specification mismatch','সাপ্লায়ার','সরবরাহ','ডেলিভারি'], suggestion:'Issue a non-conformance report (NCR) to the supplier; enforce inspection at source/pre-delivery for critical materials going forward.'},
-  {type:'do', category:'Supplier Management', keywords:['on-time delivery','supplier performance','reliable supplier','সময়মত ডেলিভারি'], suggestion:'Add the supplier to the approved/preferred vendor list; document performance for future procurement reference.'},
-
-  // ---------------- Vendor Management ----------------
-  {type:'dont', category:'Vendor Management', keywords:['vendor','subcontractor','non-compliance','safety violation','vendor performance','ভেন্ডর','সাব-কন্ট্রাক্টর'], suggestion:'Issue a formal warning/NCR to the vendor as per contract; conduct a performance review meeting and set a corrective-action timeline.'},
-  {type:'do', category:'Vendor Management', keywords:['vendor compliance','safety standard','quality standard','ভেন্ডর কমপ্লায়েন্স'], suggestion:'Recognize the vendor\'s performance formally; consider for the long-term/preferred vendor panel.'},
-
-  // ---------------- Real Estate Sector ----------------
-  {type:'dont', category:'Real Estate', keywords:['handover','snag list','defect list','unit inspection','sales commitment','হ্যান্ডওভার','ইউনিট','ডিফেক্ট'], suggestion:'Complete full snag-list rectification and joint inspection with the sales/CRM team before handover; obtain a signed handover checklist from the client.'},
-  {type:'do', category:'Real Estate', keywords:['smooth handover','zero snag','client satisfaction handover'], suggestion:'Document this handover process as the model workflow for future unit handovers.'},
-
-  // ---------------- Aesthetic Issue ----------------
-  {type:'dont', category:'Aesthetic Issue', keywords:['finish','finishing','paint','plaster','ফিনিশিং','রং','পেইন্ট','প্লাস্টার'], suggestion:'Redo finishing as per approved sample/mock-up; enforce mock-up approval before full-scale application.'},
-  {type:'dont', category:'Aesthetic Issue', keywords:['alignment','misalign','uneven','joint line','এলাইনমেন্ট','বাঁকা'], suggestion:'Re-align as per architectural drawing; use string line/laser for accurate joint alignment before fixing.'},
-  {type:'dont', category:'Aesthetic Issue', keywords:['tile','tiling','grout','color','colour','shade','টাইলস','গ্রাউট'], suggestion:'Use approved batch/shade of material; re-lay affected area following approved pattern and grout line.'},
-  {type:'dont', category:'Aesthetic Issue', keywords:['stain','damage','scratch','protection','দাগ','ক্ষতি','স্ক্র্যাচ'], suggestion:'Provide protective covering to finished surfaces during ongoing work; touch-up or replace damaged pieces.'},
-  {type:'do', category:'Aesthetic Issue', keywords:['finish','mockup','mock-up','sample','ফিনিশিং','মকআপ'], suggestion:'Continue mock-up-first approach as standard practice for future finishing works.'},
-
-  // ---------------- Functioning Issue ----------------
-  {type:'dont', category:'Functioning Issue', keywords:['door','window','hinge','lock','দরজা','জানালা'], suggestion:'Adjust/replace hardware as per manufacturer guideline; test operation (open/close) before final handover.'},
-  {type:'dont', category:'Functioning Issue', keywords:['electrical','wiring','short circuit','mcb','ইলেকট্রিক্যাল','ওয়্যারিং'], suggestion:'Rectify wiring as per approved drawing/standard; conduct testing & commissioning (megger/continuity) before energizing.'},
-  {type:'dont', category:'Functioning Issue', keywords:['plumbing','pipe','leak','pressure','প্লাম্বিং','পাইপ','লিক'], suggestion:'Conduct pressure test before covering; rectify joint/fitting as per approved method and re-test.'},
-  {type:'dont', category:'Functioning Issue', keywords:['hvac','ac','duct','ventilation','এসি','ভেন্টিলেশন'], suggestion:'Balance/commission the system as per design; verify airflow and temperature at test points before handover.'},
-  {type:'dont', category:'Functioning Issue', keywords:['lift','elevator','equipment','machine','লিফট'], suggestion:'Coordinate with vendor for inspection/certification; ensure safety interlocks are tested before use.'},
-  {type:'do', category:'Functioning Issue', keywords:['testing','commissioning','টেস্টিং','কমিশনিং'], suggestion:'Maintain this testing/commissioning protocol as standard practice for all similar systems.'},
+// ---- Advanced OFFLINE Civil QA Engineer Assistant ----
+// Works without internet. Combines a structured civil/QA knowledge base with similar
+// lessons already saved in this repository. Suggestions are engineering guidance only;
+// the Admin/QA engineer must review them against approved drawings/specifications/method
+// statements and obtain structural/design approval where technical significance is uncertain.
+const OFFLINE_QA_KB = [
+  {
+    "id": "rebar-cover",
+    "type": "dont",
+    "category": "Reinforcement",
+    "keywords": [
+      "rebar cover",
+      "concrete cover",
+      "cover block",
+      "cover blocks",
+      "spacer",
+      "spacers",
+      "রড কভার",
+      "কভার ব্লক",
+      "cover কম",
+      "cover missing"
+    ],
+    "rootCause": "Inadequate pre-pour checking, displaced/missing cover blocks, or insufficient fixing of reinforcement.",
+    "rectification": "Reposition reinforcement and provide approved cover blocks/spacers to achieve the required cover before casting. If concrete has already been cast, assess the affected area and obtain an approved repair/detail from the responsible engineer before intervention.",
+    "preventive": "Include reinforcement cover in the mandatory pre-pour checklist; secure spacers properly and re-check after MEP/embed installation and immediately before concrete placement.",
+    "verification": "Verify cover, bar position and stability against the approved structural drawing/checklist and record the pre-pour inspection before release for casting."
+  },
+  {
+    "id": "rebar-spacing",
+    "type": "dont",
+    "category": "Reinforcement",
+    "keywords": [
+      "rebar spacing",
+      "bar spacing",
+      "reinforcement spacing",
+      "spacing not maintain",
+      "spacing mismatch",
+      "রড স্পেসিং",
+      "বার স্পেসিং"
+    ],
+    "rootCause": "Incorrect bar fixing, inadequate marking, or insufficient supervision during reinforcement installation.",
+    "rectification": "Re-fix the affected reinforcement to the spacing and arrangement shown on the approved structural drawing before casting.",
+    "preventive": "Mark bar spacing, use suitable templates/chairs where helpful, and perform staged reinforcement inspection before closing the formwork.",
+    "verification": "Check spacing at representative locations, including congested zones, and confirm compliance with the approved drawing before casting."
+  },
+  {
+    "id": "rebar-lap",
+    "type": "dont",
+    "category": "Reinforcement",
+    "keywords": [
+      "lap length",
+      "lap splice",
+      "lapping",
+      "splice length",
+      "rebar lap",
+      "bar lap",
+      "ল্যাপ",
+      "ল্যাপ লেন্থ",
+      "স্প্লাইস"
+    ],
+    "rootCause": "Incorrect interpretation of reinforcement detailing, uncontrolled cutting/fixing, or inadequate inspection of splice locations.",
+    "rectification": "Rework the splice arrangement in accordance with the approved structural drawing/detail. Where already cast or where the required detail is unclear, obtain written direction from the structural engineer before alteration.",
+    "preventive": "Brief the fixing team on approved splice locations/details and include lap/splice checks in the reinforcement inspection checklist.",
+    "verification": "Verify splice location, arrangement and continuity against the latest approved structural drawing before pour release."
+  },
+  {
+    "id": "rebar-anchorage",
+    "type": "dont",
+    "category": "Reinforcement",
+    "keywords": [
+      "development length",
+      "anchorage length",
+      "embedment length",
+      "hook length",
+      "rebar anchorage",
+      "ld",
+      "ডেভেলপমেন্ট লেন্থ",
+      "এংকরেজ",
+      "হুক"
+    ],
+    "rootCause": "Incorrect bar cutting/bending, detailing misunderstanding, or inadequate checking at beam-column/slab supports and terminations.",
+    "rectification": "Correct the anchorage/development arrangement as shown on the approved structural detail before casting. Do not improvise a structural repair; seek structural-engineer direction if the member has already been cast.",
+    "preventive": "Prepare and review bar-bending details before fabrication and make support/termination anchorage a hold-point in pre-pour inspection.",
+    "verification": "Cross-check bar termination, bends/hooks and embedment with the latest approved structural drawing and BBS/detail."
+  },
+  {
+    "id": "rebar-rust",
+    "type": "dont",
+    "category": "Reinforcement",
+    "keywords": [
+      "rusted rebar",
+      "rust rebar",
+      "rebar rust",
+      "corrosion rebar",
+      "mud on rebar",
+      "oil on rebar",
+      "dirty rebar",
+      "রডে মরিচা",
+      "রডে মাটি",
+      "রডে তেল"
+    ],
+    "rootCause": "Improper storage/protection or prolonged exposure before fixing/casting.",
+    "rectification": "Clean loose rust, mud, oil and other bond-breaking contamination using an approved method; replace or escalate any visibly damaged reinforcement as required by the project specification/engineer.",
+    "preventive": "Store reinforcement off the ground with proper cover and drainage; inspect material condition before fabrication and before casting.",
+    "verification": "Visually verify that reinforcement is clean and fit for concreting, with no unacceptable section loss or contamination."
+  },
+  {
+    "id": "rebar-congestion",
+    "type": "dont",
+    "category": "Reinforcement",
+    "keywords": [
+      "rebar congestion",
+      "congested rebar",
+      "bar congestion",
+      "reinforcement congested",
+      "dense reinforcement",
+      "রড জ্যাম",
+      "রড কনজেশন"
+    ],
+    "rootCause": "Detailing/coordination congestion, uncontrolled bar positioning, or MEP/embed conflicts.",
+    "rectification": "Coordinate the reinforcement, embed and opening arrangement with the structural/MEP teams before casting. Do not cut, bend or relocate structural bars without approved structural direction.",
+    "preventive": "Conduct constructability/coordination review for congested zones and complete a focused pre-pour inspection before closing formwork.",
+    "verification": "Confirm clear concrete-placement/vibration access and compliance with the approved coordinated structural detail."
+  },
+  {
+    "id": "embed-opening",
+    "type": "dont",
+    "category": "RCC / Coordination",
+    "keywords": [
+      "sleeve missing",
+      "opening missing",
+      "embed missing",
+      "insert missing",
+      "blockout missing",
+      "mep sleeve",
+      "pipe sleeve",
+      "cast in item",
+      "এমবেড",
+      "স্লিভ মিস",
+      "ওপেনিং মিস"
+    ],
+    "rootCause": "Incomplete coordination between structural/architectural/MEP drawings or failure to verify embeds before casting.",
+    "rectification": "Stop closing/casting the affected area and install/relocate the required sleeve, opening or embed only after checking the approved coordinated drawing. For post-cast changes, obtain approved engineering/core-cutting instructions before work.",
+    "preventive": "Use a pre-pour embed/sleeve checklist signed by relevant trades and freeze coordinated openings before reinforcement/formwork closure.",
+    "verification": "Check location, size, level and fixing of embeds/openings against the latest approved coordinated drawing before pour release."
+  },
+  {
+    "id": "formwork-alignment",
+    "type": "dont",
+    "category": "Formwork",
+    "keywords": [
+      "formwork alignment",
+      "shuttering alignment",
+      "column alignment",
+      "beam alignment",
+      "wall alignment",
+      "out of plumb",
+      "plumb",
+      "bulging formwork",
+      "ফর্মওয়ার্ক এলাইনমেন্ট",
+      "শাটারিং এলাইনমেন্ট",
+      "কলাম বাঁকা",
+      "প্লাম্ব"
+    ],
+    "rootCause": "Insufficient setting-out, weak bracing/locking, or inadequate pre-pour line/level/plumb checks.",
+    "rectification": "Re-align and securely brace the formwork to the approved line, level and dimensions before casting. Where concrete is already cast, survey/assess the deviation and obtain an approved disposition before hacking or repair.",
+    "preventive": "Use survey/string/laser checks as appropriate, provide adequate bracing and make line-level-plumb verification a pre-pour hold point.",
+    "verification": "Record dimensional, line, level and plumb checks before casting and re-check critical elements immediately before pour."
+  },
+  {
+    "id": "formwork-joint",
+    "type": "dont",
+    "category": "Formwork",
+    "keywords": [
+      "formwork joint",
+      "shuttering joint",
+      "slurry leakage",
+      "cement slurry leakage",
+      "formwork gap",
+      "shutter gap",
+      "ফর্মওয়ার্ক গ্যাপ",
+      "শাটারিং গ্যাপ",
+      "স্লারি লিক"
+    ],
+    "rootCause": "Open formwork joints, damaged panels, poor joint sealing, or inadequate tightening.",
+    "rectification": "Close and seal formwork joints using the approved system and replace/repair damaged panels before casting.",
+    "preventive": "Inspect panel condition and joints during formwork erection; include leakage-prone corners, construction joints and penetrations in the pre-pour checklist.",
+    "verification": "Visually confirm tight joints, sound panels and secure locking before concrete placement."
+  },
+  {
+    "id": "formwork-support",
+    "type": "dont",
+    "category": "Formwork",
+    "keywords": [
+      "prop spacing",
+      "props",
+      "shoring",
+      "reshoring",
+      "formwork support",
+      "deflection",
+      "sagging shutter",
+      "শোরিং",
+      "প্রপ",
+      "সাপোর্ট কম",
+      "ডিফ্লেকশন"
+    ],
+    "rootCause": "Inadequate temporary-work arrangement, poor installation, disturbed supports, or insufficient checking before loading.",
+    "rectification": "Stop loading/casting where temporary support adequacy is uncertain and have the formwork/shoring arrangement checked by the responsible engineer/supervisor; correct supports and bracing per the approved temporary-work plan.",
+    "preventive": "Use approved formwork/shoring layout, inspect supports after erection and after any disturbance, and control unauthorized removal of props.",
+    "verification": "Confirm support condition, bracing, bearing and stability before pour release; retain inspection records for critical temporary works."
+  },
+  {
+    "id": "formwork-cleanliness",
+    "type": "dont",
+    "category": "Formwork",
+    "keywords": [
+      "formwork dirty",
+      "shuttering dirty",
+      "debris in beam",
+      "debris in slab",
+      "sawdust",
+      "binding wire inside",
+      "formwork cleaning",
+      "শাটারিং ময়লা",
+      "বিমে ময়লা"
+    ],
+    "rootCause": "Insufficient housekeeping and no final pre-pour cleaning/inspection.",
+    "rectification": "Remove debris, standing water and loose material from the formwork without disturbing reinforcement or embeds before casting.",
+    "preventive": "Provide cleaning access/openings where required and include final formwork cleanliness in the pre-pour checklist.",
+    "verification": "Perform final visual inspection of beam/slab/column interiors immediately before pour authorization."
+  },
+  {
+    "id": "concrete-honeycomb",
+    "type": "dont",
+    "category": "Concrete",
+    "keywords": [
+      "honeycomb",
+      "honeycombing",
+      "void in concrete",
+      "rock pocket",
+      "হানিকম্ব",
+      "কংক্রিটে ফাঁপা",
+      "কংক্রিট void"
+    ],
+    "rootCause": "Inadequate compaction, difficult access around congested reinforcement, formwork leakage, poor workability/placement, or excessive drop/segregation.",
+    "rectification": "Mark and assess the extent/depth of the affected concrete after removing loose material. Use only an approved repair procedure/material; for deep, extensive or structurally significant honeycombing, obtain structural-engineer assessment before repair.",
+    "preventive": "Plan concrete placement and vibrator access, control workability/segregation, ensure tight formwork and provide close supervision at congested zones.",
+    "verification": "Inspect the prepared defect and completed repair, record before/after photos, and obtain QA/engineering acceptance before closing the NCR/observation."
+  },
+  {
+    "id": "concrete-segregation",
+    "type": "dont",
+    "category": "Concrete",
+    "keywords": [
+      "segregation",
+      "concrete segregation",
+      "aggregate separation",
+      "stone pocket",
+      "সেগ্রিগেশন",
+      "কংক্রিট আলাদা"
+    ],
+    "rootCause": "Improper handling/placement, excessive free fall, unsuitable workability, over-vibration, or re-tempering with uncontrolled water.",
+    "rectification": "Stop the affected placement if segregation is occurring, correct the placement method/workability control, and assess any segregated concrete already placed for approved disposition.",
+    "preventive": "Control delivery/placement sequence, avoid uncontrolled water addition, use suitable placing equipment and brief the casting team on proper vibration.",
+    "verification": "Monitor fresh concrete during placement and inspect hardened surfaces after de-shuttering for segregation-related defects."
+  },
+  {
+    "id": "concrete-cold-joint",
+    "type": "dont",
+    "category": "Concrete",
+    "keywords": [
+      "cold joint",
+      "construction joint unplanned",
+      "casting delay",
+      "pour interruption",
+      "কোল্ড জয়েন্ট",
+      "কাস্টিং বন্ধ"
+    ],
+    "rootCause": "Unplanned interruption, inadequate pour planning, delayed concrete supply, or poor construction-joint preparation.",
+    "rectification": "Inform QA/structural supervision, define and prepare the joint using the approved construction-joint method, and obtain engineering direction where the joint location is not approved.",
+    "preventive": "Prepare pour sequence, concrete supply contingency and manpower/equipment plan; identify approved construction-joint locations before casting.",
+    "verification": "Record interruption time/location and verify joint preparation and subsequent casting against the approved method statement."
+  },
+  {
+    "id": "concrete-crack",
+    "type": "dont",
+    "category": "Concrete",
+    "keywords": [
+      "structural crack",
+      "concrete crack",
+      "crack in slab",
+      "crack in beam",
+      "crack in column",
+      "wide crack",
+      "active crack",
+      "কংক্রিট ক্র্যাক",
+      "স্ল্যাব ক্র্যাক",
+      "বিম ক্র্যাক",
+      "কলাম ক্র্যাক"
+    ],
+    "rootCause": "Possible shrinkage/thermal movement, restraint, loading, settlement, curing deficiency or structural behavior; the actual cause must be assessed from crack pattern, timing and location.",
+    "rectification": "Map and document the crack, monitor if required, and obtain structural/QA assessment before selecting any repair. Do not prescribe cosmetic filling where structural significance or active movement is uncertain.",
+    "preventive": "Strengthen concrete quality, curing, joint/detailing and loading controls based on the confirmed cause; communicate the approved preventive measure to future work fronts.",
+    "verification": "Record crack location/pattern and the engineer-approved disposition; verify repair effectiveness and any required monitoring before closure."
+  },
+  {
+    "id": "curing",
+    "type": "dont",
+    "category": "Concrete",
+    "keywords": [
+      "curing not done",
+      "poor curing",
+      "curing missing",
+      "dry concrete",
+      "curing issue",
+      "কিউরিং হয়নি",
+      "কিউরিং কম",
+      "কিউরিং সমস্যা"
+    ],
+    "rootCause": "Inadequate curing planning, insufficient water/protection, premature removal of curing arrangement, or weak supervision.",
+    "rectification": "Restore the approved curing method as soon as practicable and assess any resulting surface distress/cracking before further finishing.",
+    "preventive": "Prepare a curing plan/log with clear responsibility, protect newly cast surfaces and check curing continuity during routine QA/site rounds.",
+    "verification": "Verify the approved curing method is continuously maintained for the specified period and retain curing records where required."
+  },
+  {
+    "id": "concrete-test",
+    "type": "dont",
+    "category": "Concrete QA",
+    "keywords": [
+      "slump test missing",
+      "cube test missing",
+      "cube sample",
+      "cylinder test",
+      "concrete test",
+      "test sample",
+      "slump high",
+      "slump low",
+      "কিউব টেস্ট",
+      "স্লাম্প",
+      "স্যাম্পল মিস"
+    ],
+    "rootCause": "Testing/inspection plan not followed, sampling oversight, or poor coordination during concrete delivery.",
+    "rectification": "Follow the approved ITP/specification for fresh-concrete checks and strength sampling; document any missed test and escalate for disposition rather than fabricating results.",
+    "preventive": "Assign testing responsibility before each pour and use a pour checklist linking delivery tickets, fresh-concrete tests and specimen identification.",
+    "verification": "Check traceability of test records/specimens to the pour location and review results through the project QA process."
+  },
+  {
+    "id": "concrete-level",
+    "type": "dont",
+    "category": "Concrete / Floor",
+    "keywords": [
+      "slab level",
+      "floor level",
+      "raw slab level",
+      "uneven slab",
+      "level variation",
+      "surface level",
+      "ffl mismatch",
+      "স্ল্যাব লেভেল",
+      "ফ্লোর লেভেল",
+      "লেভেল ভ্যারিয়েশন"
+    ],
+    "rootCause": "Inadequate level control during casting, insufficient screed points, movement of level markers, or poor finishing supervision.",
+    "rectification": "Survey the affected surface and rectify the level only using an approved method compatible with subsequent finishes and available thickness; escalate excessive deviation for engineering/architectural review.",
+    "preventive": "Establish protected level benchmarks/screed points and continuously check surface level during placement and finishing.",
+    "verification": "Measure and record representative levels against the approved datum/finish requirement before accepting the slab for subsequent work."
+  },
+  {
+    "id": "masonry-alignment",
+    "type": "dont",
+    "category": "Masonry",
+    "keywords": [
+      "brick wall alignment",
+      "masonry alignment",
+      "wall plumb",
+      "brickwork plumb",
+      "wall line",
+      "brick wall uneven",
+      "দেয়াল বাঁকা",
+      "ইটের দেয়াল এলাইনমেন্ট",
+      "মেসনরি এলাইনমেন্ট"
+    ],
+    "rootCause": "Insufficient setting-out, lack of line/plumb control, or weak supervision during wall erection.",
+    "rectification": "Dismantle and rebuild unacceptable portions as necessary to the approved line, level and plumb, while maintaining the specified bonding/joint requirements.",
+    "preventive": "Set reference lines/levels, check plumb at regular lifts and carry out first-course/first-panel inspection before continuing full-height work.",
+    "verification": "Check wall location, line, plumb, opening dimensions and interface with structure/finishes before plastering."
+  },
+  {
+    "id": "masonry-joint",
+    "type": "dont",
+    "category": "Masonry",
+    "keywords": [
+      "mortar joint",
+      "brick joint",
+      "joint thickness",
+      "masonry mortar",
+      "empty joint",
+      "unfilled joint",
+      "মর্টার জয়েন্ট",
+      "ইটের জয়েন্ট",
+      "জয়েন্ট ফাঁকা"
+    ],
+    "rootCause": "Poor workmanship, inconsistent mortar application, or inadequate supervision/material control.",
+    "rectification": "Remove and rebuild/repair the affected masonry portion using the approved mortar and fully filled joints where required.",
+    "preventive": "Use controlled mortar batching and workmanship mock-up/briefing; inspect joints and bonding progressively instead of after completion.",
+    "verification": "Visually check bond, joint filling, wall stability and surface readiness before plastering."
+  },
+  {
+    "id": "rcc-masonry-crack",
+    "type": "dont",
+    "category": "Masonry / Plaster",
+    "keywords": [
+      "rcc masonry joint crack",
+      "column wall crack",
+      "beam wall crack",
+      "junction crack",
+      "rcc brick junction",
+      "mesh missing",
+      "chicken mesh",
+      "কলাম দেয়াল ক্র্যাক",
+      "বিম দেয়াল ক্র্যাক",
+      "জাংশন ক্র্যাক"
+    ],
+    "rootCause": "Differential movement/shrinkage at RCC-masonry interfaces, inadequate interface preparation, or missing/incorrect approved reinforcement/mesh treatment.",
+    "rectification": "Open and assess the affected interface, remove loose plaster and repair using the approved RCC-masonry junction treatment/detail. Confirm the actual cause before repeated cosmetic patching.",
+    "preventive": "Follow the approved interface preparation/mesh/detail consistently and allow appropriate background preparation/curing before plastering.",
+    "verification": "Inspect junction treatment before plastering and check repaired areas for soundness/crack recurrence before final finishing."
+  },
+  {
+    "id": "plaster-thickness",
+    "type": "dont",
+    "category": "Plaster",
+    "keywords": [
+      "plaster thickness",
+      "thick plaster",
+      "excess plaster",
+      "plaster more",
+      "uneven plaster",
+      "প্লাস্টার থিকনেস",
+      "প্লাস্টার বেশি",
+      "প্লাস্টার মোটা"
+    ],
+    "rootCause": "Poor substrate level/alignment, inadequate screed/level dots, or failure to check background condition before plastering.",
+    "rectification": "Assess background level and remove/rework unacceptable plaster using the approved method; avoid excessive build-up without approved treatment.",
+    "preventive": "Check substrate line/plumb first, establish screed/level dots and control plaster thickness progressively during application.",
+    "verification": "Check finished line, level, plumb, corner geometry and thickness at representative/critical locations before acceptance."
+  },
+  {
+    "id": "plaster-hollow",
+    "type": "dont",
+    "category": "Plaster",
+    "keywords": [
+      "hollow plaster",
+      "plaster hollow",
+      "debond plaster",
+      "plaster debonding",
+      "plaster loose",
+      "ফাঁপা প্লাস্টার",
+      "প্লাস্টার উঠে",
+      "প্লাস্টার ডিবন্ড"
+    ],
+    "rootCause": "Poor surface preparation, dust/contamination, inadequate bonding, unsuitable background moisture condition, or poor workmanship/curing.",
+    "rectification": "Remove all loose/hollow plaster to a sound edge, prepare the substrate correctly and re-plaster using the approved system.",
+    "preventive": "Ensure substrate cleaning/roughening/bonding treatment as specified, control background condition and curing, and conduct first-area workmanship inspection.",
+    "verification": "Carry out visual/tap checks where appropriate and inspect repaired area for bond, flatness and finish before painting/finishing."
+  },
+  {
+    "id": "plaster-crack",
+    "type": "dont",
+    "category": "Plaster",
+    "keywords": [
+      "plaster crack",
+      "hairline crack",
+      "crack in plaster",
+      "প্লাস্টার ক্র্যাক",
+      "হেয়ারলাইন ক্র্যাক"
+    ],
+    "rootCause": "Shrinkage, substrate movement, RCC-masonry interface movement, excessive thickness, inadequate curing, or premature finishing.",
+    "rectification": "Identify whether the crack is superficial or reflects substrate/structural movement before repair; open/repair and refinish only using the approved method after the cause is addressed.",
+    "preventive": "Control background preparation, plaster thickness, interface treatment, mix/workmanship and curing; delay final finish until the substrate is stable as required.",
+    "verification": "Check crack pattern and repaired area after an appropriate observation period before final decorative finish."
+  },
+  {
+    "id": "waterproof-prep",
+    "type": "dont",
+    "category": "Waterproofing",
+    "keywords": [
+      "waterproofing surface preparation",
+      "surface prep waterproof",
+      "waterproofing on dusty",
+      "waterproofing substrate",
+      "membrane debond",
+      "ওয়াটারপ্রুফিং সারফেস",
+      "সারফেস প্রিপারেশন"
+    ],
+    "rootCause": "Inadequate substrate cleaning/repair, moisture condition not controlled, sharp corners/voids left untreated, or application started before substrate acceptance.",
+    "rectification": "Stop application on unacceptable substrate; repair, clean and prepare the surface in accordance with the approved waterproofing system before re-application.",
+    "preventive": "Introduce substrate-acceptance hold point before waterproofing and use the manufacturer/project checklist for corners, cracks, penetrations and surface condition.",
+    "verification": "QA/vendor to inspect and release the substrate before membrane/coating application; record photos of critical details."
+  },
+  {
+    "id": "waterproof-detail",
+    "type": "dont",
+    "category": "Waterproofing",
+    "keywords": [
+      "waterproofing upturn",
+      "membrane lap",
+      "membrane overlap",
+      "pipe penetration waterproof",
+      "drain waterproofing",
+      "corner waterproofing",
+      "termination",
+      "ওয়াটারপ্রুফিং আপটার্ন",
+      "পাইপ পেনিট্রেশন",
+      "মেমব্রেন ল্যাপ"
+    ],
+    "rootCause": "Detailing not followed, poor workmanship at corners/penetrations/terminations, or lack of coordinated inspection.",
+    "rectification": "Rework the affected lap, upturn, corner, penetration or termination using the approved waterproofing detail/system and compatible accessories.",
+    "preventive": "Use detail-specific checklists/mock-ups for penetrations, drains, corners and terminations; inspect these points before covering/protection.",
+    "verification": "Inspect continuity, laps, terminations and penetrations before protection screed/finish conceals the waterproofing."
+  },
+  {
+    "id": "waterproof-leak",
+    "type": "dont",
+    "category": "Waterproofing",
+    "keywords": [
+      "water leak",
+      "water leakage",
+      "seepage",
+      "ponding test failed",
+      "flood test failed",
+      "toilet leakage",
+      "roof leakage",
+      "বাথরুম লিক",
+      "পানি চুয়ানো",
+      "সিপেজ",
+      "লিকেজ"
+    ],
+    "rootCause": "Discontinuity/damage in waterproofing, defective penetration/joint detail, poor drain/slope interface, or damage by subsequent work.",
+    "rectification": "Trace the leak source systematically, expose only as necessary and repair the identified waterproofing/detail using the approved system; repeat the required water/flood test before reinstating finishes.",
+    "preventive": "Protect completed waterproofing, control subsequent trade access and require test/QA release before covering.",
+    "verification": "Repeat the specified watertightness/flood/ponding test and document satisfactory result before closing the area."
+  },
+  {
+    "id": "slope-drainage",
+    "type": "dont",
+    "category": "Wet Area / Drainage",
+    "keywords": [
+      "wrong slope",
+      "insufficient slope",
+      "reverse slope",
+      "water ponding",
+      "floor drain slope",
+      "toilet slope",
+      "balcony slope",
+      "ছাদে পানি জমে",
+      "পানি জমে",
+      "ঢাল ভুল",
+      "রিভার্স স্লোপ"
+    ],
+    "rootCause": "Incorrect level setting, insufficient screed control, misplaced drain level, or poor finishing supervision.",
+    "rectification": "Re-establish levels and correct the screed/finish to achieve positive drainage to the approved outlet without creating unacceptable thickness or threshold conflicts.",
+    "preventive": "Fix drain and perimeter levels before screeding/tiling, use level markers and perform water-flow check before final acceptance.",
+    "verification": "Carry out level and practical water-flow/ponding check before handover or application of sensitive finishes."
+  },
+  {
+    "id": "tile-alignment",
+    "type": "dont",
+    "category": "Tiles / Stone",
+    "keywords": [
+      "tile alignment",
+      "tile joint alignment",
+      "grout line",
+      "tile joint",
+      "tile line",
+      "door tile joint",
+      "টাইলস এলাইনমেন্ট",
+      "টাইলস জয়েন্ট",
+      "গ্রাউট লাইন"
+    ],
+    "rootCause": "Insufficient setting-out/reference lines, no approved layout/mock-up, or poor progressive checking during fixing.",
+    "rectification": "Remove and re-fix unacceptable tiles/stone to the approved layout, line and joint pattern using suitable materials and without damaging adjacent finished work.",
+    "preventive": "Approve setting-out/layout and a first-area mock-up; use laser/string/reference lines and check joint alignment progressively.",
+    "verification": "Inspect joint continuity, alignment, cut-piece location and interface with doors/sanitary/other finishes before grouting/handing over."
+  },
+  {
+    "id": "tile-hollow",
+    "type": "dont",
+    "category": "Tiles / Stone",
+    "keywords": [
+      "hollow tile",
+      "tile hollow",
+      "hollow sound",
+      "tile debond",
+      "loose tile",
+      "টাইলস ফাঁপা",
+      "হলো টাইলস",
+      "টাইলস উঠে"
+    ],
+    "rootCause": "Insufficient adhesive/mortar coverage, poor substrate preparation, skinning/open-time issue, contamination, or poor bedding workmanship.",
+    "rectification": "Remove hollow/loose units, inspect and prepare the substrate, then re-fix using the approved adhesive/bedding method with adequate coverage.",
+    "preventive": "Control substrate flatness/cleanliness, adhesive mixing/open time and bedding technique; conduct first-area and random tap/adhesion checks as applicable.",
+    "verification": "Check repaired and representative areas for sound bedding, alignment and joint condition before acceptance."
+  },
+  {
+    "id": "tile-lippage",
+    "type": "dont",
+    "category": "Tiles / Stone",
+    "keywords": [
+      "lippage",
+      "tile uneven",
+      "tile level mismatch",
+      "stone level mismatch",
+      "marble uneven",
+      "টাইলস উঁচু নিচু",
+      "মার্বেল উঁচু নিচু"
+    ],
+    "rootCause": "Uneven substrate, insufficient level control, inconsistent bedding thickness, or inadequate setting-out.",
+    "rectification": "Re-fix affected units after correcting the substrate/bedding as necessary to achieve the approved finished plane and joint relationship.",
+    "preventive": "Check substrate flatness before tiling, use level-control method and inspect early rows/areas before continuing.",
+    "verification": "Check finished surface with suitable straightedge/level and visual inspection under normal lighting before grouting/handing over."
+  },
+  {
+    "id": "tile-shade",
+    "type": "dont",
+    "category": "Tiles / Stone",
+    "keywords": [
+      "tile shade",
+      "shade variation",
+      "color variation tile",
+      "colour variation tile",
+      "marble shade",
+      "stone shade",
+      "টাইলস শেড",
+      "কালার ভ্যারিয়েশন"
+    ],
+    "rootCause": "Mixed batches, inadequate dry-lay/sample control, or failure to inspect natural material variation before fixing.",
+    "rectification": "Segregate affected material and re-lay/replace only in accordance with the approved sample/layout and material acceptance criteria.",
+    "preventive": "Check batch/shade before issue, dry-lay natural stone where appropriate and obtain sample/mock-up approval before mass installation.",
+    "verification": "Carry out visual shade/pattern review before final fixing/grouting and protect accepted material from mixing."
+  },
+  {
+    "id": "marble-groove",
+    "type": "dont",
+    "category": "Stone / Marble",
+    "keywords": [
+      "marble groove",
+      "stone groove",
+      "groove alignment",
+      "marble hole",
+      "stone hole",
+      "marble joint",
+      "মার্বেল গ্রুভ",
+      "মার্বেল হোল",
+      "স্টোন গ্রুভ"
+    ],
+    "rootCause": "Poor cutting/fabrication, inadequate shop-drawing/template control, or insufficient inspection before installation.",
+    "rectification": "Replace or rework affected stone only using the approved repair/fabrication method so that groove/joint alignment and surface quality match the approved sample.",
+    "preventive": "Use approved shop drawing/template and inspect fabricated pieces before installation; maintain reference lines during fixing.",
+    "verification": "Check groove/joint continuity, edge quality, holes/defects and overall visual finish against the approved sample."
+  },
+  {
+    "id": "paint-blister",
+    "type": "dont",
+    "category": "Painting",
+    "keywords": [
+      "paint blister",
+      "blistering",
+      "paint peel",
+      "peeling paint",
+      "paint bubble",
+      "damp paint",
+      "efflorescence",
+      "পেইন্ট ব্লিস্টার",
+      "রং উঠে",
+      "রং ফুলে",
+      "ড্যাম্প"
+    ],
+    "rootCause": "Moisture/damp substrate, inadequate surface preparation, incompatible coating system, insufficient drying time, or application over contamination.",
+    "rectification": "Identify and eliminate the moisture/substrate cause first; remove unsound coating, prepare the surface and reapply the approved paint system after the substrate is suitable.",
+    "preventive": "Check substrate moisture/condition and waterproofing/plumbing sources before painting; follow approved primer/putty/paint sequence and drying intervals.",
+    "verification": "Inspect substrate condition before repainting and verify the repaired coating after drying for adhesion, uniformity and recurrence."
+  },
+  {
+    "id": "paint-finish",
+    "type": "dont",
+    "category": "Painting",
+    "keywords": [
+      "paint shade",
+      "paint patch",
+      "roller mark",
+      "brush mark",
+      "uneven paint",
+      "paint finish",
+      "রং শেড",
+      "পেইন্ট প্যাচ",
+      "রোলার মার্ক"
+    ],
+    "rootCause": "Inconsistent batch/mixing/application, poor substrate finish, uneven primer/putty, or inadequate lighting/inspection during application.",
+    "rectification": "Prepare and repaint the affected surface to match the approved color/sample and achieve uniform finish, using the approved coating sequence.",
+    "preventive": "Approve a sample/mock-up, control batch/mixing/application tools and inspect under representative lighting before large-scale completion.",
+    "verification": "Visually inspect color, sheen, coverage and surface uniformity from normal viewing distance/lighting before handover."
+  },
+  {
+    "id": "window-seal",
+    "type": "dont",
+    "category": "Window / Façade",
+    "keywords": [
+      "window seal",
+      "window seal plaster",
+      "window leakage",
+      "window frame gap",
+      "sealant window",
+      "window perimeter",
+      "জানালা সিল",
+      "উইন্ডো সিল",
+      "জানালা লিক"
+    ],
+    "rootCause": "Poor frame alignment/interface preparation, incorrect perimeter gap/detail, inadequate sealant/backing, or damage during finishing.",
+    "rectification": "Correct the frame/interface as per approved shop drawing/detail, remove unsound perimeter treatment and reinstate approved sealant/plaster/flashing system as applicable.",
+    "preventive": "Inspect frame line/level/plumb and perimeter detail before plaster/finishes; protect sealant interfaces and use approved mock-up/detail.",
+    "verification": "Check frame geometry, sealant continuity/adhesion and perform specified water testing where required before handover."
+  },
+  {
+    "id": "door-frame",
+    "type": "dont",
+    "category": "Doors",
+    "keywords": [
+      "door frame alignment",
+      "door frame plumb",
+      "door gap",
+      "door rubbing",
+      "door not closing",
+      "door hardware",
+      "দরজা বাঁকা",
+      "ডোর ফ্রেম এলাইনমেন্ট",
+      "দরজা বন্ধ হয় না"
+    ],
+    "rootCause": "Frame installed out of line/plumb, inadequate fixing, incorrect leaf clearance, or hardware adjustment/installation issue.",
+    "rectification": "Re-align/secure the frame or adjust/replace hardware as required by the approved door detail and manufacturer requirements; repair adjacent finishes afterward.",
+    "preventive": "Check frame line/plumb/level and opening dimensions before surrounding finishes; carry out first-door mock-up and functional inspection.",
+    "verification": "Test smooth opening/closing/latching, clearances, hardware operation and finish condition before acceptance."
+  },
+  {
+    "id": "glazing",
+    "type": "dont",
+    "category": "Glazing",
+    "keywords": [
+      "glass crack",
+      "glazing bead",
+      "glass gasket",
+      "glass sealant",
+      "glass setting block",
+      "glazing gap",
+      "কাচ ক্র্যাক",
+      "গ্লাস সিল্যান্ট",
+      "গ্লেজিং"
+    ],
+    "rootCause": "Improper handling/installation, missing/incorrect setting or gasket components, frame distortion, or poor sealant detailing.",
+    "rectification": "Replace damaged glass and reinstate glazing components/sealant in accordance with the approved glazing system and manufacturer method; do not force-fit glass.",
+    "preventive": "Inspect frame geometry and glazing accessories before installation, use proper handling/storage and protect completed glazing from impact.",
+    "verification": "Check glass condition, seating, gasket/bead engagement, sealant continuity and safe operation before handover."
+  },
+  {
+    "id": "facade-sealant",
+    "type": "dont",
+    "category": "Façade",
+    "keywords": [
+      "facade sealant",
+      "curtain wall sealant",
+      "sealant adhesion",
+      "sealant crack",
+      "cladding joint",
+      "ফ্যাসাড সিল্যান্ট",
+      "কার্টেন ওয়াল লিক"
+    ],
+    "rootCause": "Poor joint preparation, incorrect backing/joint geometry, incompatible/expired material, or application outside approved conditions.",
+    "rectification": "Remove failed sealant, prepare the joint and reapply the approved compatible sealant/backing system following manufacturer/project requirements.",
+    "preventive": "Use approved sealant system, verify shelf life/primer/backer and joint preparation, and approve a representative mock-up before mass work.",
+    "verification": "Inspect adhesion/continuity and carry out specified façade/water testing where applicable before final acceptance."
+  },
+  {
+    "id": "steel-weld",
+    "type": "dont",
+    "category": "Structural Steel",
+    "keywords": [
+      "weld defect",
+      "welding defect",
+      "undercut",
+      "porosity weld",
+      "lack of fusion",
+      "weld crack",
+      "structural weld",
+      "ওয়েল্ডিং ডিফেক্ট",
+      "ওয়েল্ড ক্র্যাক"
+    ],
+    "rootCause": "Inadequate welding procedure control, poor fit-up/preparation, unsuitable parameters/consumables, or insufficient welder/inspection control.",
+    "rectification": "Identify and mark the defect, remove/repair only in accordance with the approved welding procedure and engineer/QA requirements, then repeat the required inspection/NDT.",
+    "preventive": "Control WPS/approved procedure, welder qualification, fit-up, consumable storage and stage inspection before and during welding.",
+    "verification": "Complete visual inspection and specified NDT/acceptance records before coating or concealing the joint."
+  },
+  {
+    "id": "steel-bolt",
+    "type": "dont",
+    "category": "Structural Steel",
+    "keywords": [
+      "bolt loose",
+      "bolt tightening",
+      "structural bolt",
+      "missing bolt",
+      "bolt torque",
+      "bolted connection",
+      "বোল্ট লুজ",
+      "বোল্ট মিস"
+    ],
+    "rootCause": "Incomplete erection/marking, uncontrolled tightening sequence, wrong fastener installation, or missed final inspection.",
+    "rectification": "Install/replace and tighten the connection in accordance with the approved structural detail and specified bolting procedure; do not substitute fasteners without approval.",
+    "preventive": "Use connection checklist, bolt identification and controlled tightening/inspection sequence before releasing the structure.",
+    "verification": "Confirm bolt type/location, completeness and required tightening/inspection records before painting/concealment."
+  },
+  {
+    "id": "steel-coating",
+    "type": "dont",
+    "category": "Structural Steel",
+    "keywords": [
+      "steel rust",
+      "rust on steel",
+      "paint damage steel",
+      "coating damage",
+      "galvanized damage",
+      "corrosion steel",
+      "স্টিলে মরিচা",
+      "কোটিং ড্যামেজ"
+    ],
+    "rootCause": "Poor storage/protection, inadequate surface preparation, coating damage during transport/erection, or incomplete touch-up.",
+    "rectification": "Remove contamination/corrosion and repair the protective coating using the approved surface-preparation and coating/touch-up system.",
+    "preventive": "Store steel clear of standing water, protect coated surfaces during transport/erection and inspect/touch up damage promptly.",
+    "verification": "Inspect surface condition and coating continuity/repair before final acceptance or concealment."
+  },
+  {
+    "id": "excavation",
+    "type": "dont",
+    "category": "Earthwork / Excavation",
+    "keywords": [
+      "excavation collapse",
+      "excavation side",
+      "shoring excavation",
+      "water in excavation",
+      "excavation overcut",
+      "foundation excavation",
+      "খোঁড়াখুঁড়ি",
+      "এক্সকাভেশন",
+      "শোরিং"
+    ],
+    "rootCause": "Inadequate excavation support/dewatering/control, uncontrolled over-excavation, or unsuitable exposed founding condition.",
+    "rectification": "Make the excavation safe first, control water and have the exposed formation/support condition inspected before foundation work. Treat over-excavation or unsuitable soil only with an approved engineering solution.",
+    "preventive": "Plan excavation support, access, dewatering and formation protection; set out excavation limits and inspect founding level before PCC/foundation placement.",
+    "verification": "Record founding level/condition and required geotechnical/engineering acceptance before covering with PCC or foundation concrete."
+  },
+  {
+    "id": "foundation-pcc",
+    "type": "dont",
+    "category": "Foundation",
+    "keywords": [
+      "pcc level",
+      "lean concrete",
+      "blinding concrete",
+      "foundation level",
+      "footing level",
+      "soil disturbed footing",
+      "pcc dirty",
+      "পিসিসি",
+      "ফুটিং লেভেল"
+    ],
+    "rootCause": "Poor formation preparation, level control, contamination/water ingress, or work proceeding before founding-surface acceptance.",
+    "rectification": "Clean and prepare the formation, correct level using the approved method and place blinding/PCC only after the founding condition is accepted.",
+    "preventive": "Protect formation from disturbance/rain, establish level benchmarks and make founding-surface inspection a hold point.",
+    "verification": "Check location, level, cleanliness and founding-surface acceptance before reinforcement/formwork proceeds."
+  },
+  {
+    "id": "pile-boring",
+    "type": "dont",
+    "category": "Piling",
+    "keywords": [
+      "pile depth",
+      "bore depth",
+      "pile boring",
+      "bore collapse",
+      "slurry pile",
+      "pile verticality",
+      "pile record",
+      "পাইল ডেপথ",
+      "পাইল বোরিং",
+      "বোর কোলাপ্স"
+    ],
+    "rootCause": "Inadequate boring/slurry/casing control, poor equipment setup, unstable ground or incomplete pile-record monitoring.",
+    "rectification": "Stop and assess any unstable/nonconforming bore; restore bore condition only under the approved piling method and responsible engineer/geotechnical direction before cage/concrete placement.",
+    "preventive": "Maintain pile boring records, monitor depth/verticality/slurry/casing parameters as specified and coordinate cage/concrete readiness to minimize open-bore delay.",
+    "verification": "Review pile records and required inspection/test data before accepting the pile stage."
+  },
+  {
+    "id": "pile-concrete",
+    "type": "dont",
+    "category": "Piling",
+    "keywords": [
+      "pile concrete",
+      "tremie",
+      "pile casting",
+      "pile cutoff",
+      "pile head defect",
+      "pile necking",
+      "pile integrity",
+      "পাইল কাস্টিং",
+      "ট্রেমি",
+      "পাইল হেড"
+    ],
+    "rootCause": "Improper tremie/concreting sequence, interruption, contamination, inadequate concrete volume control, or poor pile-head/cutoff handling.",
+    "rectification": "Record the event and have the pile assessed using the project-approved QA/engineering process; repair/cutoff/treatment must follow approved structural/geotechnical direction.",
+    "preventive": "Plan uninterrupted pile concreting, control tremie operation and concrete volume, maintain complete pile casting records and protect the pile head.",
+    "verification": "Review concrete records and specified pile test/integrity results before pile acceptance and foundation continuation."
+  },
+  {
+    "id": "cement-storage",
+    "type": "dont",
+    "category": "Material Control",
+    "keywords": [
+      "cement storage",
+      "cement bag wet",
+      "cement expired",
+      "cement lump",
+      "সিমেন্ট স্টোরেজ",
+      "সিমেন্ট ভেজা",
+      "সিমেন্ট দলা"
+    ],
+    "rootCause": "Improper storage, moisture exposure, poor FIFO/stock control, or inadequate material inspection.",
+    "rectification": "Segregate suspect/damaged cement and do not use it until disposition is made under the project material-acceptance procedure.",
+    "preventive": "Store cement dry and off the floor with weather protection, apply FIFO and maintain delivery/batch traceability.",
+    "verification": "Check packaging/condition, delivery details and approved material documentation before issue for work."
+  },
+  {
+    "id": "aggregate",
+    "type": "dont",
+    "category": "Material Control",
+    "keywords": [
+      "aggregate dirty",
+      "sand dirty",
+      "stone chips dirty",
+      "silt in sand",
+      "aggregate contamination",
+      "aggregate segregation stockpile",
+      "বালি ময়লা",
+      "স্টোন চিপস ময়লা",
+      "এগ্রিগেট"
+    ],
+    "rootCause": "Uncontrolled stockpile/storage, contamination by soil/debris, poor drainage or material received without adequate inspection/testing.",
+    "rectification": "Segregate contaminated/nonconforming material and use only after required inspection/testing confirms acceptability or after approved corrective processing.",
+    "preventive": "Provide clean separated stockpile bases/bins, drainage and incoming-material inspection/testing as specified.",
+    "verification": "Review visual condition, source/approval and required test results before material is released for production."
+  },
+  {
+    "id": "material-approval",
+    "type": "dont",
+    "category": "Material Control",
+    "keywords": [
+      "material approval",
+      "unapproved material",
+      "wrong material",
+      "material mismatch",
+      "brand mismatch",
+      "test certificate missing",
+      "mill certificate missing",
+      "মেটেরিয়াল এপ্রুভাল",
+      "ভুল মেটেরিয়াল",
+      "সার্টিফিকেট মিস"
+    ],
+    "rootCause": "Procurement/receiving control gap, inadequate submittal tracking, or material issued before QA approval.",
+    "rectification": "Quarantine the material and verify approved submittal/specification, source and required certificates/tests before use; replace or formally disposition nonconforming material.",
+    "preventive": "Link procurement and store release to approved material submittals and maintain clear status labeling/traceability.",
+    "verification": "QA/store to verify approval status, identification and required documentation before issue to site."
+  },
+  {
+    "id": "finished-protection",
+    "type": "dont",
+    "category": "Protection / Finishing",
+    "keywords": [
+      "finished surface damage",
+      "tile damage",
+      "marble damage",
+      "scratch",
+      "stain",
+      "protection missing",
+      "finished work damaged",
+      "ফিনিশিং ড্যামেজ",
+      "স্ক্র্যাচ",
+      "প্রটেকশন নাই"
+    ],
+    "rootCause": "Inadequate protection, uncontrolled access/material movement, or poor trade sequencing after completion.",
+    "rectification": "Clean, repair or replace damaged finished work using the approved method and restore acceptable appearance/function.",
+    "preventive": "Provide suitable protective covering, define access/material routes and hand over completed zones between trades with responsibility for protection.",
+    "verification": "Inspect finished surfaces after protection removal and before handover for damage, staining, scratches and completeness."
+  },
+  {
+    "id": "housekeeping",
+    "type": "dont",
+    "category": "Site Control",
+    "keywords": [
+      "housekeeping poor",
+      "poor housekeeping",
+      "debris",
+      "waste not removed",
+      "site dirty",
+      "হাউসকিপিং",
+      "ময়লা আবর্জনা"
+    ],
+    "rootCause": "Unclear housekeeping responsibility, inadequate waste-removal cycle or weak supervision.",
+    "rectification": "Remove waste/debris, clear access/working areas and segregate materials so inspection and safe work can continue.",
+    "preventive": "Assign housekeeping ownership by zone/trade and include end-of-shift/weekly housekeeping checks in site supervision.",
+    "verification": "Verify clear access, organized materials and removal of debris before closing the observation."
+  },
+  {
+    "id": "wall-chasing",
+    "type": "dont",
+    "category": "Civil–MEP Interface",
+    "keywords": [
+      "wall chasing",
+      "chasing wall",
+      "conduit chasing",
+      "pipe chasing",
+      "cut wall",
+      "groove in wall",
+      "দেয়াল কাটা",
+      "ওয়াল চেজিং"
+    ],
+    "rootCause": "Late MEP coordination, uncontrolled routing or chasing without agreed limits/detail.",
+    "rectification": "Stop uncontrolled cutting and confirm the approved route/detail before continuing. Repair affected masonry/plaster using the approved method; do not cut structural members without engineering approval.",
+    "preventive": "Freeze service routes/openings before finishing and use approved chasing tools/depth/detail with trade coordination.",
+    "verification": "Inspect route, affected substrate and repair before concealment/plastering."
+  },
+  {
+    "id": "plumbing-pressure",
+    "type": "dont",
+    "category": "Plumbing Interface",
+    "keywords": [
+      "pipe leak",
+      "plumbing leak",
+      "pressure test",
+      "pipe pressure",
+      "joint leakage",
+      "পাইপ লিক",
+      "প্রেসার টেস্ট"
+    ],
+    "rootCause": "Defective joint/fitting, poor installation, damaged pipe, or work concealed before testing.",
+    "rectification": "Expose/repair the defective joint or component using the approved system and repeat the required pressure/leak test before concealment.",
+    "preventive": "Complete staged pressure/leak testing and inspection before screed, plaster, ceiling or shaft closure.",
+    "verification": "Record satisfactory test result and visually inspect all accessible joints before concealment release."
+  },
+  {
+    "id": "electrical-conduit",
+    "type": "dont",
+    "category": "Electrical Interface",
+    "keywords": [
+      "conduit blockage",
+      "conduit missing",
+      "electrical conduit",
+      "junction box misalign",
+      "box level",
+      "কনডুইট ব্লক",
+      "জাংশন বক্স এলাইনমেন্ট"
+    ],
+    "rootCause": "Poor coordination/fixing/protection of concealed electrical works or inadequate pre-concealment inspection.",
+    "rectification": "Correct/replace the affected conduit/box and verify route/position against the approved electrical/coordinated drawing before concealment.",
+    "preventive": "Secure and protect conduits/boxes, check continuity/route and conduct pre-concealment inspection with civil finishing team.",
+    "verification": "Verify conduit continuity/clearance and box location/level before plaster, screed or concrete concealment."
+  },
+  {
+    "id": "scaffold-height",
+    "type": "dont",
+    "category": "Temporary Works / Safety",
+    "keywords": [
+      "scaffold unsafe",
+      "scaffolding issue",
+      "working at height",
+      "guardrail missing",
+      "platform gap",
+      "স্ক্যাফোল্ডিং",
+      "উচ্চতায় কাজ",
+      "গার্ডরেল"
+    ],
+    "rootCause": "Temporary-work/safety controls not fully implemented or altered without re-inspection.",
+    "rectification": "Stop use of the affected access/platform until it is made safe and inspected by the competent responsible person in accordance with the approved safety/temporary-work requirements.",
+    "preventive": "Use inspection/tagging system and prevent unauthorized alteration; re-inspect after modification or adverse conditions.",
+    "verification": "Confirm valid inspection/tag status, safe access/platform/edge protection and closure by the responsible safety/site team."
+  },
+  {
+    "id": "do-prepour",
+    "type": "do",
+    "category": "Best Practice – RCC",
+    "keywords": [
+      "pre pour checklist",
+      "pre-pour checklist",
+      "pre casting checklist",
+      "reinforcement inspection",
+      "prepour",
+      "প্রি পোর",
+      "প্রি কাস্টিং চেক"
+    ],
+    "rootCause": "Good practice based on systematic pre-pour quality control and cross-trade verification.",
+    "rectification": "Continue the practice and use the completed checklist as evidence of release before casting.",
+    "preventive": "Standardize the checklist across similar RCC pours and include reinforcement, formwork, embeds/openings, cleanliness and access for placement/vibration.",
+    "verification": "Periodically audit checklist quality and confirm that identified issues are closed before pour authorization."
+  },
+  {
+    "id": "do-mockup",
+    "type": "do",
+    "category": "Best Practice – Finishing",
+    "keywords": [
+      "mockup",
+      "mock-up",
+      "sample panel",
+      "first sample",
+      "benchmark sample",
+      "মকআপ",
+      "স্যাম্পল প্যানেল"
+    ],
+    "rootCause": "Good practice based on establishing an approved visual/workmanship benchmark before mass execution.",
+    "rectification": "Maintain the approved mock-up/sample as the reference standard for subsequent work.",
+    "preventive": "Use first-area/mock-up approval for repetitive finishing trades and brief all relevant supervisors/subcontractors against the accepted sample.",
+    "verification": "Compare ongoing work with the approved benchmark during routine inspections and at handover."
+  },
+  {
+    "id": "do-water-test",
+    "type": "do",
+    "category": "Best Practice – Waterproofing",
+    "keywords": [
+      "flood test passed",
+      "ponding test passed",
+      "water test passed",
+      "waterproofing test",
+      "ফ্লাড টেস্ট",
+      "পন্ডিং টেস্ট"
+    ],
+    "rootCause": "Good practice based on testing the waterproofing system before concealment/finishes.",
+    "rectification": "Continue the test-before-covering approach and retain the result as a quality record.",
+    "preventive": "Make successful waterproofing testing a release hold point before protection screed/tiles/finishes.",
+    "verification": "Keep test date/location/result and before/after inspection evidence traceable to the area."
+  },
+  {
+    "id": "do-survey",
+    "type": "do",
+    "category": "Best Practice – Setting Out",
+    "keywords": [
+      "laser level",
+      "survey check",
+      "total station",
+      "level check",
+      "plumb check",
+      "লেজার লেভেল",
+      "সার্ভে চেক"
+    ],
+    "rootCause": "Good practice based on objective measurement of line, level, plumb and dimensional control.",
+    "rectification": "Continue measurement-based checking and use the records to release critical geometry before subsequent work.",
+    "preventive": "Standardize survey/laser verification at defined hold points for structural and high-visibility finishing elements.",
+    "verification": "Maintain traceable reference benchmarks and spot-check completed work against approved drawings."
+  },
+  {
+    "id": "do-protection",
+    "type": "do",
+    "category": "Best Practice – Protection",
+    "keywords": [
+      "surface protection",
+      "finished work protection",
+      "tile protection",
+      "marble protection",
+      "প্রটেকশন",
+      "ফিনিশিং প্রটেকশন"
+    ],
+    "rootCause": "Good practice based on protecting accepted work from damage by subsequent trades.",
+    "rectification": "Maintain the protection until the risk of damage has passed and remove it carefully before final inspection.",
+    "preventive": "Include protection responsibilities in trade handover and sequencing plans for completed zones.",
+    "verification": "Inspect protected work at handover between trades and after protection removal."
+  },
+  {
+    "id": "do-material",
+    "type": "do",
+    "category": "Best Practice – Material Control",
+    "keywords": [
+      "material inspection",
+      "incoming inspection",
+      "source inspection",
+      "factory inspection",
+      "material test",
+      "মেটেরিয়াল ইন্সপেকশন",
+      "ফ্যাক্টরি ইন্সপেকশন"
+    ],
+    "rootCause": "Good practice based on controlling material conformity before incorporation into the works.",
+    "rectification": "Continue source/incoming inspection and preserve approval/test traceability.",
+    "preventive": "Apply risk-based incoming inspection for critical materials and link store release to QA acceptance.",
+    "verification": "Maintain inspection records, test certificates and identification traceability to the material batch/source."
+  }
 ];
 
-const STOPWORDS = new Set(['the','a','an','was','were','is','are','of','in','on','at','to','for','and','or','with','by','this','that','it','be','been','had','has','have','not','due','also','into','from','was','will']);
+const STOPWORDS = new Set(['the','a','an','was','were','is','are','of','in','on','at','to','for','and','or','with','by','this','that','it','be','been','had','has','have','not','due','also','into','from','will','been','found','observed']);
 function tokenize(str){
   return (str||'').toLowerCase().split(/[^\p{L}\p{N}\p{M}]+/u).filter(w => w.length > 2 && !STOPWORDS.has(w));
 }
+function qaNorm(str){ return (str||'').toLowerCase().replace(/\s+/g,' ').trim(); }
+function qaContextText(descText){
+  return [
+    descText,
+    document.getElementById('f_title')?.value||'',
+    document.getElementById('f_project')?.value||'',
+    document.getElementById('f_trade')?.value||''
+  ].join(' ').trim();
+}
+function qaConfidence(score){ return score >= 8 ? 'High match' : score >= 4.5 ? 'Good match' : 'Possible match'; }
+function qaBuildAction(a){
+  const parts=[];
+  if(a.rectification) parts.push(`Rectification: ${a.rectification}`);
+  if(a.preventive) parts.push(`Preventive Action: ${a.preventive}`);
+  if(a.verification) parts.push(`QA Verification: ${a.verification}`);
+  return parts.join('\n');
+}
+function qaSimilarity(a,b){
+  const A=new Set(tokenize(a)), B=new Set(tokenize(b));
+  if(!A.size||!B.size)return 0;
+  let inter=0; A.forEach(x=>{if(B.has(x))inter++;});
+  const union=new Set([...A,...B]).size;
+  return union?inter/union:0;
+}
+function scoreQaRule(rule, contextText, trade, item){
+  const lower=qaNorm(contextText);
+  const tokens=new Set(tokenize(contextText));
+  let score=0, hits=0;
+  for(const raw of rule.keywords||[]){
+    const kw=qaNorm(raw); if(!kw)continue;
+    if(lower.includes(kw)){ score += kw.includes(' ') ? 3.2 : 2.0; hits++; continue; }
+    const kt=tokenize(kw); const overlap=kt.filter(t=>tokens.has(t)).length;
+    if(overlap && overlap===kt.length){score += 1.25 + overlap*.35; hits++;}
+  }
+  const cat=qaNorm(rule.category);
+  if(trade && cat.includes(qaNorm(trade))) score += .65;
+  if(item && rule.keywords?.some(k=>qaNorm(item).includes(qaNorm(k)) || qaNorm(k).includes(qaNorm(item)))) score += .9;
+  return {score,hits};
+}
+function suggestOfflineAdvice(descText, type){
+  const contextText=qaContextText(descText);
+  const trade=document.getElementById('f_trade')?.value||'';
+  const item=document.getElementById('f_project')?.value||'';
+  if(tokenize(contextText).length===0)return [];
+  const results=[];
 
-// Returns up to 3 ranked suggestions for the Action/Rectification field,
-// combining the user's own past lessons (learned memory) with the offline KB.
-function suggestActions(descText, type){
-  const tokens = new Set(tokenize(descText));
-  if(tokens.size === 0) return [];
-  const results = [];
-
-  lessons.filter(l => l.type === type && l.action && l.desc && l.id !== editingId).forEach(l => {
-    const lTokens = tokenize(l.desc);
-    const overlap = lTokens.filter(t => tokens.has(t)).length;
-    if(overlap > 0) results.push({ score: overlap + 0.5, text: l.action, source: 'আপনার আগের entry থেকে' });
+  // Repository memory: reuse the user's own previously accepted lessons when similar.
+  lessons.filter(l=>l.type===type && l.id!==editingId && l.desc && (l.action||l.cause)).forEach(l=>{
+    const sim=qaSimilarity(contextText,[l.title,l.project,l.trade,l.desc].filter(Boolean).join(' '));
+    if(sim>=0.11){
+      let score=sim*10;
+      if(trade && l.trade===trade)score+=1;
+      if(item && qaNorm(l.project)===qaNorm(item))score+=1;
+      results.push({
+        score, source:'Repository memory', category:l.trade||'Past Lesson',
+        rootCause:l.cause||'Review the previous lesson and verify whether the same cause applies.',
+        rectification:l.action||'', preventive:'Review the previous accepted action and standardize the applicable preventive control for this work front.',
+        verification:'Verify the corrective action at site and retain before/after evidence before closing the observation.',
+        memory:true
+      });
+    }
   });
 
-  SUGGESTION_KB.filter(k => k.type === type).forEach(k => {
-    const lower = descText.toLowerCase();
-    const hits = k.keywords.filter(kw => lower.includes(kw)).length;
-    if(hits > 0) results.push({ score: hits, text: k.suggestion, source: k.category });
+  OFFLINE_QA_KB.filter(r=>r.type===type).forEach(rule=>{
+    const m=scoreQaRule(rule,contextText,trade,item);
+    if(m.hits>0 && m.score>=1.8) results.push({...rule,score:m.score,source:'Offline Civil QA KB'});
   });
 
-  results.sort((a,b) => b.score - a.score);
-  const seen = new Set();
-  const top = [];
+  results.sort((a,b)=>b.score-a.score);
+  const out=[], seen=new Set();
   for(const r of results){
-    const key = r.text.slice(0, 60);
-    if(seen.has(key)) continue;
-    seen.add(key);
-    top.push(r);
-    if(top.length >= 3) break;
+    const key=[r.category,r.rectification].join('|').slice(0,180);
+    if(seen.has(key))continue; seen.add(key);
+    out.push({...r,confidence:qaConfidence(r.score)});
+    if(out.length>=3)break;
   }
-  return top;
+  if(out.length)return out;
+
+  // Safe generic fallback instead of returning nothing.
+  if(type==='do') return [{score:1,confidence:'General guidance',source:'Offline Civil QA KB',category:'General Best Practice',rootCause:'Good practice appears to be based on controlled execution and inspection.',rectification:'Continue the demonstrated practice and document it as a repeatable quality-control step.',preventive:'Standardize the applicable checklist/method statement briefing so the practice is repeated consistently.',verification:'Use periodic QA spot checks and retain representative records/photos as evidence.'}];
+  return [{score:1,confidence:'General guidance',source:'Offline Civil QA KB',category:'General QA/QC',rootCause:'Probable execution, coordination or supervision gap; confirm the actual cause from site condition before finalizing the lesson.',rectification:'Inspect the affected work against the latest approved drawing/specification/method statement and rectify the nonconforming portion using an approved procedure. Escalate to the responsible engineer where structural integrity, safety or design intent may be affected.',preventive:'Brief the responsible team, strengthen the relevant checklist/hold point and verify materials, setting-out and workmanship before repeating the activity.',verification:'QA/QC to re-inspect the corrected work, record objective evidence and close the observation only after acceptance.'}];
 }
 
+// Backward-compatible helper used by the AI fallback.
+function suggestActions(descText,type){
+  return suggestOfflineAdvice(descText,type).map(a=>({score:a.score,text:qaBuildAction(a),source:`${a.source} · ${a.category}`}));
+}
+function offlineTaskSuggestion(task,ctx){
+  const a=suggestOfflineAdvice(ctx.description,ctx.type)[0]; if(!a)return null;
+  if(task==='root_cause')return a.rootCause;
+  if(task==='rectification')return a.rectification;
+  if(task==='preventive')return a.preventive;
+  if(task==='qa_check')return a.verification;
+  if(task==='complete')return {
+    title:ctx.title || `QA Lesson – ${ctx.item||a.category||'Construction'}`,
+    description:ctx.description, rootCause:a.rootCause, rectification:a.rectification,
+    preventiveAction:a.preventive, qaVerification:a.verification
+  };
+  return null;
+}
+function applyOfflineAdvice(a,mode='both'){
+  if(!a)return;
+  if(mode==='cause'||mode==='both')document.getElementById('f_cause').value=a.rootCause||'';
+  if(mode==='action'||mode==='both')document.getElementById('f_action').value=qaBuildAction(a);
+}
 function renderActionSuggestions(){
-  const box = document.getElementById('actionSuggestions');
-  if(!box) return;
-  const descVal = document.getElementById('f_desc').value.trim();
-  const typeVal = (document.querySelector('input[name="ltype"]:checked') || {}).value || 'dont';
-  if(descVal.length < 6){ box.innerHTML = ''; box.style.display = 'none'; return; }
-  const suggestions = suggestActions(descVal, typeVal);
-  box.style.display = 'block';
-  let html = '';
-  if(suggestions.length){
-    html += `<div class="suggest-label">💡 Suggested rectification / action (ক্লিক করলে ফিল হবে):</div>` +
-      suggestions.map((s,i) => `<button type="button" class="suggest-chip" data-idx="${i}"><span class="suggest-tag">${esc(s.source)}</span>${esc(s.text.length>90 ? s.text.slice(0,90)+'…' : s.text)}</button>`).join('');
-  } else {
-    html += `<div class="suggest-label">এই লেখার সাথে মিলে এমন কোনো offline suggestion পাওয়া যায়নি।</div>`;
-  }
-  html += `<button type="button" class="suggest-chip ai-suggest-btn" id="aiSuggestBtn" style="border-style:solid;font-weight:600;">🤖 AI দিয়ে Suggestion আনুন (ইন্টারনেট লাগবে)</button>`;
-  html += `<div id="aiSuggestStatus" style="font-size:11px;color:var(--text-mute);margin-top:4px;"></div>`;
-  box.innerHTML = html;
-  box.querySelectorAll('.suggest-chip[data-idx]').forEach((btn,i) => {
-    btn.addEventListener('click', () => {
-      document.getElementById('f_action').value = suggestions[i].text;
-    });
-  });
-  document.getElementById('aiSuggestBtn').addEventListener('click', () => fetchAISuggestion(descVal, typeVal));
-}
-
-let aiSuggestBusy = false;
-async function fetchAISuggestion(descVal, typeVal){
-  if(aiSuggestBusy) return;
-  aiSuggestBusy = true;
-  const btn = document.getElementById('aiSuggestBtn');
-  const status = document.getElementById('aiSuggestStatus');
-  btn.disabled = true;
-  btn.textContent = '⏳ AI suggestion আনা হচ্ছে…';
-  status.textContent = '';
-  try{
-    const typeContext = typeVal === 'dont'
-      ? 'a site QA observation describing an issue or non-conformance'
-      : 'a site QA observation describing a good practice worth replicating';
-    const promptText = `You are a senior QA/QC and construction inspection expert covering civil engineering, architecture, structural design, project management, stakeholder management, supplier management, vendor management, and real estate development. Given ${typeContext} at a construction site: "${descVal}". Reply with ONE concise, professional, actionable recommendation (1-2 sentences) for the "Rectification / Action Plan" field of a QA lesson-learned report. No preamble, no labels, just the recommendation text.`;
-    const url = 'https://text.pollinations.ai/' + encodeURIComponent(promptText) + '?model=openai';
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000);
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    let text = (await res.text()).trim();
-    text = text.replace(/^["'`]+|["'`]+$/g, '').trim();
-    if(!text) throw new Error('empty response');
-    const box = document.getElementById('actionSuggestions');
-    const aiChip = document.createElement('button');
-    aiChip.type = 'button';
-    aiChip.className = 'suggest-chip';
-    aiChip.innerHTML = `<span class="suggest-tag">🤖 AI</span>${esc(text.length>140 ? text.slice(0,140)+'…' : text)}`;
-    aiChip.addEventListener('click', () => { document.getElementById('f_action').value = text; });
-    btn.insertAdjacentElement('beforebegin', aiChip);
-    status.textContent = '✅ AI suggestion যোগ হয়েছে, ক্লিক করে fill করুন।';
-    btn.style.display = 'none';
-  }catch(e){
-    console.error('AI suggestion failed', e);
-    status.textContent = '⚠️ AI suggestion আনা যায়নি (ইন্টারনেট বা সার্ভার সমস্যা)। আবার চেষ্টা করুন।';
-    btn.disabled = false;
-    btn.textContent = '🤖 আবার চেষ্টা করুন';
-  }finally{
-    aiSuggestBusy = false;
-  }
+  const box=document.getElementById('actionSuggestions'); if(!box)return;
+  const descVal=document.getElementById('f_desc').value.trim();
+  const typeVal=(document.querySelector('input[name="ltype"]:checked')||{}).value||'dont';
+  if(descVal.length<5){box.innerHTML='';box.style.display='none';return;}
+  const suggestions=suggestOfflineAdvice(descVal,typeVal);
+  box.style.display='block';
+  box.innerHTML=`<div class="suggest-label"><b>🛠 Offline Civil QA Engineer Assistant</b> — internet ছাড়াই probable root cause, rectification, preventive action ও QA verification দেখাচ্ছে। Admin review করে Apply করবেন.</div>` +
+    suggestions.map((s,i)=>`<div class="offline-advice" data-advice="${i}">
+      <div class="offline-advice-head"><span class="suggest-tag">${esc(s.category)}</span><span>${esc(s.confidence)}</span><span>• ${esc(s.source)}</span></div>
+      <div class="offline-advice-row"><b>Probable Root Cause</b><div>${esc(s.rootCause||'-')}</div></div>
+      <div class="offline-advice-row"><b>Rectification</b><div>${esc(s.rectification||'-')}</div></div>
+      <div class="offline-advice-row"><b>Preventive Action</b><div>${esc(s.preventive||'-')}</div></div>
+      <div class="offline-advice-row"><b>QA Verification</b><div>${esc(s.verification||'-')}</div></div>
+      <div class="offline-advice-actions">
+        <button type="button" class="btn btn-ghost btn-sm" data-offline-cause="${i}">Root Cause নিন</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-offline-action="${i}">Action Plan নিন</button>
+        <button type="button" class="btn btn-gold btn-sm" data-offline-both="${i}">✓ Apply Both</button>
+      </div>
+    </div>`).join('') + `<div class="offline-disclaimer">Engineering note: suggestionটি approved drawing/specification/method statement-এর বিকল্প নয়। Structural/safety/design-significant issue হলে responsible engineer/consultant review প্রয়োজন.</div>`;
+  box.querySelectorAll('[data-offline-cause]').forEach(b=>b.onclick=()=>applyOfflineAdvice(suggestions[+b.dataset.offlineCause],'cause'));
+  box.querySelectorAll('[data-offline-action]').forEach(b=>b.onclick=()=>applyOfflineAdvice(suggestions[+b.dataset.offlineAction],'action'));
+  box.querySelectorAll('[data-offline-both]').forEach(b=>b.onclick=()=>applyOfflineAdvice(suggestions[+b.dataset.offlineBoth],'both'));
 }
 
 function esc(s){ return (s||'').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
@@ -1034,7 +2871,7 @@ async function writeToFolder(){
 
 function persist(){
   try{
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(lessons));
+    if(CLOUD_ENABLED) localStorage.removeItem(LOCAL_KEY); else localStorage.setItem(LOCAL_KEY, JSON.stringify(lessons));
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   }catch(e){
     console.error('localStorage save failed', e);
@@ -1070,6 +2907,8 @@ updateBackupBanner();
 function applySettings(){
   document.getElementById('titleText').textContent = settings.title || 'Lesson Learned Repository';
   document.getElementById('subtitleText').textContent = settings.subtitle || 'Shanta Holdings Limited — Inspection & Analysis';
+  renderAboutContent();
+  renderWelcomeScreen();
   // createdByText is fixed/non-editable — always "Developed by: Md. Mostak Mozahid", ignores settings.createdBy
   const logoMark = document.getElementById('logoMark');
   const initials = document.getElementById('logoInitials');
@@ -1084,7 +2923,7 @@ function applySettings(){
     initials.style.display = 'block';
   }
 }
-document.getElementById('logoMark').addEventListener('click', () => document.getElementById('logoInput').click());
+document.getElementById('logoMark').addEventListener('click', () => { if(requireAdmin()) document.getElementById('logoInput').click(); });
 document.getElementById('logoInput').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if(!file) return;
@@ -1105,6 +2944,272 @@ document.getElementById('logoInput').addEventListener('change', (e) => {
     cloudSaveSettings();
   });
 });
+
+
+// ================== SETTINGS / PASSWORD MANAGEMENT / ABOUT ==================
+function setStatus(id, message, kind=''){
+  const el=document.getElementById(id); if(!el)return;
+  el.textContent=message||''; el.className='settings-status'+(kind?' '+kind:'');
+}
+function validateNewPassword(pw, confirm){
+  if(!pw || pw.length < 6) return 'Password must be at least 6 characters.';
+  if(pw !== confirm) return 'New password and confirmation do not match.';
+  return '';
+}
+function clearPasswordFields(){
+  ['adminCurrentPassword','adminNewPassword','adminConfirmPassword','viewerCurrentPassword','viewerNewPassword','viewerConfirmPassword'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  setStatus('adminPasswordStatus',''); setStatus('viewerPasswordStatus','');
+}
+
+let welcomeLogoDraft=settings.welcomeLogo||'';
+function renderWelcomeLogoPreview(){
+  const box=document.getElementById('welcomeLogoPreview');
+  const txt=document.getElementById('welcomeLogoPreviewText');
+  if(!box||!txt)return;
+  let img=box.querySelector('img');
+  if(welcomeLogoDraft){
+    if(!img){img=document.createElement('img');box.insertBefore(img,box.firstChild);}
+    img.src=welcomeLogoDraft; txt.style.display='none';
+  }else{
+    if(img)img.remove(); txt.style.display='inline';
+  }
+}
+function renderWelcomeScreen(){
+  const g=id=>document.getElementById(id);
+  const setText=(id,key)=>{const el=g(id);if(el)el.textContent=settings[key]||DEFAULT_WELCOME[key];};
+  setText('welcomeTitleText','welcomeTitle');
+  setText('welcomeSubtitleText','welcomeSubtitle');
+  setText('welcomeTaglineText','welcomeTagline');
+  setText('welcomeIntroText','welcomeIntro');
+  setText('enterRepositoryBtn','welcomeEnterButton');
+  setText('welcomeViewerTitleText','welcomeViewerTitle');
+  setText('welcomeViewerSubtitleText','welcomeViewerSubtitle');
+  setText('viewerLoginBtn','welcomeViewerButton');
+  setText('welcomeDividerText','welcomeDivider');
+  setText('welcomeAdminTitleText','welcomeAdminTitle');
+  setText('welcomeAdminSubtitleText','welcomeAdminSubtitle');
+  setText('gateAdminLoginBtn','welcomeAdminButton');
+  setText('accessBackBtn','welcomeBack');
+  setText('welcomeFootText','welcomeFooter');
+  const vp=g('viewerPassword');if(vp)vp.placeholder=settings.welcomeViewerPlaceholder||DEFAULT_WELCOME.welcomeViewerPlaceholder;
+  const ae=g('gateAdminEmail');if(ae)ae.placeholder=settings.welcomeAdminEmailPlaceholder||DEFAULT_WELCOME.welcomeAdminEmailPlaceholder;
+  const ap=g('gateAdminPassword');if(ap)ap.placeholder=settings.welcomeAdminPasswordPlaceholder||DEFAULT_WELCOME.welcomeAdminPasswordPlaceholder;
+  const box=g('accessWelcomeLogo'), txt=g('accessWelcomeLogoText');
+  if(box&&txt){
+    let img=box.querySelector('img');
+    const src=settings.welcomeLogo||'';
+    if(src){if(!img){img=document.createElement('img');box.insertBefore(img,box.firstChild);}img.src=src;txt.style.display='none';}
+    else{if(img)img.remove();txt.style.display='inline';}
+  }
+}
+function populateWelcomeSettingsForm(){
+  welcomeLogoDraft=settings.welcomeLogo||'';
+  renderWelcomeLogoPreview();
+  const map={
+    welcomeTitleInput:'welcomeTitle',welcomeSubtitleInput:'welcomeSubtitle',welcomeTaglineInput:'welcomeTagline',welcomeIntroInput:'welcomeIntro',welcomeEnterButtonInput:'welcomeEnterButton',
+    welcomeViewerTitleInput:'welcomeViewerTitle',welcomeViewerSubtitleInput:'welcomeViewerSubtitle',welcomeViewerPlaceholderInput:'welcomeViewerPlaceholder',welcomeViewerButtonInput:'welcomeViewerButton',
+    welcomeDividerInput:'welcomeDivider',welcomeAdminTitleInput:'welcomeAdminTitle',welcomeAdminSubtitleInput:'welcomeAdminSubtitle',welcomeAdminEmailPlaceholderInput:'welcomeAdminEmailPlaceholder',welcomeAdminPasswordPlaceholderInput:'welcomeAdminPasswordPlaceholder',welcomeAdminButtonInput:'welcomeAdminButton',
+    welcomeBackInput:'welcomeBack',welcomeFooterInput:'welcomeFooter'
+  };
+  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=settings[key]??DEFAULT_WELCOME[key];});
+  setStatus('welcomeSettingsStatus','');
+}
+function resizeWelcomeLogo(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onerror=()=>reject(reader.error||new Error('Could not read image'));
+    reader.onload=()=>{
+      const img=new Image();
+      img.onerror=()=>reject(new Error('Invalid image'));
+      img.onload=()=>{
+        const max=360; const scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+        const w=Math.max(1,Math.round(img.naturalWidth*scale)); const h=Math.max(1,Math.round(img.naturalHeight*scale));
+        const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+        const ctx=canvas.getContext('2d');ctx.clearRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+document.getElementById('uploadWelcomeLogoBtn').addEventListener('click',()=>document.getElementById('welcomeLogoInput').click());
+document.getElementById('welcomeLogoInput').addEventListener('change',async e=>{
+  const file=e.target.files&&e.target.files[0];if(!file)return;
+  try{welcomeLogoDraft=await resizeWelcomeLogo(file);renderWelcomeLogoPreview();setStatus('welcomeSettingsStatus','Logo ready. Click “Save Welcome Screen” to publish it.','');}
+  catch(err){console.error(err);setStatus('welcomeSettingsStatus','Could not read this logo image.','err');}
+  e.target.value='';
+});
+document.getElementById('useHeaderLogoBtn').addEventListener('click',()=>{if(settings.logo){welcomeLogoDraft=settings.logo;renderWelcomeLogoPreview();setStatus('welcomeSettingsStatus','Header logo copied to the Welcome Screen preview. Save to apply.','');}else setStatus('welcomeSettingsStatus','No repository header logo has been uploaded yet.','err');});
+document.getElementById('removeWelcomeLogoBtn').addEventListener('click',()=>{welcomeLogoDraft='';renderWelcomeLogoPreview();setStatus('welcomeSettingsStatus','Logo removed from preview. Save to apply.','');});
+document.getElementById('resetWelcomeDefaultsBtn').addEventListener('click',()=>{
+  welcomeLogoDraft='';
+  const map={
+    welcomeTitleInput:'welcomeTitle',welcomeSubtitleInput:'welcomeSubtitle',welcomeTaglineInput:'welcomeTagline',welcomeIntroInput:'welcomeIntro',welcomeEnterButtonInput:'welcomeEnterButton',
+    welcomeViewerTitleInput:'welcomeViewerTitle',welcomeViewerSubtitleInput:'welcomeViewerSubtitle',welcomeViewerPlaceholderInput:'welcomeViewerPlaceholder',welcomeViewerButtonInput:'welcomeViewerButton',
+    welcomeDividerInput:'welcomeDivider',welcomeAdminTitleInput:'welcomeAdminTitle',welcomeAdminSubtitleInput:'welcomeAdminSubtitle',welcomeAdminEmailPlaceholderInput:'welcomeAdminEmailPlaceholder',welcomeAdminPasswordPlaceholderInput:'welcomeAdminPasswordPlaceholder',welcomeAdminButtonInput:'welcomeAdminButton',welcomeBackInput:'welcomeBack',welcomeFooterInput:'welcomeFooter'
+  };
+  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=DEFAULT_WELCOME[key];});
+  renderWelcomeLogoPreview();
+  setStatus('welcomeSettingsStatus','Defaults loaded in the form. Click Save to apply.','');
+});
+document.getElementById('saveWelcomeSettingsBtn').addEventListener('click',async()=>{
+  if(!requireAdmin())return;
+  const values={
+    welcomeLogo:welcomeLogoDraft,
+    welcomeTitle:document.getElementById('welcomeTitleInput').value.trim()||DEFAULT_WELCOME.welcomeTitle,
+    welcomeSubtitle:document.getElementById('welcomeSubtitleInput').value.trim()||DEFAULT_WELCOME.welcomeSubtitle,
+    welcomeTagline:document.getElementById('welcomeTaglineInput').value.trim()||DEFAULT_WELCOME.welcomeTagline,
+    welcomeIntro:document.getElementById('welcomeIntroInput').value.trim()||DEFAULT_WELCOME.welcomeIntro,
+    welcomeEnterButton:document.getElementById('welcomeEnterButtonInput').value.trim()||DEFAULT_WELCOME.welcomeEnterButton,
+    welcomeViewerTitle:document.getElementById('welcomeViewerTitleInput').value.trim()||DEFAULT_WELCOME.welcomeViewerTitle,
+    welcomeViewerSubtitle:document.getElementById('welcomeViewerSubtitleInput').value.trim()||DEFAULT_WELCOME.welcomeViewerSubtitle,
+    welcomeViewerPlaceholder:document.getElementById('welcomeViewerPlaceholderInput').value.trim()||DEFAULT_WELCOME.welcomeViewerPlaceholder,
+    welcomeViewerButton:document.getElementById('welcomeViewerButtonInput').value.trim()||DEFAULT_WELCOME.welcomeViewerButton,
+    welcomeDivider:document.getElementById('welcomeDividerInput').value.trim()||DEFAULT_WELCOME.welcomeDivider,
+    welcomeAdminTitle:document.getElementById('welcomeAdminTitleInput').value.trim()||DEFAULT_WELCOME.welcomeAdminTitle,
+    welcomeAdminSubtitle:document.getElementById('welcomeAdminSubtitleInput').value.trim()||DEFAULT_WELCOME.welcomeAdminSubtitle,
+    welcomeAdminEmailPlaceholder:document.getElementById('welcomeAdminEmailPlaceholderInput').value.trim()||DEFAULT_WELCOME.welcomeAdminEmailPlaceholder,
+    welcomeAdminPasswordPlaceholder:document.getElementById('welcomeAdminPasswordPlaceholderInput').value.trim()||DEFAULT_WELCOME.welcomeAdminPasswordPlaceholder,
+    welcomeAdminButton:document.getElementById('welcomeAdminButtonInput').value.trim()||DEFAULT_WELCOME.welcomeAdminButton,
+    welcomeBack:document.getElementById('welcomeBackInput').value.trim()||DEFAULT_WELCOME.welcomeBack,
+    welcomeFooter:document.getElementById('welcomeFooterInput').value.trim()||DEFAULT_WELCOME.welcomeFooter
+  };
+  Object.assign(settings,values);
+  persist();renderWelcomeScreen();
+  const btn=document.getElementById('saveWelcomeSettingsBtn');btn.disabled=true;btn.textContent='Saving…';
+  try{
+    await cloudSaveSettings();
+    await cloudSaveWelcomeSettings();
+    setStatus('welcomeSettingsStatus','✓ Welcome screen saved for all users.','ok');
+  }catch(e){setStatus('welcomeSettingsStatus','Saved locally, but cloud welcome sync failed. Check Firestore rules for meta/welcome.','err');}
+  finally{btn.disabled=false;btn.textContent='Save Welcome Screen';}
+});
+function openSettings(){
+  if(!requireAdmin())return;
+  clearPasswordFields();
+  populateWelcomeSettingsForm();
+  document.getElementById('settingsOverlay').classList.add('open');
+}
+function closeSettings(){document.getElementById('settingsOverlay').classList.remove('open');clearPasswordFields();}
+document.getElementById('settingsBtn').addEventListener('click',openSettings);
+document.getElementById('closeSettings').addEventListener('click',closeSettings);
+document.getElementById('settingsOverlay').addEventListener('click',e=>{if(e.target.id==='settingsOverlay')closeSettings();});
+
+document.getElementById('changeAdminPasswordBtn').addEventListener('click',async()=>{
+  if(!requireAdmin() || !auth?.currentUser || auth.currentUser.uid!==ADMIN_UID)return;
+  const current=document.getElementById('adminCurrentPassword').value;
+  const next=document.getElementById('adminNewPassword').value;
+  const confirm=document.getElementById('adminConfirmPassword').value;
+  const validation=validateNewPassword(next,confirm);
+  if(!current){setStatus('adminPasswordStatus','Current Admin password is required.','err');return;}
+  if(validation){setStatus('adminPasswordStatus',validation,'err');return;}
+  const btn=document.getElementById('changeAdminPasswordBtn');btn.disabled=true;btn.textContent='Updating…';
+  try{
+    const email=auth.currentUser.email;
+    const credential=firebase.auth.EmailAuthProvider.credential(email,current);
+    await auth.currentUser.reauthenticateWithCredential(credential);
+    await auth.currentUser.updatePassword(next);
+    document.getElementById('adminCurrentPassword').value='';document.getElementById('adminNewPassword').value='';document.getElementById('adminConfirmPassword').value='';
+    setStatus('adminPasswordStatus','✓ Admin password changed successfully.','ok');
+  }catch(e){
+    console.error('Admin password change failed',e);
+    const code=(e&&e.code)||'';
+    setStatus('adminPasswordStatus',code.includes('wrong-password')||code.includes('invalid-credential')?'Current Admin password is incorrect.':code.includes('weak-password')?'New password is too weak.':'Could not change Admin password. Please try again.','err');
+  }finally{btn.disabled=false;btn.textContent='Change Admin Password';}
+});
+
+let viewerAuthSecondary=null;
+function getViewerSecondaryAuth(){
+  if(viewerAuthSecondary)return viewerAuthSecondary;
+  let app;
+  try{app=firebase.app('viewerPasswordManager');}
+  catch(e){app=firebase.initializeApp(firebaseConfig,'viewerPasswordManager');}
+  viewerAuthSecondary=app.auth();
+  try{viewerAuthSecondary.setPersistence(firebase.auth.Auth.Persistence.NONE);}catch(e){}
+  return viewerAuthSecondary;
+}
+document.getElementById('changeViewerPasswordBtn').addEventListener('click',async()=>{
+  if(!requireAdmin())return;
+  const current=document.getElementById('viewerCurrentPassword').value;
+  const next=document.getElementById('viewerNewPassword').value;
+  const confirm=document.getElementById('viewerConfirmPassword').value;
+  const validation=validateNewPassword(next,confirm);
+  if(!current){setStatus('viewerPasswordStatus','Current Viewer password is required.','err');return;}
+  if(validation){setStatus('viewerPasswordStatus',validation,'err');return;}
+  const btn=document.getElementById('changeViewerPasswordBtn');btn.disabled=true;btn.textContent='Updating…';
+  const vAuth=getViewerSecondaryAuth();
+  try{
+    await vAuth.signOut().catch(()=>{});
+    const cred=await vAuth.signInWithEmailAndPassword(VIEWER_EMAIL,current);
+    if(!cred.user || cred.user.uid!==VIEWER_UID)throw new Error('viewer_uid_mismatch');
+    await cred.user.updatePassword(next);
+    await vAuth.signOut();
+    document.getElementById('viewerCurrentPassword').value='';document.getElementById('viewerNewPassword').value='';document.getElementById('viewerConfirmPassword').value='';
+    setStatus('viewerPasswordStatus','✓ Viewer password changed successfully.','ok');
+  }catch(e){
+    console.error('Viewer password change failed',e);
+    try{await vAuth.signOut();}catch(_){}
+    const code=(e&&e.code)||'';
+    setStatus('viewerPasswordStatus',code.includes('wrong-password')||code.includes('invalid-credential')?'Current Viewer password is incorrect.':code.includes('weak-password')?'New password is too weak.':'Could not change Viewer password. Please try again.','err');
+  }finally{btn.disabled=false;btn.textContent='Change Viewer Password';}
+});
+
+function renderAboutContent(){
+  const overview=settings.appOverview||DEFAULT_ABOUT.appOverview;
+  const mission=settings.mission||DEFAULT_ABOUT.mission;
+  const vision=settings.vision||DEFAULT_ABOUT.vision;
+  const a=document.getElementById('aboutAppText'); if(a)a.textContent=overview;
+  const m=document.getElementById('aboutMissionText'); if(m)m.textContent=mission;
+  const v=document.getElementById('aboutVisionText'); if(v)v.textContent=vision;
+}
+function openAbout(){
+  renderAboutContent();
+  const modal=document.getElementById('aboutModal'); modal.classList.remove('admin-editing');
+  document.getElementById('editAboutBtn').style.display=isAdmin?'inline-flex':'none';
+  document.getElementById('saveAboutBtn').style.display='none';
+  document.getElementById('cancelAboutEdit').style.display='none';
+  setStatus('aboutSaveStatus','');
+  document.getElementById('aboutOverlay').classList.add('open');
+}
+function closeAbout(){document.getElementById('aboutOverlay').classList.remove('open');document.getElementById('aboutModal').classList.remove('admin-editing');}
+document.getElementById('aboutBtn').addEventListener('click',openAbout);
+document.getElementById('closeAbout').addEventListener('click',closeAbout);
+document.getElementById('aboutOverlay').addEventListener('click',e=>{if(e.target.id==='aboutOverlay')closeAbout();});
+document.getElementById('editAboutBtn').addEventListener('click',()=>{
+  if(!requireAdmin())return;
+  document.getElementById('aboutAppInput').value=settings.appOverview||DEFAULT_ABOUT.appOverview;
+  document.getElementById('aboutMissionInput').value=settings.mission||DEFAULT_ABOUT.mission;
+  document.getElementById('aboutVisionInput').value=settings.vision||DEFAULT_ABOUT.vision;
+  document.getElementById('aboutModal').classList.add('admin-editing');
+  document.getElementById('editAboutBtn').style.display='none';
+  document.getElementById('saveAboutBtn').style.display='inline-flex';
+  document.getElementById('cancelAboutEdit').style.display='inline-flex';
+});
+document.getElementById('cancelAboutEdit').addEventListener('click',()=>{
+  document.getElementById('aboutModal').classList.remove('admin-editing');
+  document.getElementById('editAboutBtn').style.display=isAdmin?'inline-flex':'none';
+  document.getElementById('saveAboutBtn').style.display='none';
+  document.getElementById('cancelAboutEdit').style.display='none';
+  setStatus('aboutSaveStatus','');
+});
+document.getElementById('saveAboutBtn').addEventListener('click',async()=>{
+  if(!requireAdmin())return;
+  settings.appOverview=document.getElementById('aboutAppInput').value.trim()||DEFAULT_ABOUT.appOverview;
+  settings.mission=document.getElementById('aboutMissionInput').value.trim()||DEFAULT_ABOUT.mission;
+  settings.vision=document.getElementById('aboutVisionInput').value.trim()||DEFAULT_ABOUT.vision;
+  persist();
+  await cloudSaveSettings();
+  renderAboutContent();
+  setStatus('aboutSaveStatus','✓ About, Mission and Vision saved for all users.','ok');
+  setTimeout(()=>{
+    document.getElementById('aboutModal').classList.remove('admin-editing');
+    document.getElementById('editAboutBtn').style.display='inline-flex';
+    document.getElementById('saveAboutBtn').style.display='none';
+    document.getElementById('cancelAboutEdit').style.display='none';
+  },500);
+});
+// ================== END SETTINGS / ABOUT ==================
 
 if(!CLOUD_ENABLED && lessons.length === 0){
   lessons = [
@@ -1184,13 +3289,20 @@ function renderGrid(){
     html += `<div class="empty-state"><div class="icon">📋</div>কোনো lesson পাওয়া যায়নি। ফিল্টার পরিবর্তন করুন অথবা নতুন lesson যোগ করুন।</div>`;
   } else {
     list.forEach(l => {
-      const mainPhoto = l.photo1 || l.photo2 || '';
-      const img = mainPhoto ? `<img src="${mainPhoto}" alt="">` : `<div class="no-img">No photo</div>`;
-      const both = l.photo1 && l.photo2;
+      const both = !!(l.photo1 && l.photo2);
+      let photoHtml = '';
+      if(both){
+        photoHtml = `
+          <div class="card-photo-item"><img src="${l.photo1}" alt="Photo 1"></div>
+          <div class="card-photo-item"><img src="${l.photo2}" alt="Photo 2"></div>`;
+      } else {
+        const mainPhoto = l.photo1 || l.photo2 || '';
+        photoHtml = mainPhoto ? `<img src="${mainPhoto}" alt="Lesson photo">` : `<div class="no-img">No photo</div>`;
+      }
       html += `
       <div class="lesson-card" data-id="${l.id}">
-        <div class="card-photo">
-          ${img}
+        <div class="card-photo ${both ? 'dual' : 'single'}">
+          ${photoHtml}
           <span class="badge ${l.type}">${l.type==='do'?"Do":"Don't"}</span>
           ${both ? '<span class="photo-count">2 photos</span>' : ''}
         </div>
@@ -1203,13 +3315,13 @@ function renderGrid(){
       </div>`;
     });
   }
-  html += `<div class="add-cta" id="addCta"><div class="plus">+</div><div>নতুন lesson learned যোগ করুন</div></div>`;
+  if(isAdmin) html += `<div class="add-cta" id="addCta"><div class="plus">+</div><div>নতুন lesson learned যোগ করুন</div></div>`;
   grid.innerHTML = html;
 
   document.querySelectorAll('.lesson-card').forEach(el => {
     el.addEventListener('click', () => openDetail(el.dataset.id));
   });
-  document.getElementById('addCta').addEventListener('click', openAddModal);
+  const addCta=document.getElementById('addCta'); if(addCta) addCta.addEventListener('click', openAddModal);
 }
 
 function renderAll(){
@@ -1217,6 +3329,91 @@ function renderAll(){
   renderStats();
   renderGrid();
 }
+
+// ================== FULL-SCREEN PHOTO VIEWER ==================
+const imageLightbox = document.getElementById('imageLightbox');
+const lightboxStage = document.getElementById('lightboxStage');
+const lightboxImage = document.getElementById('lightboxImage');
+const lightboxCaption = document.getElementById('lightboxCaption');
+const zoomReadout = document.getElementById('zoomReadout');
+let lbScale = 1, lbX = 0, lbY = 0;
+let lbPointers = new Map();
+let lbGesture = null;
+
+function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
+function applyLightboxTransform(){
+  lightboxImage.style.transform = `translate(${lbX}px, ${lbY}px) scale(${lbScale})`;
+  zoomReadout.textContent = Math.round(lbScale*100)+'%';
+}
+function resetLightbox(){ lbScale=1; lbX=0; lbY=0; applyLightboxTransform(); }
+function setLightboxScale(next){
+  lbScale=clamp(next,1,6);
+  if(lbScale===1){lbX=0;lbY=0;}
+  applyLightboxTransform();
+}
+function openImageLightbox(src,label='Lesson photo'){
+  if(!src) return;
+  lightboxCaption.textContent=label||'Lesson photo';
+  lightboxImage.src=src;
+  resetLightbox();
+  imageLightbox.classList.add('open');
+  imageLightbox.setAttribute('aria-hidden','false');
+}
+function closeImageLightbox(){
+  imageLightbox.classList.remove('open');
+  imageLightbox.setAttribute('aria-hidden','true');
+  lbPointers.clear(); lbGesture=null;
+}
+document.getElementById('lightboxClose').addEventListener('click',closeImageLightbox);
+document.getElementById('zoomResetBtn').addEventListener('click',resetLightbox);
+document.getElementById('zoomInBtn').addEventListener('click',()=>setLightboxScale(lbScale*1.25));
+document.getElementById('zoomOutBtn').addEventListener('click',()=>setLightboxScale(lbScale/1.25));
+imageLightbox.addEventListener('wheel',e=>{
+  e.preventDefault();
+  setLightboxScale(lbScale*(e.deltaY<0?1.13:0.885));
+},{passive:false});
+lightboxStage.addEventListener('dblclick',e=>{e.preventDefault();setLightboxScale(lbScale>1?1:2.5);});
+
+function pointerDistance(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
+lightboxStage.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  lightboxStage.setPointerCapture?.(e.pointerId);
+  lbPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  const pts=[...lbPointers.values()];
+  if(pts.length===1){
+    lbGesture={mode:'pan',startX:pts[0].x,startY:pts[0].y,baseX:lbX,baseY:lbY};
+  }else if(pts.length===2){
+    lbGesture={mode:'pinch',startDist:pointerDistance(pts[0],pts[1]),baseScale:lbScale};
+  }
+});
+lightboxStage.addEventListener('pointermove',e=>{
+  if(!lbPointers.has(e.pointerId)) return;
+  lbPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  const pts=[...lbPointers.values()];
+  if(pts.length>=2){
+    if(!lbGesture||lbGesture.mode!=='pinch') lbGesture={mode:'pinch',startDist:pointerDistance(pts[0],pts[1]),baseScale:lbScale};
+    const d=pointerDistance(pts[0],pts[1]);
+    lbScale=clamp(lbGesture.baseScale*(d/Math.max(1,lbGesture.startDist)),1,6);
+    if(lbScale===1){lbX=0;lbY=0;}
+    applyLightboxTransform();
+  }else if(pts.length===1 && lbScale>1){
+    if(!lbGesture||lbGesture.mode!=='pan') lbGesture={mode:'pan',startX:pts[0].x,startY:pts[0].y,baseX:lbX,baseY:lbY};
+    lbX=lbGesture.baseX+(pts[0].x-lbGesture.startX);
+    lbY=lbGesture.baseY+(pts[0].y-lbGesture.startY);
+    applyLightboxTransform();
+  }
+});
+function endLightboxPointer(e){
+  lbPointers.delete(e.pointerId);
+  const pts=[...lbPointers.values()];
+  if(pts.length===1) lbGesture={mode:'pan',startX:pts[0].x,startY:pts[0].y,baseX:lbX,baseY:lbY};
+  else if(!pts.length) lbGesture=null;
+}
+lightboxStage.addEventListener('pointerup',endLightboxPointer);
+lightboxStage.addEventListener('pointercancel',endLightboxPointer);
+imageLightbox.addEventListener('click',e=>{ if(e.target===imageLightbox) closeImageLightbox(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&imageLightbox.classList.contains('open'))closeImageLightbox(); });
+// ================== END PHOTO VIEWER ==================
 
 function compressImage(file, maxDim, quality){
   return new Promise((resolve) => {
@@ -1256,11 +3453,17 @@ function setupPhotoUpload(uploadId, inputId, stateKey){
   });
 }
 function renderPhotoPreview(wrap, dataUrl){
-  wrap.querySelectorAll('img,.remove-photo,.edit-photo,span').forEach(n=>n.remove());
+  wrap.querySelectorAll('img,.remove-photo,.edit-photo,.view-photo,.photo-fit-note,span').forEach(n=>n.remove());
   if(dataUrl){
     const img = document.createElement('img');
     img.src = dataUrl;
     wrap.appendChild(img);
+    const viewBtn = document.createElement('button');
+    viewBtn.className = 'view-photo';
+    viewBtn.type = 'button';
+    viewBtn.textContent = '🔍 View';
+    viewBtn.onclick = (e) => { e.stopPropagation(); openImageLightbox(dataUrl, wrap._key==='photo1'?'Before / Observation':'After / Reference'); };
+    wrap.appendChild(viewBtn);
     const editBtn = document.createElement('button');
     editBtn.className = 'edit-photo';
     editBtn.type = 'button';
@@ -1273,6 +3476,10 @@ function renderPhotoPreview(wrap, dataUrl){
     btn.textContent = '×';
     btn.onclick = (e) => { e.stopPropagation(); wrap._state[wrap._key] = ''; renderPhotoPreview(wrap, ''); };
     wrap.appendChild(btn);
+    const note=document.createElement('span');
+    note.className='photo-fit-note';
+    note.textContent='Full image shown · Edit is optional';
+    wrap.appendChild(note);
   } else {
     const span = document.createElement('span');
     span.textContent = '📷 ছবি আপলোড / paste করুন (Ctrl+V)';
@@ -1293,6 +3500,7 @@ document.getElementById('f_desc').addEventListener('input', () => {
 document.querySelectorAll('input[name="ltype"]').forEach(r => {
   r.addEventListener('change', renderActionSuggestions);
 });
+['f_project','f_trade','f_title'].forEach(id => document.getElementById(id)?.addEventListener('change', renderActionSuggestions));
 
 // Paste-to-upload: click/focus either photo box, then Ctrl+V to paste a copied image.
 // Also works if pasted anywhere inside the modal — fills the first empty photo slot.
@@ -1325,8 +3533,9 @@ function openCropModal(wrap){
   const dataUrl = wrap._state[wrap._key];
   if(!dataUrl) return;
   cropImageEl.onload = () => {
-    resetCropBoxToFull();
+    // Show the modal first; dimensions are zero while display:none, which previously broke Edit/Crop.
     document.getElementById('cropOverlay').classList.add('open');
+    requestAnimationFrame(() => requestAnimationFrame(resetCropBoxToFull));
   };
   cropImageEl.src = dataUrl;
 }
@@ -1442,6 +3651,7 @@ document.getElementById('cropApplyBtn').addEventListener('click', () => {
 });
 
 function openAddModal(){
+  if(!requireAdmin()) return;
   editingId = null;
   document.getElementById('modalTitle').textContent = 'নতুন Lesson Learned যোগ করুন';
   document.getElementById('deleteBtn').style.display = 'none';
@@ -1462,6 +3672,7 @@ function openAddModal(){
 }
 
 function openEditModal(l){
+  if(!requireAdmin()) return;
   editingId = l.id;
   document.getElementById('modalTitle').textContent = 'Lesson Learned এডিট করুন';
   document.getElementById('deleteBtn').style.display = 'inline-flex';
@@ -1488,6 +3699,7 @@ document.getElementById('cancelBtn').addEventListener('click', () => document.ge
 document.getElementById('editOverlay').addEventListener('click', (e) => { if(e.target.id==='editOverlay') e.currentTarget.classList.remove('open'); });
 
 document.getElementById('saveBtn').addEventListener('click', () => {
+  if(!requireAdmin()) return;
   const title = document.getElementById('f_title').value.trim();
   if(!title){ alert('Title লিখুন'); return; }
   const type = document.querySelector('input[name=ltype]:checked').value;
@@ -1520,6 +3732,7 @@ document.getElementById('saveBtn').addEventListener('click', () => {
 });
 
 document.getElementById('deleteBtn').addEventListener('click', () => {
+  if(!requireAdmin()) return;
   if(!editingId) return;
   if(confirm('এই lesson মুছে ফেলতে চান?')){
     const idToDelete = editingId;
@@ -1541,7 +3754,7 @@ function openDetail(id){
   if(l.photo2) photoEntries.push({label:'After / Reference', src:l.photo2});
   let photoHtml = '';
   if(photoEntries.length){
-    photoHtml = `<div style="display:grid;grid-template-columns:repeat(${photoEntries.length},1fr);gap:10px;margin-bottom:14px;">${photoEntries.map(p=>`<div><div style="font-size:11px;color:var(--text-mute);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;font-weight:600;">${esc(p.label)}</div><img class="detail-photo" src="${p.src}"></div>`).join('')}</div>`;
+    photoHtml = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:14px;">${photoEntries.map((p,i)=>`<div><div style="font-size:11px;color:var(--text-mute);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;font-weight:600;">${esc(p.label)}</div><div style="position:relative;background:#111;border-radius:10px;overflow:hidden;min-height:160px;display:flex;align-items:center;justify-content:center;"><img class="detail-photo" data-photo-idx="${i}" src="${p.src}" alt="${esc(p.label)}"><span style="position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.58);color:#fff;font-size:10px;padding:4px 7px;border-radius:8px;pointer-events:none;">🔍 Tap / click to zoom</span></div></div>`).join('')}</div>`;
   }
   document.getElementById('detailBody').innerHTML = `
     ${photoHtml}
@@ -1556,6 +3769,9 @@ function openDetail(id){
     ${l.action ? `<div class="field"><label>Rectification / Action</label><div class="detail-desc" style="margin-bottom:0;">${esc(l.action)}</div></div>` : ''}
     <div class="card-tags" style="margin-top:14px;">${(l.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
   `;
+  document.getElementById('detailBody').querySelectorAll('.detail-photo').forEach((img,i)=>{
+    img.addEventListener('click',()=>openImageLightbox(photoEntries[i]?.src,photoEntries[i]?.label||'Lesson photo'));
+  });
   document.getElementById('detailOverlay').classList.add('open');
 }
 document.getElementById('closeDetail').addEventListener('click', () => document.getElementById('detailOverlay').classList.remove('open'));
@@ -1816,8 +4032,8 @@ document.getElementById('importExcelFile').addEventListener('change', (e) => {
 
 applySettings();
 renderAll();
-tryReconnect();
-if(CLOUD_ENABLED) startCloudSync(); else cloudBadgeUpdate('disabled');
+if(!CLOUD_ENABLED) cloudBadgeUpdate('disabled');
+initSecureAccess();
 
 // ---- PWA install support ----
 if('serviceWorker' in navigator){
