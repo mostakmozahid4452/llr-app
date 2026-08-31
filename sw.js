@@ -1,4 +1,4 @@
-const CACHE = 'shl-qa-llr-shell-v1.0.11-iconfix';
+const CACHE = 'shl-qa-llr-shell-v1.0.18-object-transform';
 const SHELL = [
   './',
   './index.html',
