@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>SHL QA — Lesson Learned Repository</title>
-<!-- Cross-platform patch v1.0.20: notifications/messages + professional command header -->
+<!-- Cross-platform patch v1.0.23: rich admin messages with image/QR and copyable link card -->
 <!-- v1.0.11: mobile/web login viewport + keyboard responsiveness fix -->
 <!-- v1.0.7: card view shows both uploaded photos side-by-side -->
 
@@ -92,72 +92,72 @@ header{
 .brand-text .subtitle{font-size:12px;color:var(--text-mute);margin-top:2px;}
 .brand-text .created-by{font-size:11px;color:var(--gold-dim);margin-top:3px;}
 .header-actions{
-  display:flex;align-items:center;gap:5px;flex-wrap:wrap;
-  padding:6px;
-  background:linear-gradient(180deg,#ffffff 0%,#fbfcfd 100%);
+  display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;
+  padding:8px 10px;
+  background:linear-gradient(180deg,#ffffff 0%,#fbfcfe 100%);
   border:1px solid rgba(28,43,58,.10);
-  border-radius:15px;
-  box-shadow:0 7px 20px rgba(28,43,58,.07);
+  border-radius:18px;
+  box-shadow:0 10px 24px rgba(28,43,58,.08);
 }
-.action-cluster{display:flex;align-items:center;gap:4px;min-width:0;}
-.action-separator{width:1px;height:26px;background:rgba(28,43,58,.10);margin:0 3px;flex:0 0 1px;}
+.action-cluster{display:flex;align-items:center;gap:6px;min-width:0;padding:2px 0;}
+.action-cluster.status{margin-right:auto;}
+.action-cluster.data,.action-cluster.tools,.action-cluster.account{
+  padding:4px 6px;border-radius:14px;background:#ffffff;border:1px solid rgba(28,43,58,.08);
+  box-shadow:0 4px 14px rgba(28,43,58,.04);
+}
+.action-separator{display:none;}
 .header-actions .btn{
-  min-height:36px;padding:0 11px;border-radius:9px;font-size:11.5px;font-weight:650;
-  border-color:transparent;background:transparent;color:#415064;
+  min-height:38px;padding:0 13px;border-radius:11px;font-size:12px;font-weight:700;
+  border:1px solid transparent;background:transparent;color:#415064;letter-spacing:.1px;transition:all .18s ease;
 }
 .header-actions .btn-ghost{border-color:transparent;background:transparent;}
 .header-actions .btn-ghost:hover{
-  background:#f1f4f7;border-color:#e4e9ee;color:var(--navy);box-shadow:none;
+  background:#f2f5f8;border-color:#e0e6ec;color:var(--navy);box-shadow:none;
 }
 .header-actions .dropdown-wrap>.btn::after{font-size:9px;opacity:.55;}
 .header-actions .dropdown-menu{
-  top:calc(100% + 9px);border-radius:12px;border-color:rgba(28,43,58,.10);
+  top:calc(100% + 10px);border-radius:12px;border-color:rgba(28,43,58,.10);
   box-shadow:0 14px 36px rgba(28,43,58,.15);
 }
 .header-actions .dropdown-menu button{min-height:40px;}
 .header-actions #addBtn{
-  min-height:38px;padding:0 16px;border-radius:10px;
+  min-height:42px;padding:0 18px;border-radius:12px;
   background:linear-gradient(135deg,#d6a348 0%,#bd8327 100%);
   color:#fff;border:1px solid rgba(151,101,25,.32);font-weight:800;
-  box-shadow:0 5px 13px rgba(184,130,43,.20);
+  box-shadow:0 7px 16px rgba(184,130,43,.24);
 }
 .header-actions #addBtn:hover{
   background:linear-gradient(135deg,#c9943b 0%,#ad7520 100%);
-  color:#fff;transform:translateY(-1px);box-shadow:0 7px 17px rgba(184,130,43,.24);
+  color:#fff;transform:translateY(-1px);box-shadow:0 9px 18px rgba(184,130,43,.26);
 }
 .header-actions #announcementManagerBtn{color:#805d1d;background:#fff8e8;border:1px solid #ecd9ac;}
 .header-actions #announcementManagerBtn:hover{background:#fff2d2;border-color:#dfc483;color:#6f4d12;}
-.header-actions #settingsBtn,.header-actions #aboutBtn{color:#4b596c;}
+.header-actions #settingsBtn,.header-actions #aboutBtn,.header-actions #exportMenuBtn,.header-actions #importMenuBtn,.header-actions #connectFolderBtn{color:#4b596c;}
 .header-actions #adminLoginBtn,.header-actions #viewerLogoutBtn{color:#6a7482;}
 .header-actions #adminLoginBtn:hover,.header-actions #viewerLogoutBtn:hover{color:#a23b35;background:#fff4f3;border-color:#f0d5d2;}
 .header-actions .notify-btn{
-  width:38px;min-width:38px;padding:0;border-radius:10px;background:#f6f8fa;border:1px solid #e7ebef;
+  width:40px;min-width:40px;padding:0;border-radius:11px;background:#f6f8fa;border:1px solid #e7ebef;
   font-size:15px;color:var(--navy);
 }
 .header-actions .notify-btn:hover{background:#eef2f6;border-color:#d9e0e7;}
 .header-actions .role-badge{
-  min-height:30px;display:inline-flex;align-items:center;padding:0 11px;border-radius:999px;
-  font-size:10.5px;font-weight:800;letter-spacing:.1px;
+  min-height:32px;display:inline-flex;align-items:center;padding:0 12px;border-radius:999px;
+  font-size:10.5px;font-weight:800;letter-spacing:.15px;
 }
-.header-actions .role-badge.admin{
-  background:#edf8f1;border-color:#bfe1cb;color:#197542;
-}
-.header-actions .role-badge.viewer{
-  background:#eef5fb;border-color:#cbddeb;color:#315f86;
-}
+.header-actions .role-badge.admin{background:#edf8f1;border-color:#bfe1cb;color:#197542;}
+.header-actions .role-badge.viewer{background:#eef5fb;border-color:#cbddeb;color:#315f86;}
 .header-actions .storage-badge{
-  min-height:32px;padding:0 10px;border-radius:9px;background:#f7f9fb;border-color:#e2e7ec;
-  font-size:10.5px;font-weight:700;color:#5d6978;
+  min-height:34px;padding:0 12px;border-radius:12px;background:#f7f9fb;border-color:#e2e7ec;
+  font-size:11px;font-weight:800;color:#5d6978;
 }
-.header-actions .storage-badge.connected{
-  background:#eef9f2;border-color:#c4e4cf;color:#1b7d48;
-}
-.action-cluster.primary{margin-left:1px;}
-.action-label-muted{font-size:9.5px;color:var(--text-mute);font-weight:700;text-transform:uppercase;letter-spacing:.55px;margin:0 4px 0 2px;}
+.header-actions .storage-badge.connected{background:#eef9f2;border-color:#c4e4cf;color:#1b7d48;}
+.action-cluster.primary{padding-left:2px;}
+.action-label-muted{display:none;}
 
 @media(max-width:1180px){
   header{align-items:flex-start;padding:12px 18px;}
-  .header-actions{width:100%;justify-content:flex-end;}
+  .header-actions{width:100%;justify-content:flex-start;}
+  .action-cluster.status{margin-right:0;}
 }
 @media(max-width:760px){
   header{padding:10px 12px;gap:10px;}
@@ -167,15 +167,16 @@ header{
   .logo-mark{width:42px;height:42px;}
   .header-actions{
     width:100%;flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;
-    padding:5px;border-radius:12px;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+    padding:6px;border-radius:14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;
   }
   .header-actions::-webkit-scrollbar{display:none;}
   .action-cluster{flex:0 0 auto;}
-  .action-separator{height:24px;}
+  .action-cluster.data,.action-cluster.tools,.action-cluster.account{padding:4px 5px;border-radius:12px;}
   .header-actions .btn{min-height:38px;font-size:11.5px;padding:0 10px;}
-  .header-actions #addBtn{min-height:38px;}
+  .header-actions #addBtn{min-height:40px;}
   .header-actions .storage-badge{min-height:34px;}
 }
+
 
 /* ===== v1.0.19 Notification Center / Announcements ===== */
 .notify-wrap{position:relative;display:inline-flex;}
@@ -244,6 +245,46 @@ header{
 .announcement-status{font-size:11.5px;color:var(--text-mute);padding-top:8px;min-height:24px;}
 .announcement-status.ok{color:var(--green);}
 .announcement-status.err{color:var(--red);}
+
+/* ===== v1.0.23 Rich Admin Message: Image / QR + Link Card ===== */
+.message-media{
+  margin-top:10px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff;
+}
+.message-media img{
+  display:block;width:100%;max-height:320px;object-fit:contain;background:#fff;cursor:zoom-in;
+}
+.message-link-card{
+  margin-top:10px;border:1px solid #d9e2ea;border-radius:12px;background:linear-gradient(180deg,#fff 0%,#f8fafc 100%);
+  padding:11px 12px;display:flex;align-items:center;gap:10px;min-width:0;
+}
+.message-link-icon{
+  width:36px;height:36px;flex:0 0 36px;border-radius:10px;background:#eef3f7;border:1px solid #dce5ec;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+.message-link-info{min-width:0;flex:1;}
+.message-link-label{font-size:10px;font-weight:800;color:var(--text-mute);text-transform:uppercase;letter-spacing:.45px;}
+.message-link-url{
+  margin-top:2px;font-size:11.5px;color:#315f86;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.message-link-actions{display:flex;gap:6px;flex:0 0 auto;}
+.message-link-actions .btn{min-height:34px;padding:0 10px;font-size:10.5px;}
+.message-copy-status{font-size:10.5px;color:var(--green);margin-top:5px;min-height:16px;}
+
+.announcement-image-row{
+  margin-top:10px;padding:10px;border:1px dashed var(--border-strong);border-radius:11px;background:#fbfcfd;
+}
+.announcement-image-row .controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.announcement-image-preview{
+  margin-top:9px;display:none;max-width:260px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#fff;
+}
+.announcement-image-preview.show{display:block;}
+.announcement-image-preview img{display:block;width:100%;max-height:190px;object-fit:contain;}
+.announcement-image-note{font-size:10.5px;color:var(--text-mute);margin-top:6px;line-height:1.45;}
+.announcement-link-help{font-size:10px;color:var(--text-mute);margin-top:4px;line-height:1.4;}
+@media(max-width:680px){
+  .message-link-card{align-items:flex-start;flex-wrap:wrap;}
+  .message-link-actions{width:100%;justify-content:flex-end;}
+}
 @media(max-width:680px){
   .notify-toast{right:8px;bottom:8px;width:calc(100vw - 16px);}
   .announcement-form-grid{grid-template-columns:1fr;}
@@ -910,7 +951,15 @@ body.access-keyboard-open .access-foot{display:none;}
       <button class="btn btn-gold btn-sm" id="installAppBtn" style="display:none;">📲 Install App</button>
     </div>
 
-    <div class="action-separator admin-only"></div>
+    <div class="action-cluster tools">
+      <div class="notify-wrap">
+        <button class="btn btn-ghost btn-sm notify-btn" id="notificationBtn" type="button" aria-label="Notifications" title="Notifications">🔔</button>
+        <span class="notify-badge" id="notificationBadge">0</span>
+      </div>
+      <button class="btn btn-ghost btn-sm admin-only" id="announcementManagerBtn">📢 Message</button>
+      <button class="btn btn-ghost btn-sm info-btn" id="aboutBtn">ⓘ About</button>
+      <button class="btn btn-ghost btn-sm admin-only" id="settingsBtn">⚙ Settings</button>
+    </div>
 
     <div class="action-cluster data admin-only">
       <div class="dropdown-wrap admin-only">
@@ -933,20 +982,6 @@ body.access-keyboard-open .access-foot{display:none;}
 
     <input type="file" id="importFile" accept="application/json" style="display:none;">
     <input type="file" id="importExcelFile" accept=".xlsx,.xls" style="display:none;">
-
-    <div class="action-separator"></div>
-
-    <div class="action-cluster tools">
-      <button class="btn btn-ghost btn-sm info-btn" id="aboutBtn">ⓘ About</button>
-      <button class="btn btn-ghost btn-sm admin-only" id="settingsBtn">⚙ Settings</button>
-      <button class="btn btn-ghost btn-sm admin-only" id="announcementManagerBtn">📢 Message</button>
-      <div class="notify-wrap">
-        <button class="btn btn-ghost btn-sm notify-btn" id="notificationBtn" type="button" aria-label="Notifications" title="Notifications">🔔</button>
-        <span class="notify-badge" id="notificationBadge">0</span>
-      </div>
-    </div>
-
-    <div class="action-separator"></div>
 
     <div class="action-cluster account">
       <span class="role-badge" id="roleBadge">Locked</span>
@@ -1304,6 +1339,33 @@ body.access-keyboard-open .access-foot{display:none;}
         <label>Message</label>
         <textarea id="announcementBodyInput" maxlength="1000" placeholder="Write the message viewers should see..."></textarea>
       </div>
+
+      <div class="announcement-form-grid">
+        <div class="field" style="margin:0;">
+          <label>Update / Download Link (optional)</label>
+          <input type="url" id="announcementLinkInput" maxlength="500" placeholder="https://...">
+          <div class="announcement-link-help">Viewer message card-এ link দেখাবে; Open ও Copy Link দুটো option থাকবে।</div>
+        </div>
+        <div class="field" style="margin:0;">
+          <label>Link Label (optional)</label>
+          <input type="text" id="announcementLinkLabelInput" maxlength="60" placeholder="e.g. Download Latest App">
+        </div>
+      </div>
+
+      <div class="announcement-image-row">
+        <div class="controls">
+          <label class="btn btn-ghost btn-sm" for="announcementImageInput" style="cursor:pointer;">🖼 Add JPG / PNG / QR</label>
+          <input type="file" id="announcementImageInput" accept="image/jpeg,image/png,image/webp" style="display:none;">
+          <button class="btn btn-ghost btn-sm" id="announcementImageRemoveBtn" type="button" style="display:none;">Remove Image</button>
+        </div>
+        <div class="announcement-image-preview" id="announcementImagePreview">
+          <img id="announcementImagePreviewImg" alt="Announcement image preview">
+        </div>
+        <div class="announcement-image-note">
+          QR code বা update poster দেওয়া যাবে। Image automatically resize/compress হবে যাতে Firestore message size safe থাকে।
+        </div>
+      </div>
+
       <div class="announcement-form-grid">
         <div class="field" style="margin:0;">
           <label>Expiry date (optional)</label>
@@ -1795,6 +1857,9 @@ function unreadAnnouncementItems(){
       title:a.title||'Admin Message',
       text:a.body||'',
       priority:a.priority||'normal',
+      imageData:a.imageData||'',
+      linkUrl:a.linkUrl||'',
+      linkLabel:a.linkLabel||'',
       createdAt:a.createdAt||'',
       unread:true
     }));
@@ -1825,6 +1890,9 @@ function allNotificationItems(){
       title:a.title||'Admin Message',
       text:a.body||'',
       priority:a.priority||'normal',
+      imageData:a.imageData||'',
+      linkUrl:a.linkUrl||'',
+      linkLabel:a.linkLabel||'',
       createdAt:a.createdAt||'',
       unread:!readMsgs.has(a.id)
     }));
@@ -1892,8 +1960,25 @@ function renderNotificationCenter(){
       <div class="notification-content">
         <div class="notification-title">${item.unread?'<span class="notification-dot"></span> ':''}${escNotify(item.title)}</div>
         <div class="notification-text">${escNotify(item.text)}</div>
+        ${item.kind==='announcement' && item.imageData ? `
+          <div class="message-media">
+            <img src="${item.imageData}" alt="Message image or QR code" data-message-image="${escNotify(item.id)}">
+          </div>` : ''}
+        ${item.kind==='announcement' && item.linkUrl ? `
+          <div class="message-link-card" data-link-card="${escNotify(item.id)}">
+            <div class="message-link-icon">🔗</div>
+            <div class="message-link-info">
+              <div class="message-link-label">${escNotify(item.linkLabel||'Update Link')}</div>
+              <div class="message-link-url" title="${escNotify(item.linkUrl)}">${escNotify(item.linkUrl)}</div>
+              <div class="message-copy-status" data-copy-status="${escNotify(item.id)}"></div>
+            </div>
+            <div class="message-link-actions">
+              <button type="button" class="btn btn-ghost btn-sm message-open-link" data-link="${escNotify(item.linkUrl)}">Open</button>
+              <button type="button" class="btn btn-ghost btn-sm message-copy-link" data-link="${escNotify(item.linkUrl)}" data-ann-id="${escNotify(item.id)}">Copy Link</button>
+            </div>
+          </div>` : ''}
         <div class="notification-meta">
-          ${item.kind==='announcement'?`<span class="priority-pill priority-${pr}">${priorityLabel}</span>`:'<span>New Lesson</span>'}
+          ${item.kind==='announcement'?`<span class="priority-pill priority-${pr}">${priorityLabel}</span>`:'<span>📘 New Lesson</span>'}
           ${item.createdAt?`<span>${escNotify(formatNotifyTime(item.createdAt))}</span>`:''}
         </div>
       </div>
@@ -1901,7 +1986,8 @@ function renderNotificationCenter(){
   }).join('');
 
   el.querySelectorAll('.notification-item').forEach(row=>{
-    row.addEventListener('click',()=>{
+    row.addEventListener('click',e=>{
+      if(e.target.closest('.message-link-actions') || e.target.closest('.message-media')) return;
       const kind=row.dataset.notifyKind;
       const id=row.dataset.notifyId;
       if(kind==='lesson'){
@@ -1914,6 +2000,54 @@ function renderNotificationCenter(){
         const dot=row.querySelector('.notification-dot');
         if(dot) dot.remove();
         updateNotificationUI(false);
+      }
+    });
+  });
+
+  el.querySelectorAll('.message-open-link').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.preventDefault();e.stopPropagation();
+      const url=btn.dataset.link;
+      if(url) window.open(url,'_blank','noopener,noreferrer');
+    });
+  });
+
+  el.querySelectorAll('.message-copy-link').forEach(btn=>{
+    btn.addEventListener('click',async e=>{
+      e.preventDefault();e.stopPropagation();
+      const url=btn.dataset.link||'';
+      const id=btn.dataset.annId||'';
+      let copied=false;
+      try{
+        if(navigator.clipboard?.writeText){
+          await navigator.clipboard.writeText(url);
+          copied=true;
+        }
+      }catch(_){}
+      if(!copied){
+        try{
+          const ta=document.createElement('textarea');
+          ta.value=url; ta.style.position='fixed'; ta.style.opacity='0'; ta.style.pointerEvents='none';
+          document.body.appendChild(ta); ta.focus(); ta.select();
+          copied=document.execCommand('copy');
+          ta.remove();
+        }catch(_){}
+      }
+      const status=el.querySelector(`[data-copy-status="${CSS.escape(id)}"]`);
+      if(status){
+        status.textContent=copied?'✓ Link copied':'Copy failed — select the URL manually';
+        setTimeout(()=>{status.textContent='';},2200);
+      }
+    });
+  });
+
+  el.querySelectorAll('.message-media img').forEach(img=>{
+    img.addEventListener('click',e=>{
+      e.preventDefault();e.stopPropagation();
+      try{
+        openPhotoViewer(img.src);
+      }catch(_){
+        window.open(img.src,'_blank','noopener,noreferrer');
       }
     });
   });
@@ -1947,6 +2081,12 @@ function showNotificationToastIfNeeded(){
 
   const title=document.getElementById('notificationToastTitle');
   const body=document.getElementById('notificationToastText');
+  const toastIcon=document.querySelector('#notificationToast > div:first-child');
+  if(toastIcon){
+    toastIcon.textContent = unreadMsgs.length && !unreadLessons.length ? '📢'
+      : unreadLessons.length && !unreadMsgs.length ? '📘'
+      : '🔔';
+  }
   title.textContent=count===1?'1 new notification':count+' new notifications';
   const parts=[];
   if(unreadLessons.length) parts.push(unreadLessons.length+' new Lesson'+(unreadLessons.length>1?'s':''));
@@ -1966,10 +2106,77 @@ function updateNotificationUI(showToast=true){
   if(showToast) setTimeout(showNotificationToastIfNeeded,250);
 }
 
+let announcementImageDraft='';
+
+function renderAnnouncementImagePreview(){
+  const wrap=document.getElementById('announcementImagePreview');
+  const img=document.getElementById('announcementImagePreviewImg');
+  const removeBtn=document.getElementById('announcementImageRemoveBtn');
+  if(announcementImageDraft){
+    img.src=announcementImageDraft;
+    wrap.classList.add('show');
+    removeBtn.style.display='';
+  }else{
+    img.removeAttribute('src');
+    wrap.classList.remove('show');
+    removeBtn.style.display='none';
+  }
+}
+
+function resizeAnnouncementImage(file){
+  return new Promise((resolve,reject)=>{
+    if(!file || !file.type.startsWith('image/')){reject(new Error('Please choose an image file.'));return;}
+    if(file.size>12*1024*1024){reject(new Error('Image is too large. Please use a file under 12 MB.'));return;}
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        const maxSide=1100;
+        const scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));
+        const w=Math.max(1,Math.round(img.naturalWidth*scale));
+        const h=Math.max(1,Math.round(img.naturalHeight*scale));
+        const c=document.createElement('canvas');c.width=w;c.height=h;
+        const ctx=c.getContext('2d');
+        ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);
+        ctx.drawImage(img,0,0,w,h);
+        let quality=.78;
+        let data=c.toDataURL('image/jpeg',quality);
+        while(data.length>520000 && quality>.48){
+          quality-=.08;
+          data=c.toDataURL('image/jpeg',quality);
+        }
+        if(data.length>650000){
+          reject(new Error('Compressed image is still too large. Please use a smaller image/QR.'));
+          return;
+        }
+        resolve(data);
+      };
+      img.onerror=()=>reject(new Error('Could not read image.'));
+      img.src=reader.result;
+    };
+    reader.onerror=()=>reject(new Error('Could not read image.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function normalizeHttpUrl(value){
+  const raw=(value||'').trim();
+  if(!raw) return '';
+  try{
+    const u=new URL(raw);
+    if(u.protocol!=='http:' && u.protocol!=='https:') return '';
+    return u.href;
+  }catch(_){return '';}
+}
+
 function resetAnnouncementForm(){
   document.getElementById('announcementEditId').value='';
   document.getElementById('announcementTitleInput').value='';
   document.getElementById('announcementBodyInput').value='';
+  document.getElementById('announcementLinkInput').value='';
+  document.getElementById('announcementLinkLabelInput').value='';
+  announcementImageDraft='';
+  renderAnnouncementImagePreview();
   document.getElementById('announcementPriorityInput').value='normal';
   document.getElementById('announcementExpiryInput').value='';
   document.getElementById('announcementActiveInput').value='true';
@@ -2004,6 +2211,14 @@ function renderAnnouncementManager(){
         </div>
       </div>
       <div class="announcement-admin-body">${escNotify(a.body||'')}</div>
+      ${a.imageData?`<div class="message-media" style="max-width:230px;"><img src="${a.imageData}" alt="Announcement image"></div>`:''}
+      ${a.linkUrl?`<div class="message-link-card" style="margin-top:8px;">
+        <div class="message-link-icon">🔗</div>
+        <div class="message-link-info">
+          <div class="message-link-label">${escNotify(a.linkLabel||'Update Link')}</div>
+          <div class="message-link-url">${escNotify(a.linkUrl)}</div>
+        </div>
+      </div>`:''}
       <div class="announcement-admin-actions">
         <button type="button" class="btn btn-ghost btn-sm ann-edit">Edit</button>
         <button type="button" class="btn btn-ghost btn-sm ann-toggle">${a.active===false?'Activate':'Deactivate'}</button>
@@ -2019,6 +2234,10 @@ function renderAnnouncementManager(){
       document.getElementById('announcementEditId').value=a.id;
       document.getElementById('announcementTitleInput').value=a.title||'';
       document.getElementById('announcementBodyInput').value=a.body||'';
+      document.getElementById('announcementLinkInput').value=a.linkUrl||'';
+      document.getElementById('announcementLinkLabelInput').value=a.linkLabel||'';
+      announcementImageDraft=a.imageData||'';
+      renderAnnouncementImagePreview();
       document.getElementById('announcementPriorityInput').value=a.priority||'normal';
       document.getElementById('announcementExpiryInput').value=a.expiresAt||'';
       document.getElementById('announcementActiveInput').value=a.active===false?'false':'true';
@@ -2058,8 +2277,14 @@ async function saveAnnouncementFromForm(){
   if(!requireAdmin()) return;
   const title=document.getElementById('announcementTitleInput').value.trim();
   const body=document.getElementById('announcementBodyInput').value.trim();
+  const rawLink=document.getElementById('announcementLinkInput').value.trim();
+  const linkUrl=normalizeHttpUrl(rawLink);
   if(!title || !body){
     setAnnouncementStatus('Title এবং Message দুটোই লিখুন।','err');
+    return;
+  }
+  if(rawLink && !linkUrl){
+    setAnnouncementStatus('Link অবশ্যই valid http:// বা https:// URL হতে হবে।','err');
     return;
   }
   const editingId=document.getElementById('announcementEditId').value.trim();
@@ -2069,6 +2294,9 @@ async function saveAnnouncementFromForm(){
     id:editingId||uid(),
     title,
     body,
+    imageData:announcementImageDraft||'',
+    linkUrl,
+    linkLabel:document.getElementById('announcementLinkLabelInput').value.trim()||'Update Link',
     priority:document.getElementById('announcementPriorityInput').value||'normal',
     expiresAt:document.getElementById('announcementExpiryInput').value||'',
     active:document.getElementById('announcementActiveInput').value!=='false',
@@ -2131,6 +2359,24 @@ document.getElementById('announcementManagerOverlay').addEventListener('click',e
 });
 document.getElementById('announcementPublishBtn').addEventListener('click',saveAnnouncementFromForm);
 document.getElementById('announcementResetBtn').addEventListener('click',resetAnnouncementForm);
+document.getElementById('announcementImageInput').addEventListener('change',async e=>{
+  const file=e.target.files?.[0];
+  e.target.value='';
+  if(!file) return;
+  setAnnouncementStatus('Preparing image…');
+  try{
+    announcementImageDraft=await resizeAnnouncementImage(file);
+    renderAnnouncementImagePreview();
+    setAnnouncementStatus('Image ready. Publish/Save the message to send it.','ok');
+  }catch(err){
+    setAnnouncementStatus(err?.message||'Could not prepare image.','err');
+  }
+});
+document.getElementById('announcementImageRemoveBtn').addEventListener('click',()=>{
+  announcementImageDraft='';
+  renderAnnouncementImagePreview();
+  setAnnouncementStatus('Image removed from this message draft.');
+});
 
 // ================== ROLE / SECURE ACCESS ==================
 function applyRoleUI(){
@@ -5484,10 +5730,9 @@ document.getElementById('saveBtn').addEventListener('click', () => {
   }
   persist();
   cloudSaveLesson(savedLesson);
-  if(!editingId && savedLesson?.id){
-    notifyState.seenLessonIds.push(savedLesson.id);
-    saveNotifyState();
-  }
+  // v1.0.21: do NOT auto-mark a newly created lesson as seen.
+  // New lessons should behave exactly like Admin messages:
+  // they increase the bell badge and remain unread until opened/read on this device.
   document.getElementById('editOverlay').classList.remove('open');
   renderAll();
 });
