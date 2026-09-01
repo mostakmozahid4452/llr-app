@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>SHL QA — Lesson Learned Repository</title>
-<!-- Cross-platform patch v1.0.18: photo markup objects can be selected, moved and resized -->
+<!-- Cross-platform patch v1.0.20: notifications/messages + professional command header -->
 <!-- v1.0.11: mobile/web login viewport + keyboard responsiveness fix -->
 <!-- v1.0.7: card view shows both uploaded photos side-by-side -->
 
@@ -60,15 +60,18 @@ body{
 [contenteditable]:hover{background:rgba(184,134,59,0.06);border-radius:4px;}
 
 header{
-  background:var(--bg-2);
-  border-bottom:1px solid var(--border);
-  padding:18px 32px;
+  background:rgba(255,255,255,.96);
+  border-bottom:1px solid rgba(28,43,58,.09);
+  padding:13px 28px;
   display:flex;
   align-items:center;
   justify-content:space-between;
   position:sticky;top:0;z-index:50;
   flex-wrap:wrap;
-  gap:12px;
+  gap:14px;
+  box-shadow:0 5px 18px rgba(28,43,58,.055);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
 }
 .brand{display:flex;align-items:center;gap:14px;}
 .logo-mark{
@@ -88,7 +91,165 @@ header{
 .brand-text h1{font-size:17px;font-weight:600;letter-spacing:0.2px;color:var(--navy);}
 .brand-text .subtitle{font-size:12px;color:var(--text-mute);margin-top:2px;}
 .brand-text .created-by{font-size:11px;color:var(--gold-dim);margin-top:3px;}
-.header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.header-actions{
+  display:flex;align-items:center;gap:5px;flex-wrap:wrap;
+  padding:6px;
+  background:linear-gradient(180deg,#ffffff 0%,#fbfcfd 100%);
+  border:1px solid rgba(28,43,58,.10);
+  border-radius:15px;
+  box-shadow:0 7px 20px rgba(28,43,58,.07);
+}
+.action-cluster{display:flex;align-items:center;gap:4px;min-width:0;}
+.action-separator{width:1px;height:26px;background:rgba(28,43,58,.10);margin:0 3px;flex:0 0 1px;}
+.header-actions .btn{
+  min-height:36px;padding:0 11px;border-radius:9px;font-size:11.5px;font-weight:650;
+  border-color:transparent;background:transparent;color:#415064;
+}
+.header-actions .btn-ghost{border-color:transparent;background:transparent;}
+.header-actions .btn-ghost:hover{
+  background:#f1f4f7;border-color:#e4e9ee;color:var(--navy);box-shadow:none;
+}
+.header-actions .dropdown-wrap>.btn::after{font-size:9px;opacity:.55;}
+.header-actions .dropdown-menu{
+  top:calc(100% + 9px);border-radius:12px;border-color:rgba(28,43,58,.10);
+  box-shadow:0 14px 36px rgba(28,43,58,.15);
+}
+.header-actions .dropdown-menu button{min-height:40px;}
+.header-actions #addBtn{
+  min-height:38px;padding:0 16px;border-radius:10px;
+  background:linear-gradient(135deg,#d6a348 0%,#bd8327 100%);
+  color:#fff;border:1px solid rgba(151,101,25,.32);font-weight:800;
+  box-shadow:0 5px 13px rgba(184,130,43,.20);
+}
+.header-actions #addBtn:hover{
+  background:linear-gradient(135deg,#c9943b 0%,#ad7520 100%);
+  color:#fff;transform:translateY(-1px);box-shadow:0 7px 17px rgba(184,130,43,.24);
+}
+.header-actions #announcementManagerBtn{color:#805d1d;background:#fff8e8;border:1px solid #ecd9ac;}
+.header-actions #announcementManagerBtn:hover{background:#fff2d2;border-color:#dfc483;color:#6f4d12;}
+.header-actions #settingsBtn,.header-actions #aboutBtn{color:#4b596c;}
+.header-actions #adminLoginBtn,.header-actions #viewerLogoutBtn{color:#6a7482;}
+.header-actions #adminLoginBtn:hover,.header-actions #viewerLogoutBtn:hover{color:#a23b35;background:#fff4f3;border-color:#f0d5d2;}
+.header-actions .notify-btn{
+  width:38px;min-width:38px;padding:0;border-radius:10px;background:#f6f8fa;border:1px solid #e7ebef;
+  font-size:15px;color:var(--navy);
+}
+.header-actions .notify-btn:hover{background:#eef2f6;border-color:#d9e0e7;}
+.header-actions .role-badge{
+  min-height:30px;display:inline-flex;align-items:center;padding:0 11px;border-radius:999px;
+  font-size:10.5px;font-weight:800;letter-spacing:.1px;
+}
+.header-actions .role-badge.admin{
+  background:#edf8f1;border-color:#bfe1cb;color:#197542;
+}
+.header-actions .role-badge.viewer{
+  background:#eef5fb;border-color:#cbddeb;color:#315f86;
+}
+.header-actions .storage-badge{
+  min-height:32px;padding:0 10px;border-radius:9px;background:#f7f9fb;border-color:#e2e7ec;
+  font-size:10.5px;font-weight:700;color:#5d6978;
+}
+.header-actions .storage-badge.connected{
+  background:#eef9f2;border-color:#c4e4cf;color:#1b7d48;
+}
+.action-cluster.primary{margin-left:1px;}
+.action-label-muted{font-size:9.5px;color:var(--text-mute);font-weight:700;text-transform:uppercase;letter-spacing:.55px;margin:0 4px 0 2px;}
+
+@media(max-width:1180px){
+  header{align-items:flex-start;padding:12px 18px;}
+  .header-actions{width:100%;justify-content:flex-end;}
+}
+@media(max-width:760px){
+  header{padding:10px 12px;gap:10px;}
+  .brand{width:100%;}
+  .brand-text .subtitle,.brand-text .created-by{display:none;}
+  .brand-text h1{font-size:15px;}
+  .logo-mark{width:42px;height:42px;}
+  .header-actions{
+    width:100%;flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;
+    padding:5px;border-radius:12px;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  .header-actions::-webkit-scrollbar{display:none;}
+  .action-cluster{flex:0 0 auto;}
+  .action-separator{height:24px;}
+  .header-actions .btn{min-height:38px;font-size:11.5px;padding:0 10px;}
+  .header-actions #addBtn{min-height:38px;}
+  .header-actions .storage-badge{min-height:34px;}
+}
+
+/* ===== v1.0.19 Notification Center / Announcements ===== */
+.notify-wrap{position:relative;display:inline-flex;}
+.notify-btn{position:relative;min-width:42px;justify-content:center;}
+.notify-badge{
+  position:absolute;top:-7px;right:-7px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;
+  display:none;align-items:center;justify-content:center;background:#c8362e;color:#fff;
+  border:2px solid #fff;font-size:10px;font-weight:800;line-height:1;box-shadow:0 2px 7px rgba(0,0,0,.18);
+}
+.notify-badge.show{display:flex;}
+.notify-toast{
+  position:fixed;right:18px;bottom:18px;z-index:6100;width:min(360px,calc(100vw - 28px));
+  background:var(--navy);color:#fff;border-radius:13px;padding:13px 14px;box-shadow:0 16px 40px rgba(0,0,0,.28);
+  display:none;gap:10px;align-items:flex-start;
+}
+.notify-toast.show{display:flex;}
+.notify-toast .body{flex:1;min-width:0;}
+.notify-toast .title{font-weight:800;font-size:13px;margin-bottom:3px;}
+.notify-toast .sub{font-size:11.5px;line-height:1.45;color:rgba(255,255,255,.8);}
+.notify-toast button{
+  border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;border-radius:8px;
+  min-height:34px;padding:0 9px;cursor:pointer;font-weight:700;font-size:11px;
+}
+
+.notification-list{display:flex;flex-direction:column;gap:10px;padding:14px 16px 4px;}
+.notification-empty{
+  padding:28px 16px;text-align:center;color:var(--text-mute);font-size:13px;line-height:1.55;
+}
+.notification-item{
+  border:1px solid var(--border);border-radius:12px;background:var(--card);padding:12px 13px;
+  display:flex;gap:11px;align-items:flex-start;cursor:pointer;transition:.15s ease;
+}
+.notification-item:hover{border-color:var(--gold);background:var(--gold-soft);}
+.notification-item.unread{border-left:4px solid var(--gold);background:#fffaf0;}
+.notification-icon{
+  width:34px;height:34px;flex:0 0 34px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  background:var(--bg);border:1px solid var(--border);font-size:16px;
+}
+.notification-content{min-width:0;flex:1;}
+.notification-title{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:3px;}
+.notification-text{font-size:11.5px;line-height:1.5;color:var(--text-dim);white-space:pre-wrap;word-break:break-word;}
+.notification-meta{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:6px;font-size:10.5px;color:var(--text-mute);}
+.priority-pill{
+  display:inline-flex;align-items:center;border-radius:999px;padding:2px 7px;border:1px solid var(--border);font-weight:750;font-size:9.5px;
+}
+.priority-normal{background:#eef4fb;color:#355f87;}
+.priority-important{background:#fff4d6;color:#8a671d;}
+.priority-urgent{background:#fde9e7;color:#a8322b;}
+.notification-dot{width:7px;height:7px;border-radius:50%;background:#c8362e;display:inline-block;}
+.notification-actions{
+  padding:10px 16px 14px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--border);margin-top:10px;
+}
+
+.announcement-form{padding:14px 16px;border-bottom:1px solid var(--border);}
+.announcement-form-grid{display:grid;grid-template-columns:1fr 160px;gap:10px;}
+.announcement-form textarea{min-height:95px;resize:vertical;}
+.announcement-manager-list{padding:12px 16px 16px;display:flex;flex-direction:column;gap:9px;max-height:320px;overflow:auto;}
+.announcement-admin-item{
+  border:1px solid var(--border);border-radius:11px;padding:10px 11px;background:var(--card);
+}
+.announcement-admin-head{display:flex;align-items:flex-start;gap:9px;justify-content:space-between;}
+.announcement-admin-title{font-size:12.5px;font-weight:800;color:var(--navy);}
+.announcement-admin-body{font-size:11px;line-height:1.45;color:var(--text-dim);margin-top:4px;white-space:pre-wrap;}
+.announcement-admin-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.announcement-admin-actions .btn{min-height:32px;padding:0 9px;font-size:10.5px;}
+.announcement-status{font-size:11.5px;color:var(--text-mute);padding-top:8px;min-height:24px;}
+.announcement-status.ok{color:var(--green);}
+.announcement-status.err{color:var(--red);}
+@media(max-width:680px){
+  .notify-toast{right:8px;bottom:8px;width:calc(100vw - 16px);}
+  .announcement-form-grid{grid-template-columns:1fr;}
+  .notification-list{padding:10px;}
+  .notification-actions{padding:9px 10px 12px;}
+}
 .btn{
   padding:9px 16px;border-radius:var(--radius);
   border:1px solid var(--border-strong);
@@ -742,34 +903,60 @@ body.access-keyboard-open .access-foot{display:none;}
       <div class="created-by" id="createdByText" spellcheck="false">Developed by: Md. Mostak Mozahid</div>
     </div>
   </div>
-  <div class="header-actions">
-    <div class="storage-badge" id="storageBadge" data-tooltip="এই ফাইলটি অন্য কাউকে শেয়ার করলে সে শুধু খালি টেমপ্লেট দেখবে — আপনার ডেটা (lessons, ছবি) এই ব্রাউজারেই থাকে, ফাইলের ভেতরে সেভ হয় না। সবার সাথে শেয়ার করতে হলে Export করে JSON/Excel ফাইলটাও পাঠান, তারা Import দিয়ে লোড করে নিতে পারবে।">⚠ Browser storage only ℹ</div>
-    <button class="btn btn-ghost btn-sm admin-only" id="connectFolderBtn">📁 Storage ফোল্ডার সংযোগ</button>
-    <button class="btn btn-gold btn-sm" id="installAppBtn" style="display:none;">📲 App হিসেবে Install করুন</button>
-    <div class="dropdown-wrap admin-only">
-      <button class="btn btn-ghost btn-sm" id="exportMenuBtn">⬇ Export ▾</button>
-      <div class="dropdown-menu" id="exportMenu">
-        <button id="exportJson">🗂 JSON (full backup)</button>
-        <button id="exportExcel">📊 Excel (.xlsx)</button>
-        <button id="exportPdf">🖨 Print / Save as PDF</button>
-        <button id="exportFullApp">🌐 সম্পূর্ণ App (HTML ফাইল)</button>
+  <div class="header-actions" aria-label="Application command bar">
+    <div class="action-cluster status">
+      <div class="storage-badge" id="storageBadge" data-tooltip="এই ফাইলটি অন্য কাউকে শেয়ার করলে সে শুধু খালি টেমপ্লেট দেখবে — আপনার ডেটা (lessons, ছবি) এই ব্রাউজারেই থাকে, ফাইলের ভেতরে সেভ হয় না। সবার সাথে শেয়ার করতে হলে Export করে JSON/Excel ফাইলটাও পাঠান, তারা Import দিয়ে লোড করে নিতে পারবে।">☁ Sync Status</div>
+      <button class="btn btn-ghost btn-sm admin-only" id="connectFolderBtn">📁 Storage</button>
+      <button class="btn btn-gold btn-sm" id="installAppBtn" style="display:none;">📲 Install App</button>
+    </div>
+
+    <div class="action-separator admin-only"></div>
+
+    <div class="action-cluster data admin-only">
+      <div class="dropdown-wrap admin-only">
+        <button class="btn btn-ghost btn-sm" id="exportMenuBtn">↓ Export ▾</button>
+        <div class="dropdown-menu" id="exportMenu">
+          <button id="exportJson">🗂 JSON (full backup)</button>
+          <button id="exportExcel">📊 Excel (.xlsx)</button>
+          <button id="exportPdf">🖨 Print / Save as PDF</button>
+          <button id="exportFullApp">🌐 সম্পূর্ণ App (HTML ফাইল)</button>
+        </div>
+      </div>
+      <div class="dropdown-wrap admin-only">
+        <button class="btn btn-ghost btn-sm" id="importMenuBtn">↑ Import ▾</button>
+        <div class="dropdown-menu" id="importMenu">
+          <button id="importJsonBtn">🗂 JSON (full backup)</button>
+          <button id="importExcelBtn">📊 Excel (.xlsx) — with photos</button>
+        </div>
       </div>
     </div>
-    <div class="dropdown-wrap admin-only">
-      <button class="btn btn-ghost btn-sm" id="importMenuBtn">⬆ Import ▾</button>
-      <div class="dropdown-menu" id="importMenu">
-        <button id="importJsonBtn">🗂 JSON (full backup)</button>
-        <button id="importExcelBtn">📊 Excel (.xlsx) — with photos</button>
-      </div>
-    </div>
+
     <input type="file" id="importFile" accept="application/json" style="display:none;">
     <input type="file" id="importExcelFile" accept=".xlsx,.xls" style="display:none;">
-    <button class="btn btn-ghost btn-sm info-btn" id="aboutBtn">ℹ About</button>
-    <button class="btn btn-ghost btn-sm admin-only" id="settingsBtn">⚙ Settings</button>
-    <span class="role-badge" id="roleBadge">Locked</span>
-    <button class="btn btn-ghost btn-sm viewer-only" id="viewerLogoutBtn">↪ Logout</button>
-    <button class="btn btn-ghost btn-sm" id="adminLoginBtn">↪ Logout</button>
-    <button class="btn btn-gold admin-only" id="addBtn">+ নতুন Lesson</button>
+
+    <div class="action-separator"></div>
+
+    <div class="action-cluster tools">
+      <button class="btn btn-ghost btn-sm info-btn" id="aboutBtn">ⓘ About</button>
+      <button class="btn btn-ghost btn-sm admin-only" id="settingsBtn">⚙ Settings</button>
+      <button class="btn btn-ghost btn-sm admin-only" id="announcementManagerBtn">📢 Message</button>
+      <div class="notify-wrap">
+        <button class="btn btn-ghost btn-sm notify-btn" id="notificationBtn" type="button" aria-label="Notifications" title="Notifications">🔔</button>
+        <span class="notify-badge" id="notificationBadge">0</span>
+      </div>
+    </div>
+
+    <div class="action-separator"></div>
+
+    <div class="action-cluster account">
+      <span class="role-badge" id="roleBadge">Locked</span>
+      <button class="btn btn-ghost btn-sm viewer-only" id="viewerLogoutBtn">↪ Logout</button>
+      <button class="btn btn-ghost btn-sm" id="adminLoginBtn">↪ Logout</button>
+    </div>
+
+    <div class="action-cluster primary">
+      <button class="btn btn-gold admin-only" id="addBtn">＋ New Lesson</button>
+    </div>
   </div>
 </header>
 
@@ -1069,6 +1256,89 @@ body.access-keyboard-open .access-foot{display:none;}
 
 
 <!-- Admin Security Settings -->
+
+<div class="overlay" id="notificationOverlay">
+  <div class="modal" style="max-width:650px;">
+    <div class="modal-header">
+      <div>
+        <h2>🔔 Notification Center</h2>
+        <div style="font-size:11px;color:var(--text-mute);margin-top:3px;">এই ডিভাইসে নতুন Lesson ও Admin message আলাদাভাবে track হবে।</div>
+      </div>
+      <button class="close-btn" id="notificationCloseBtn" type="button">&times;</button>
+    </div>
+    <div class="notification-list" id="notificationList"></div>
+    <div class="notification-actions">
+      <button class="btn btn-ghost btn-sm" id="markAllNotificationsReadBtn" type="button">✓ Mark all as read</button>
+      <button class="btn btn-gold btn-sm" id="notificationDoneBtn" type="button">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="announcementManagerOverlay">
+  <div class="modal" style="max-width:700px;">
+    <div class="modal-header">
+      <div>
+        <h2>📢 Admin Message / Announcement</h2>
+        <div style="font-size:11px;color:var(--text-mute);margin-top:3px;">Viewer-রা app খুললে নতুন message notification হিসেবে দেখবে।</div>
+      </div>
+      <button class="close-btn" id="announcementManagerCloseBtn" type="button">&times;</button>
+    </div>
+
+    <div class="announcement-form">
+      <input type="hidden" id="announcementEditId">
+      <div class="announcement-form-grid">
+        <div class="field" style="margin:0;">
+          <label>Message Title</label>
+          <input type="text" id="announcementTitleInput" maxlength="100" placeholder="e.g. Important QA Update">
+        </div>
+        <div class="field" style="margin:0;">
+          <label>Priority</label>
+          <select id="announcementPriorityInput">
+            <option value="normal">Normal</option>
+            <option value="important">Important</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label>Message</label>
+        <textarea id="announcementBodyInput" maxlength="1000" placeholder="Write the message viewers should see..."></textarea>
+      </div>
+      <div class="announcement-form-grid">
+        <div class="field" style="margin:0;">
+          <label>Expiry date (optional)</label>
+          <input type="date" id="announcementExpiryInput">
+        </div>
+        <div class="field" style="margin:0;">
+          <label>Status</label>
+          <select id="announcementActiveInput">
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="settings-actions">
+        <button class="btn btn-ghost" id="announcementResetBtn" type="button">Clear</button>
+        <button class="btn btn-gold" id="announcementPublishBtn" type="button">Publish Message</button>
+      </div>
+      <div class="announcement-status" id="announcementStatus"></div>
+    </div>
+
+    <div style="padding:12px 16px 0;font-size:12px;font-weight:800;color:var(--navy);">Published Messages</div>
+    <div class="announcement-manager-list" id="announcementManagerList"></div>
+  </div>
+</div>
+
+<div class="notify-toast" id="notificationToast" role="status" aria-live="polite">
+  <div style="font-size:19px;line-height:1;">🔔</div>
+  <div class="body">
+    <div class="title" id="notificationToastTitle">New notification</div>
+    <div class="sub" id="notificationToastText"></div>
+  </div>
+  <button type="button" id="notificationToastViewBtn">View</button>
+  <button type="button" id="notificationToastDismissBtn" aria-label="Dismiss">&times;</button>
+</div>
+
 <div class="overlay" id="settingsOverlay">
   <div class="modal" style="max-width:760px;">
     <div class="modal-header">
@@ -1248,6 +1518,35 @@ const VIEWER_UID = 'XGEAk92tLAUbdYkNym0UxIpWWSi1';
 const VIEWER_EMAIL = 'viewer@gmail.com';
 let cloudUnsubs = [];
 let cloudSyncStarted = false;
+
+// v1.0.19 notification state.
+// IMPORTANT: read/seen status is intentionally local to each browser/app installation.
+// The shared Viewer Firebase account therefore does NOT share read status between devices.
+const NOTIFY_STATE_KEY = 'shl_llr_notify_state_v1';
+const LOCAL_ANNOUNCEMENTS_KEY = 'shl_llr_announcements_local_v1';
+let announcements = [];
+let lessonNotificationBaselineReady = false;
+let notificationToastShownForSignature = '';
+
+function loadNotifyState(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(NOTIFY_STATE_KEY)||'null')||{};
+    return {
+      seenLessonIds:Array.isArray(raw.seenLessonIds)?raw.seenLessonIds:[],
+      readAnnouncementIds:Array.isArray(raw.readAnnouncementIds)?raw.readAnnouncementIds:[]
+    };
+  }catch(e){
+    return {seenLessonIds:[],readAnnouncementIds:[]};
+  }
+}
+let notifyState=loadNotifyState();
+
+function saveNotifyState(){
+  // Bound the arrays so years of use do not grow localStorage forever.
+  notifyState.seenLessonIds=[...new Set(notifyState.seenLessonIds)].slice(-3000);
+  notifyState.readAnnouncementIds=[...new Set(notifyState.readAnnouncementIds)].slice(-1500);
+  try{localStorage.setItem(NOTIFY_STATE_KEY,JSON.stringify(notifyState));}catch(e){}
+}
 const AI_ENDPOINT_KEY = 'shl_llr_ai_endpoint_v1';
 const DEFAULT_AI_ENDPOINT = 'https://wispy-pine-d7bd.lessonlr.workers.dev/';
 // Always start from the verified Worker endpoint. This avoids an old/stale URL
@@ -1318,18 +1617,18 @@ function cloudBadgeUpdate(state){
   const badge = document.getElementById('storageBadge');
   if(!badge) return;
   if(state === 'live'){
-    badge.textContent = '☁️ সবার সাথে Live সংযুক্ত';
+    badge.textContent = '● Live Sync';
     badge.classList.add('connected');
     badge.setAttribute('data-tooltip','এই ডেটা cloud-এ (Firebase) সেভ হচ্ছে। আপনার টিমের সবাই একই ডেটা দেখছে এবং যোগ করতে পারছে, রিয়েল-টাইমে।');
   } else if(state === 'connecting'){
-    badge.textContent = '☁️ সংযুক্ত হচ্ছে…';
+    badge.textContent = '◌ Connecting…';
     badge.classList.remove('connected');
   } else if(state === 'offline'){
-    badge.textContent = '⚠ ইন্টারনেট নেই — শেষ সেভ হওয়া ডেটা দেখাচ্ছে';
+    badge.textContent = '⚠ Offline';
     badge.classList.remove('connected');
     badge.setAttribute('data-tooltip','ইন্টারনেট সংযোগ ফিরলে এই ডিভাইসে যা যোগ/এডিট করেছেন তা নিজে থেকেই cloud-এ সিঙ্ক হয়ে যাবে।');
   } else {
-    badge.textContent = '⚠ Cloud যুক্ত নেই — শুধু এই ব্রাউজারে সেভ হচ্ছে';
+    badge.textContent = '⚠ Local Only';
     badge.classList.remove('connected');
     badge.setAttribute('data-tooltip','firebaseConfig এখনো বসানো হয়নি, তাই ডেটা শুধু এই ব্রাউজারে (localStorage) থাকছে, অন্য কেউ দেখতে পাবে না।');
   }
@@ -1375,6 +1674,25 @@ async function cloudSaveSettings(){
   catch(e){ console.error('cloudSaveSettings failed', e); }
 }
 
+function announcementIsCurrent(a){
+  if(!a || a.active===false) return false;
+  if(a.expiresAt){
+    const exp=new Date(a.expiresAt+'T23:59:59');
+    if(Number.isFinite(exp.getTime()) && exp.getTime()<Date.now()) return false;
+  }
+  return true;
+}
+
+async function cloudSaveAnnouncement(a){
+  if(!db || !isAdmin) return;
+  await db.collection('announcements').doc(a.id).set(a);
+}
+
+async function cloudDeleteAnnouncement(id){
+  if(!db || !isAdmin) return;
+  await db.collection('announcements').doc(id).delete();
+}
+
 function stopCloudSync(){
   cloudUnsubs.forEach(fn=>{ try{fn&&fn();}catch(e){} });
   cloudUnsubs=[]; cloudSyncStarted=false; cloudReady=false;
@@ -1413,12 +1731,406 @@ function startCloudSync(){
     lessons = cloudLessons;
     localStorage.removeItem(LOCAL_KEY); // do not leave repository content readable in browser localStorage
     renderAll();
+    syncLessonNotificationState();
+    updateNotificationUI();
     firstLoad = false;
   }, err => {
     console.error('lessons onSnapshot error', err);
     cloudBadgeUpdate('offline');
   }));
+
+  cloudUnsubs.push(db.collection('announcements').onSnapshot(snap=>{
+    const list=[];
+    snap.forEach(doc=>list.push({id:doc.id,...doc.data()}));
+    list.sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
+    announcements=list;
+    renderAnnouncementManager();
+    updateNotificationUI();
+  },err=>{
+    console.error('announcements onSnapshot error',err);
+  }));
 }
+
+
+// ================== NOTIFICATION CENTER / ADMIN MESSAGES ==================
+function syncLessonNotificationState(){
+  const ids=lessons.map(l=>l.id).filter(Boolean);
+
+  // First time this feature runs on a device, existing lessons become the baseline.
+  // That prevents hundreds of historical lessons from suddenly appearing as "new".
+  if(!lessonNotificationBaselineReady){
+    if(!notifyState.seenLessonIds.length){
+      notifyState.seenLessonIds=[...ids];
+      saveNotifyState();
+    }
+    lessonNotificationBaselineReady=true;
+  }
+}
+
+function unreadLessonItems(){
+  if(!lessonNotificationBaselineReady) return [];
+  const seen=new Set(notifyState.seenLessonIds);
+  return lessons
+    .filter(l=>l?.id && !seen.has(l.id))
+    .map(l=>({
+      key:'lesson:'+l.id,
+      kind:'lesson',
+      id:l.id,
+      title:l.title||'New Lesson',
+      text:[l.project,l.trade].filter(Boolean).join(' · ') || 'New lesson added',
+      createdAt:l.createdAt||l.date||'',
+      unread:true
+    }));
+}
+
+function unreadAnnouncementItems(){
+  const read=new Set(notifyState.readAnnouncementIds);
+  return announcements
+    .filter(announcementIsCurrent)
+    .filter(a=>a?.id && !read.has(a.id))
+    .map(a=>({
+      key:'announcement:'+a.id,
+      kind:'announcement',
+      id:a.id,
+      title:a.title||'Admin Message',
+      text:a.body||'',
+      priority:a.priority||'normal',
+      createdAt:a.createdAt||'',
+      unread:true
+    }));
+}
+
+function allNotificationItems(){
+  const seenLessons=new Set(notifyState.seenLessonIds);
+  const readMsgs=new Set(notifyState.readAnnouncementIds);
+
+  const lessonItems=lessons
+    .filter(l=>l?.id)
+    .map(l=>({
+      key:'lesson:'+l.id,
+      kind:'lesson',
+      id:l.id,
+      title:l.title||'Lesson',
+      text:[l.project,l.trade].filter(Boolean).join(' · ') || 'Lesson',
+      createdAt:l.createdAt||l.date||'',
+      unread:lessonNotificationBaselineReady && !seenLessons.has(l.id)
+    }));
+
+  const msgItems=announcements
+    .filter(announcementIsCurrent)
+    .map(a=>({
+      key:'announcement:'+a.id,
+      kind:'announcement',
+      id:a.id,
+      title:a.title||'Admin Message',
+      text:a.body||'',
+      priority:a.priority||'normal',
+      createdAt:a.createdAt||'',
+      unread:!readMsgs.has(a.id)
+    }));
+
+  return [...msgItems,...lessonItems]
+    .sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0))
+    .slice(0,80);
+}
+
+function notificationUnreadCount(){
+  return unreadLessonItems().length+unreadAnnouncementItems().length;
+}
+
+function markLessonNotificationRead(id){
+  if(!id) return;
+  if(!notifyState.seenLessonIds.includes(id)) notifyState.seenLessonIds.push(id);
+  saveNotifyState();
+  updateNotificationUI(false);
+}
+
+function markAnnouncementRead(id){
+  if(!id) return;
+  if(!notifyState.readAnnouncementIds.includes(id)) notifyState.readAnnouncementIds.push(id);
+  saveNotifyState();
+  updateNotificationUI(false);
+}
+
+function markAllNotificationsRead(){
+  notifyState.seenLessonIds=[...new Set([...notifyState.seenLessonIds,...lessons.map(l=>l.id).filter(Boolean)])];
+  notifyState.readAnnouncementIds=[...new Set([
+    ...notifyState.readAnnouncementIds,
+    ...announcements.filter(announcementIsCurrent).map(a=>a.id).filter(Boolean)
+  ])];
+  saveNotifyState();
+  updateNotificationUI(false);
+  renderNotificationCenter();
+}
+
+function formatNotifyTime(value){
+  if(!value) return '';
+  const d=new Date(value);
+  if(!Number.isFinite(d.getTime())) return '';
+  try{
+    return d.toLocaleString([], {year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  }catch(e){return d.toLocaleString();}
+}
+
+function escNotify(s){
+  return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderNotificationCenter(){
+  const el=document.getElementById('notificationList');
+  if(!el) return;
+  const items=allNotificationItems();
+  if(!items.length){
+    el.innerHTML='<div class="notification-empty">🔔 এখন কোনো notification নেই।<br>নতুন Lesson বা Admin message এলে এখানে দেখা যাবে।</div>';
+    return;
+  }
+  el.innerHTML=items.map(item=>{
+    const pr=item.kind==='announcement'?(item.priority||'normal'):'normal';
+    const priorityLabel=pr==='urgent'?'Urgent':pr==='important'?'Important':'Normal';
+    return `<div class="notification-item ${item.unread?'unread':''}" data-notify-kind="${item.kind}" data-notify-id="${escNotify(item.id)}">
+      <div class="notification-icon">${item.kind==='announcement'?'📢':'📘'}</div>
+      <div class="notification-content">
+        <div class="notification-title">${item.unread?'<span class="notification-dot"></span> ':''}${escNotify(item.title)}</div>
+        <div class="notification-text">${escNotify(item.text)}</div>
+        <div class="notification-meta">
+          ${item.kind==='announcement'?`<span class="priority-pill priority-${pr}">${priorityLabel}</span>`:'<span>New Lesson</span>'}
+          ${item.createdAt?`<span>${escNotify(formatNotifyTime(item.createdAt))}</span>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('.notification-item').forEach(row=>{
+    row.addEventListener('click',()=>{
+      const kind=row.dataset.notifyKind;
+      const id=row.dataset.notifyId;
+      if(kind==='lesson'){
+        markLessonNotificationRead(id);
+        closeNotificationCenter();
+        openDetail(id);
+      }else{
+        markAnnouncementRead(id);
+        row.classList.remove('unread');
+        const dot=row.querySelector('.notification-dot');
+        if(dot) dot.remove();
+        updateNotificationUI(false);
+      }
+    });
+  });
+}
+
+function openNotificationCenter(){
+  renderNotificationCenter();
+  document.getElementById('notificationOverlay').classList.add('open');
+}
+function closeNotificationCenter(){
+  document.getElementById('notificationOverlay').classList.remove('open');
+}
+
+function showNotificationToastIfNeeded(){
+  if(currentRole==='locked') return;
+  const unreadLessons=unreadLessonItems();
+  const unreadMsgs=unreadAnnouncementItems();
+  const count=unreadLessons.length+unreadMsgs.length;
+  const toast=document.getElementById('notificationToast');
+  if(!toast || count<=0){
+    if(toast) toast.classList.remove('show');
+    return;
+  }
+
+  const signature=[
+    ...unreadLessons.map(x=>'l:'+x.id),
+    ...unreadMsgs.map(x=>'m:'+x.id)
+  ].sort().join('|');
+  if(signature===notificationToastShownForSignature) return;
+  notificationToastShownForSignature=signature;
+
+  const title=document.getElementById('notificationToastTitle');
+  const body=document.getElementById('notificationToastText');
+  title.textContent=count===1?'1 new notification':count+' new notifications';
+  const parts=[];
+  if(unreadLessons.length) parts.push(unreadLessons.length+' new Lesson'+(unreadLessons.length>1?'s':''));
+  if(unreadMsgs.length) parts.push(unreadMsgs.length+' Admin message'+(unreadMsgs.length>1?'s':''));
+  body.textContent=parts.join(' · ');
+  toast.classList.add('show');
+}
+
+function updateNotificationUI(showToast=true){
+  const count=notificationUnreadCount();
+  const badge=document.getElementById('notificationBadge');
+  if(badge){
+    badge.textContent=count>99?'99+':String(count);
+    badge.classList.toggle('show',count>0);
+  }
+  if(document.getElementById('notificationOverlay')?.classList.contains('open')) renderNotificationCenter();
+  if(showToast) setTimeout(showNotificationToastIfNeeded,250);
+}
+
+function resetAnnouncementForm(){
+  document.getElementById('announcementEditId').value='';
+  document.getElementById('announcementTitleInput').value='';
+  document.getElementById('announcementBodyInput').value='';
+  document.getElementById('announcementPriorityInput').value='normal';
+  document.getElementById('announcementExpiryInput').value='';
+  document.getElementById('announcementActiveInput').value='true';
+  document.getElementById('announcementPublishBtn').textContent='Publish Message';
+  setAnnouncementStatus('');
+}
+
+function setAnnouncementStatus(msg,kind=''){
+  const el=document.getElementById('announcementStatus');
+  if(!el) return;
+  el.textContent=msg||'';
+  el.className='announcement-status'+(kind?' '+kind:'');
+}
+
+function renderAnnouncementManager(){
+  const el=document.getElementById('announcementManagerList');
+  if(!el) return;
+  if(!announcements.length){
+    el.innerHTML='<div class="notification-empty" style="padding:16px;">No messages published yet.</div>';
+    return;
+  }
+  el.innerHTML=announcements.map(a=>`
+    <div class="announcement-admin-item" data-ann-id="${escNotify(a.id)}">
+      <div class="announcement-admin-head">
+        <div>
+          <div class="announcement-admin-title">${escNotify(a.title||'Admin Message')}</div>
+          <div class="notification-meta">
+            <span class="priority-pill priority-${escNotify(a.priority||'normal')}">${escNotify(a.priority||'normal')}</span>
+            <span>${a.active===false?'Inactive':'Active'}</span>
+            ${a.expiresAt?`<span>Expires ${escNotify(a.expiresAt)}</span>`:''}
+          </div>
+        </div>
+      </div>
+      <div class="announcement-admin-body">${escNotify(a.body||'')}</div>
+      <div class="announcement-admin-actions">
+        <button type="button" class="btn btn-ghost btn-sm ann-edit">Edit</button>
+        <button type="button" class="btn btn-ghost btn-sm ann-toggle">${a.active===false?'Activate':'Deactivate'}</button>
+        <button type="button" class="btn btn-ghost btn-sm ann-delete">Delete</button>
+      </div>
+    </div>`).join('');
+
+  el.querySelectorAll('.announcement-admin-item').forEach(card=>{
+    const id=card.dataset.annId;
+    const get=()=>announcements.find(a=>a.id===id);
+    card.querySelector('.ann-edit').addEventListener('click',()=>{
+      const a=get(); if(!a) return;
+      document.getElementById('announcementEditId').value=a.id;
+      document.getElementById('announcementTitleInput').value=a.title||'';
+      document.getElementById('announcementBodyInput').value=a.body||'';
+      document.getElementById('announcementPriorityInput').value=a.priority||'normal';
+      document.getElementById('announcementExpiryInput').value=a.expiresAt||'';
+      document.getElementById('announcementActiveInput').value=a.active===false?'false':'true';
+      document.getElementById('announcementPublishBtn').textContent='Save Changes';
+      setAnnouncementStatus('Editing existing message.');
+    });
+    card.querySelector('.ann-toggle').addEventListener('click',async()=>{
+      if(!requireAdmin()) return;
+      const a=get(); if(!a) return;
+      const updated={...a,active:a.active===false,updatedAt:new Date().toISOString()};
+      try{
+        if(db) await cloudSaveAnnouncement(updated);
+        else{
+          announcements=announcements.map(x=>x.id===id?updated:x);
+          localStorage.setItem(LOCAL_ANNOUNCEMENTS_KEY,JSON.stringify(announcements));
+          renderAnnouncementManager(); updateNotificationUI();
+        }
+      }catch(e){setAnnouncementStatus('Could not update message: '+e.message,'err');}
+    });
+    card.querySelector('.ann-delete').addEventListener('click',async()=>{
+      if(!requireAdmin()) return;
+      if(!confirm('এই message delete করতে চান?')) return;
+      try{
+        if(db) await cloudDeleteAnnouncement(id);
+        else{
+          announcements=announcements.filter(x=>x.id!==id);
+          localStorage.setItem(LOCAL_ANNOUNCEMENTS_KEY,JSON.stringify(announcements));
+          renderAnnouncementManager(); updateNotificationUI();
+        }
+        setAnnouncementStatus('Message deleted.','ok');
+      }catch(e){setAnnouncementStatus('Could not delete message: '+e.message,'err');}
+    });
+  });
+}
+
+async function saveAnnouncementFromForm(){
+  if(!requireAdmin()) return;
+  const title=document.getElementById('announcementTitleInput').value.trim();
+  const body=document.getElementById('announcementBodyInput').value.trim();
+  if(!title || !body){
+    setAnnouncementStatus('Title এবং Message দুটোই লিখুন।','err');
+    return;
+  }
+  const editingId=document.getElementById('announcementEditId').value.trim();
+  const existing=editingId?announcements.find(a=>a.id===editingId):null;
+  const now=new Date().toISOString();
+  const a={
+    id:editingId||uid(),
+    title,
+    body,
+    priority:document.getElementById('announcementPriorityInput').value||'normal',
+    expiresAt:document.getElementById('announcementExpiryInput').value||'',
+    active:document.getElementById('announcementActiveInput').value!=='false',
+    createdAt:existing?.createdAt||now,
+    updatedAt:now
+  };
+  try{
+    if(db) await cloudSaveAnnouncement(a);
+    else{
+      announcements=editingId
+        ? announcements.map(x=>x.id===editingId?a:x)
+        : [a,...announcements];
+      localStorage.setItem(LOCAL_ANNOUNCEMENTS_KEY,JSON.stringify(announcements));
+      renderAnnouncementManager(); updateNotificationUI();
+    }
+    setAnnouncementStatus(editingId?'Message updated successfully.':'Message published successfully.','ok');
+    resetAnnouncementForm();
+  }catch(e){
+    setAnnouncementStatus('Message save failed: '+(e?.message||e),'err');
+  }
+}
+
+function loadLocalAnnouncementsFallback(){
+  if(db) return;
+  try{
+    const arr=JSON.parse(localStorage.getItem(LOCAL_ANNOUNCEMENTS_KEY)||'[]');
+    announcements=Array.isArray(arr)?arr:[];
+  }catch(e){announcements=[];}
+  renderAnnouncementManager();
+  updateNotificationUI();
+}
+
+document.getElementById('notificationBtn').addEventListener('click',openNotificationCenter);
+document.getElementById('notificationCloseBtn').addEventListener('click',closeNotificationCenter);
+document.getElementById('notificationDoneBtn').addEventListener('click',closeNotificationCenter);
+document.getElementById('notificationOverlay').addEventListener('click',e=>{
+  if(e.target.id==='notificationOverlay') closeNotificationCenter();
+});
+document.getElementById('markAllNotificationsReadBtn').addEventListener('click',markAllNotificationsRead);
+
+document.getElementById('notificationToastViewBtn').addEventListener('click',()=>{
+  document.getElementById('notificationToast').classList.remove('show');
+  openNotificationCenter();
+});
+document.getElementById('notificationToastDismissBtn').addEventListener('click',()=>{
+  document.getElementById('notificationToast').classList.remove('show');
+});
+
+document.getElementById('announcementManagerBtn').addEventListener('click',()=>{
+  if(!requireAdmin()) return;
+  resetAnnouncementForm();
+  renderAnnouncementManager();
+  document.getElementById('announcementManagerOverlay').classList.add('open');
+});
+document.getElementById('announcementManagerCloseBtn').addEventListener('click',()=>{
+  document.getElementById('announcementManagerOverlay').classList.remove('open');
+});
+document.getElementById('announcementManagerOverlay').addEventListener('click',e=>{
+  if(e.target.id==='announcementManagerOverlay') e.currentTarget.classList.remove('open');
+});
+document.getElementById('announcementPublishBtn').addEventListener('click',saveAnnouncementFromForm);
+document.getElementById('announcementResetBtn').addEventListener('click',resetAnnouncementForm);
 
 // ================== ROLE / SECURE ACCESS ==================
 function applyRoleUI(){
@@ -1436,6 +2148,9 @@ function applyRoleUI(){
   }
   const viewerLogoutBtn = document.getElementById('viewerLogoutBtn');
   if(viewerLogoutBtn) viewerLogoutBtn.classList.toggle('viewer-visible', currentRole==='viewer');
+  const notificationBtn=document.getElementById('notificationBtn');
+  if(notificationBtn) notificationBtn.style.display=currentRole==='locked'?'none':'';
+  if(currentRole!=='locked') setTimeout(()=>updateNotificationUI(true),350);
   ['titleText','subtitleText'].forEach(id => { const el=document.getElementById(id); if(el) el.setAttribute('contenteditable', isAdmin ? 'true':'false'); });
   const logo = document.getElementById('logoMark'); if(logo) logo.style.cursor = isAdmin ? 'pointer':'default';
 }
@@ -1459,6 +2174,9 @@ function hideAccessGate(){
 function lockRepository(){
   stopCloudSync();
   currentRole='locked'; isAdmin=false; lessons=[];
+  document.getElementById('notificationToast')?.classList.remove('show');
+  document.getElementById('notificationOverlay')?.classList.remove('open');
+  document.getElementById('announcementManagerOverlay')?.classList.remove('open');
   localStorage.removeItem(LOCAL_KEY);
   applyRoleUI(); renderAll(); showAccessGate(false);
 }
@@ -3491,6 +4209,8 @@ document.getElementById('saveAboutBtn').addEventListener('click',async()=>{
 });
 // ================== END SETTINGS / ABOUT ==================
 
+if(!CLOUD_ENABLED) loadLocalAnnouncementsFallback();
+
 if(!CLOUD_ENABLED && lessons.length === 0){
   lessons = [
     {id:uid(), type:'dont', project:'AWCH', trade:'Civil', title:'Improper rebar cover before casting', desc:'Cover blocks were missing in several column sections leading to insufficient concrete cover for reinforcement.', cause:'Supervision gap', severity:'Critical', action:'Cover blocks mandated before every pour; checklist added to pre-casting inspection.', photo1:'', photo2:'', tags:['rebar','casting','cover block'], date:new Date().toISOString()},
@@ -4758,11 +5478,16 @@ document.getElementById('saveBtn').addEventListener('click', () => {
     lessons[idx] = { ...lessons[idx], ...data };
     savedLesson = lessons[idx];
   } else {
-    savedLesson = { id: uid(), date: new Date().toISOString(), ...data };
+    const createdNow=new Date().toISOString();
+    savedLesson = { id: uid(), date: createdNow, createdAt: createdNow, ...data };
     lessons.push(savedLesson);
   }
   persist();
   cloudSaveLesson(savedLesson);
+  if(!editingId && savedLesson?.id){
+    notifyState.seenLessonIds.push(savedLesson.id);
+    saveNotifyState();
+  }
   document.getElementById('editOverlay').classList.remove('open');
   renderAll();
 });
