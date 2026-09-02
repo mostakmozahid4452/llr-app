@@ -1,4 +1,4 @@
-const CACHE = 'shl-qa-llr-shell-v1.0.31-visibility';
+const CACHE = 'shl-qa-llr-shell-v1.0.33-preset-ios-safearea';
 const SHELL = [
   './',
   './index.html',

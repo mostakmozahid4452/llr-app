@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>SHL QA — Lesson Learned Repository</title>
-<!-- Cross-platform patch v1.0.31: Admin hide/show controls for Welcome/Login branding lines -->
+<!-- Cross-platform patch v1.0.33: auto-sync custom Viewer presets + iOS PWA safe-area/Dynamic Island fix -->
 <!-- v1.0.11: mobile/web login viewport + keyboard responsiveness fix -->
 <!-- v1.0.7: card view shows both uploaded photos side-by-side -->
 
@@ -13,7 +13,7 @@
 <meta name="theme-color" content="#b8863b">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="QA LLR">
 <link rel="apple-touch-icon" href="icon-192-v1.0.11.png">
 <link rel="icon" href="icon-192-v1.0.11.png">
@@ -165,7 +165,13 @@ header{
 /* ===== v1.0.24 Mobile header ===== */
 .mobile-action-row,.mobile-more-menu{display:none;}
 @media(max-width:760px){
-  header{padding:10px 12px 11px;gap:9px;align-items:stretch;}
+  header{
+    padding-top:max(10px,calc(env(safe-area-inset-top) + 8px));
+    padding-right:max(12px,env(safe-area-inset-right));
+    padding-bottom:11px;
+    padding-left:max(12px,env(safe-area-inset-left));
+    gap:9px;align-items:stretch;
+  }
   .brand{width:100%;gap:11px;align-items:center;min-width:0;}
   .brand-text{min-width:0;flex:1;}
   .brand-text h1{font-size:15px;line-height:1.25;white-space:normal;overflow-wrap:anywhere;}
@@ -1059,7 +1065,13 @@ body.theme-dark .login-role-tab.active{color:var(--text);}
   .access-card{
     width:100%;min-height:var(--access-viewport-height,100dvh);border:0;border-radius:0;box-shadow:none;margin:0;
   }
-  .access-intro{min-height:var(--access-viewport-height,100dvh);padding:45px 22px 26px;}
+  .access-intro{
+    min-height:var(--access-viewport-height,100dvh);
+    padding-top:max(45px,calc(env(safe-area-inset-top) + 24px));
+    padding-right:max(22px,env(safe-area-inset-right));
+    padding-bottom:max(26px,env(safe-area-inset-bottom));
+    padding-left:max(22px,env(safe-area-inset-left));
+  }
   .welcome-kicker{font-size:17px;margin-top:10px;}
   .welcome-main-title{font-size:29px;letter-spacing:.7px;margin-top:10px;}
   .welcome-note{font-size:11px;margin-top:7px;}
@@ -1069,7 +1081,13 @@ body.theme-dark .login-role-tab.active{color:var(--text);}
   .welcome-company{margin-top:28px;font-size:12px;letter-spacing:1.8px;}
   .welcome-developer{font-size:10px;}
 
-  .access-login{min-height:var(--access-viewport-height,100dvh);padding:28px 20px 24px;}
+  .access-login{
+    min-height:var(--access-viewport-height,100dvh);
+    padding-top:max(28px,calc(env(safe-area-inset-top) + 18px));
+    padding-right:max(20px,env(safe-area-inset-right));
+    padding-bottom:max(24px,env(safe-area-inset-bottom));
+    padding-left:max(20px,env(safe-area-inset-left));
+  }
   .login-brand-logo{width:84px;height:84px;border-radius:20px;}
   .login-company{font-size:23px;margin-top:18px;}
   .login-app-name{font-size:12px;}
@@ -1109,6 +1127,82 @@ body.theme-dark .login-role-tab.active{color:var(--text);}
 
 /* ===== Admin Settings + About ===== */
 .info-btn{display:inline-flex;align-items:center;gap:6px;}
+
+/* ===== v1.0.32 Settings Hub ===== */
+.settings-modal{display:flex;flex-direction:column;overflow:hidden!important;}
+.settings-modal .modal-header{flex:0 0 auto;}
+.settings-modal .modal-body{flex:1 1 auto;overflow-y:auto;}
+.settings-header-left{display:flex;align-items:center;gap:10px;min-width:0;}
+.settings-back-btn{width:34px;height:34px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text-dim);display:none;align-items:center;justify-content:center;cursor:pointer;font-size:17px;}
+.settings-back-btn.show{display:inline-flex;}
+.settings-header-title{font-size:16px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.settings-screen{display:none;}
+.settings-screen.active{display:block;}
+.settings-hub-intro{font-size:11.5px;line-height:1.55;color:var(--text-mute);margin:0 2px 14px;}
+.settings-menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.settings-menu-item{border:1px solid var(--border);border-radius:15px;background:var(--card);padding:15px;display:flex;align-items:center;gap:12px;text-align:left;cursor:pointer;color:var(--text);min-height:88px;transition:.16s ease;}
+.settings-menu-item:hover{border-color:var(--gold-dim);box-shadow:0 7px 20px rgba(28,43,58,.08);transform:translateY(-1px);}
+.settings-menu-icon{width:46px;height:46px;flex:0 0 46px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:var(--gold-bg);border:1px solid color-mix(in srgb,var(--gold) 26%,var(--border));color:var(--gold-dim);font-size:20px;}
+.settings-menu-copy{min-width:0;}
+.settings-menu-title{font-size:13px;font-weight:850;color:var(--navy);display:block;}
+.settings-menu-desc{font-size:10px;line-height:1.4;color:var(--text-mute);margin-top:4px;display:block;}
+.settings-section-stack{display:grid;gap:16px;}
+
+/* ===== v1.0.32 Theme editor ===== */
+.theme-quick-label,.theme-style-title,.theme-live-title,.theme-viewer-title{font-size:12px;font-weight:850;color:var(--navy);margin:4px 0 9px;}
+.theme-preset-list{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:15px;}
+.theme-preset-chip{border:1px solid var(--border-strong);background:var(--card);color:var(--text);min-height:40px;border-radius:999px;padding:0 13px;display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:11.5px;font-weight:750;cursor:pointer;}
+.theme-preset-chip:hover,.theme-preset-chip.active{border-color:var(--gold-dim);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 12%,transparent);}
+.theme-preset-dot{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.10);flex:0 0 18px;}
+.theme-color-rows{display:grid;gap:10px;}
+.theme-hex-row{display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:center;}
+.theme-color-swatch{width:48px;height:48px;border:1px solid var(--border-strong);border-radius:12px;background:var(--card);padding:4px;}
+.theme-color-swatch input[type=color]{width:100%;height:100%;border:0;padding:0;background:transparent;cursor:pointer;border-radius:8px;}
+.theme-hex-field{position:relative;}
+.theme-hex-field label{position:absolute;left:13px;top:-7px;background:var(--card);padding:0 5px;font-size:10px;color:var(--text-dim);z-index:1;}
+.theme-hex-field input{width:100%;min-height:48px;border:1px solid var(--border-strong);border-radius:13px;background:var(--card);color:var(--text);padding:10px 13px;font:inherit;font-size:13px;text-transform:uppercase;}
+.theme-hex-field input:focus{outline:none;border-color:var(--gold-dim);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 10%,transparent);}
+.theme-style-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+.theme-select-field{position:relative;}
+.theme-select-field label{position:absolute;left:13px;top:-7px;z-index:1;background:var(--card);padding:0 5px;font-size:10px;color:var(--text-dim);}
+.theme-select-field select{width:100%;min-height:48px;border:1px solid var(--border-strong);border-radius:13px;background:var(--card);color:var(--text);padding:10px 12px;font:inherit;font-size:12px;}
+.theme-live-preview{margin-top:10px;border:1px solid var(--border);border-radius:16px;padding:24px 16px;background:var(--bg);text-align:center;transition:.18s ease;}
+.theme-live-preview .preview-welcome{font-size:13px;font-weight:800;margin-bottom:8px;}
+.theme-live-preview .preview-title{font-size:24px;font-weight:850;letter-spacing:2px;margin-bottom:18px;}
+.theme-live-preview .preview-button{display:inline-flex;align-items:center;justify-content:center;min-width:210px;min-height:48px;padding:0 20px;font-size:11px;font-weight:850;}
+.theme-live-preview .preview-line{width:150px;height:5px;border-radius:99px;margin:17px auto 0;opacity:.65;}
+.theme-extra-box{margin-top:14px;border:1px solid var(--border);border-radius:14px;padding:12px;background:var(--bg);}
+.theme-extra-form{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;}
+.theme-extra-form .field{margin:0;}
+.theme-extra-list{display:grid;gap:7px;margin-top:10px;}
+.theme-extra-item{display:flex;align-items:center;gap:9px;border:1px solid var(--border);border-radius:10px;background:var(--card);padding:8px 9px;}
+.theme-extra-name{font-size:11px;font-weight:800;color:var(--navy);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.theme-extra-swatches{display:flex;gap:4px;}
+.theme-extra-swatches span{width:16px;height:16px;border-radius:5px;border:1px solid rgba(0,0,0,.08);}
+.theme-extra-delete{border:0;background:transparent;color:var(--red);cursor:pointer;padding:5px;font-size:13px;}
+.theme-note{font-size:10px;color:var(--text-mute);line-height:1.45;margin-top:8px;}
+.theme-picker-card{width:min(620px,100%)!important;}
+.theme-picker-options{grid-template-columns:repeat(2,minmax(0,1fr))!important;max-height:62dvh;overflow:auto;}
+.theme-option{min-height:72px;}
+.theme-option-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* Login password eye */
+.access-input-wrap.has-password-toggle input{padding-right:48px!important;}
+.login-password-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;background:transparent;color:var(--text-dim);display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:9px;}
+.login-password-toggle:hover{background:var(--card-hover);color:var(--navy);}
+.login-password-toggle svg{width:20px;height:20px;display:block;}
+
+/* App-wide font choices */
+body.font-system{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,'Noto Sans Bengali',Arial,sans-serif;}
+body.font-modern{font-family:Arial,Helvetica,'Noto Sans Bengali',sans-serif;}
+body.font-classic{font-family:Georgia,'Times New Roman','Noto Serif Bengali',serif;}
+body.font-compact{font-family:Tahoma,'Segoe UI','Noto Sans Bengali',sans-serif;}
+
+/* App-wide button shape choices */
+body.button-pill .btn,body.button-pill .m-action,body.button-pill .theme-preset-chip,body.button-pill .access-login-button,body.button-pill .enter-repository-btn{border-radius:999px!important;}
+body.button-square .btn,body.button-square .m-action,body.button-square .theme-preset-chip,body.button-square .access-login-button,body.button-square .enter-repository-btn{border-radius:6px!important;}
+body.button-rounded .btn{border-radius:9px;}
+
 .settings-grid{display:grid;grid-template-columns:1fr;gap:18px;}
 .settings-card{border:1px solid var(--border);border-radius:12px;padding:16px;background:var(--card);}
 .settings-card h3{font-size:14px;color:var(--navy);margin-bottom:6px;}
@@ -1183,6 +1277,20 @@ body.theme-dark .login-role-tab.active{color:var(--text);}
 .welcome-settings-subhead{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.55px;color:var(--gold-dim);margin:8px 0 2px;padding-top:8px;border-top:1px solid var(--border);}
 .welcome-settings-subhead:first-of-type{border-top:none;padding-top:0;}
 @media(max-width:700px){
+  #settingsOverlay{padding:0!important;align-items:stretch!important;}
+  #settingsOverlay .settings-modal{width:100%;height:100dvh;max-width:none!important;max-height:100dvh!important;border:0;border-radius:0;}
+  #settingsOverlay .modal-header{
+    padding-top:max(14px,calc(env(safe-area-inset-top) + 8px));
+    padding-right:max(16px,env(safe-area-inset-right));
+    padding-bottom:14px;
+    padding-left:max(16px,env(safe-area-inset-left));
+  }
+  #settingsOverlay .modal-body{padding:18px 16px max(22px,env(safe-area-inset-bottom));}
+  .settings-menu-grid{grid-template-columns:1fr;}
+  .settings-menu-item{min-height:78px;}
+  .theme-style-grid{grid-template-columns:1fr;}
+  .theme-picker-options{grid-template-columns:1fr!important;}
+  .theme-extra-form{grid-template-columns:1fr;}
   .settings-actions{flex-direction:column;}
   .settings-actions .btn{justify-content:center;width:100%;}
 }
@@ -1269,9 +1377,10 @@ body.theme-dark .login-role-tab.active{color:var(--text);}
               <span class="access-input-icon">✉</span>
               <input type="email" id="gateAdminEmail" autocomplete="username" placeholder="Admin email">
             </div>
-            <div class="access-input-wrap">
+            <div class="access-input-wrap has-password-toggle">
               <span class="access-input-icon">▣</span>
               <input type="password" id="gateAdminPassword" autocomplete="current-password" placeholder="Admin password">
+              <button class="login-password-toggle" type="button" data-password-toggle="gateAdminPassword" aria-label="Show password" title="Show / hide password"></button>
             </div>
             <button class="btn access-login-button" id="gateAdminLoginBtn" type="button">ADMIN LOGIN</button>
           </div>
@@ -1282,9 +1391,10 @@ body.theme-dark .login-role-tab.active{color:var(--text);}
           <div class="access-section-title" id="welcomeViewerTitleText">Viewer Login</div>
           <div class="access-section-sub" id="welcomeViewerSubtitleText">Enter the shared Viewer password for read-only access.</div>
           <div class="access-row">
-            <div class="access-input-wrap">
+            <div class="access-input-wrap has-password-toggle">
               <span class="access-input-icon">◉</span>
               <input type="password" id="viewerPassword" autocomplete="current-password" placeholder="Viewer password">
+              <button class="login-password-toggle" type="button" data-password-toggle="viewerPassword" aria-label="Show password" title="Show / hide password"></button>
             </div>
             <button class="btn access-login-button" id="viewerLoginBtn" type="button">VIEWER LOGIN</button>
           </div>
@@ -1920,14 +2030,24 @@ body.theme-dark .login-role-tab.active{color:var(--text);}
 </div>
 
 <div class="overlay" id="settingsOverlay">
-  <div class="modal" style="max-width:920px;">
+  <div class="modal settings-modal" style="max-width:920px;">
     <div class="modal-header">
-      <h2>⚙ Admin Settings</h2>
+      <div class="settings-header-left"><button class="settings-back-btn" id="settingsBackBtn" type="button" aria-label="Back">←</button><h2 class="settings-header-title" id="settingsPageTitle">Settings</h2></div>
       <button class="close-btn" id="closeSettings">&times;</button>
     </div>
     <div class="modal-body">
       <div class="settings-grid">
-        <div class="settings-card">
+<div class="settings-screen active" id="settingsHomeScreen">
+  <div class="settings-hub-intro">Choose what you want to configure. Each section opens separately so Settings stays clean on phone, web and Windows.</div>
+  <div class="settings-menu-grid">
+    <button class="settings-menu-item" type="button" data-settings-page="welcome"><span class="settings-menu-icon">🖼</span><span class="settings-menu-copy"><span class="settings-menu-title">Welcome &amp; Login</span><span class="settings-menu-desc">Logos, text, labels and login branding</span></span></button>
+    <button class="settings-menu-item" type="button" data-settings-page="visibility"><span class="settings-menu-icon">👁</span><span class="settings-menu-copy"><span class="settings-menu-title">Screen Visibility</span><span class="settings-menu-desc">Hide or show Welcome/Login elements</span></span></button>
+    <button class="settings-menu-item" type="button" data-settings-page="theme"><span class="settings-menu-icon">🎨</span><span class="settings-menu-copy"><span class="settings-menu-title">Branding &amp; Theme</span><span class="settings-menu-desc">Presets, HEX colors, fonts and button style</span></span></button>
+    <button class="settings-menu-item" type="button" data-settings-page="access"><span class="settings-menu-icon">🔐</span><span class="settings-menu-copy"><span class="settings-menu-title">Access &amp; Password</span><span class="settings-menu-desc">Admin and shared Viewer password settings</span></span></button>
+    <button class="settings-menu-item" type="button" id="settingsAboutShortcut"><span class="settings-menu-icon">ⓘ</span><span class="settings-menu-copy"><span class="settings-menu-title">About / Mission / Vision</span><span class="settings-menu-desc">Review and edit repository information</span></span></button>
+  </div>
+</div>
+<div class="settings-screen" id="settingsWelcomeScreen"><div class="settings-section-stack"><div class="settings-card">
           <h3>Welcome &amp; Login Screens</h3>
           <div class="help">Admin controls the public Welcome/Login branding for all users. Both logos use the drag + zoom crop editor and sync through Firebase.</div>
 
@@ -2015,9 +2135,8 @@ body.theme-dark .login-role-tab.active{color:var(--text);}
             <button class="btn btn-ghost" type="button" id="resetWelcomeDefaultsBtn">Restore Branding Defaults</button>
             <button class="btn btn-gold" type="button" id="saveWelcomeSettingsBtn">Save Welcome &amp; Login</button>
           </div>
-        </div>
-
-        <div class="settings-card">
+        </div></div></div>
+<div class="settings-screen" id="settingsVisibilityScreen"><div class="settings-section-stack"><div class="settings-card">
           <h3>Welcome &amp; Login Visibility</h3>
           <div class="help">Hide or show individual branding/text lines without deleting their saved text. Turn an item back on anytime and the previous text will reappear.</div>
 
@@ -2060,53 +2179,35 @@ body.theme-dark .login-role-tab.active{color:var(--text);}
             <button class="btn btn-ghost" id="showAllBrandingBtn" type="button">Show All</button>
             <button class="btn btn-gold" id="saveVisibilityBtn" type="button">Save Visibility</button>
           </div>
-        </div>
-
-        <div class="settings-card">
-          <h3>Appearance &amp; Theme</h3>
-          <div class="help">The current SHL LLR-QA color combination is the default. Admin sets the company theme for everyone; Viewers may choose a different preset only on their own device.</div>
-
-          <div class="field">
-            <label>Company Default Theme</label>
-            <select id="adminThemePreset">
-              <option value="shl">SHL Gold — Default</option>
-              <option value="light">Clean Light</option>
-              <option value="gray">Soft Gray</option>
-              <option value="navy">Navy Professional</option>
-              <option value="dark">Dark</option>
-              <option value="custom">Custom Colors</option>
-            </select>
-          </div>
-
-          <div id="adminCustomThemeFields">
-            <div class="theme-admin-grid">
-              <label class="theme-color-field"><span>Primary / Gold</span><input type="color" id="themeColorGold"></label>
-              <label class="theme-color-field"><span>Background</span><input type="color" id="themeColorBg"></label>
-              <label class="theme-color-field"><span>Card</span><input type="color" id="themeColorCard"></label>
-              <label class="theme-color-field"><span>Navy / Heading</span><input type="color" id="themeColorNavy"></label>
-              <label class="theme-color-field"><span>Main Text</span><input type="color" id="themeColorText"></label>
-              <label class="theme-color-field"><span>Muted Text</span><input type="color" id="themeColorMute"></label>
-              <label class="theme-color-field"><span>Border</span><input type="color" id="themeColorBorder"></label>
-              <label class="theme-color-field"><span>Secondary Text</span><input type="color" id="themeColorDim"></label>
-            </div>
-          </div>
-
-          <div class="theme-preview" id="themeAdminPreview">
-            <div class="theme-preview-card">
-              <div class="theme-preview-title">Lesson Learned Repository</div>
-              <div class="theme-preview-text">Theme preview — buttons, cards, text and background.</div>
-              <span class="theme-preview-btn">Primary Action</span>
-            </div>
-          </div>
-
-          <div class="settings-status" id="themeSettingsStatus"></div>
-          <div class="settings-actions">
-            <button class="btn btn-ghost" id="restoreSHLThemeBtn" type="button">Restore SHL Default</button>
-            <button class="btn btn-gold" id="saveThemeBtn" type="button">Save Theme</button>
-          </div>
-        </div>
-
-        <div class="settings-card">
+        </div></div></div>
+<div class="settings-screen" id="settingsThemeScreen"><div class="settings-section-stack"><div class="settings-card">
+  <h3>Branding &amp; Theme Settings</h3>
+  <div class="help">The current SHL Gold look remains the default. Choose a preset, enter new HEX colors, set the app style, or create more color presets for Viewers.</div>
+  <div class="theme-quick-label">Theme Colors — Quick Presets</div>
+  <div class="theme-preset-list" id="adminThemePresetList"></div>
+  <div class="theme-color-rows">
+    <div class="theme-hex-row"><div class="theme-color-swatch"><input type="color" id="themePrimaryPicker" aria-label="Primary color"></div><div class="theme-hex-field"><label>Primary Color (Hex)</label><input type="text" id="themePrimaryHex" maxlength="7" value="#B8863B"></div></div>
+    <div class="theme-hex-row"><div class="theme-color-swatch"><input type="color" id="themeAccentPicker" aria-label="Accent color"></div><div class="theme-hex-field"><label>Accent Color (Hex)</label><input type="text" id="themeAccentHex" maxlength="7" value="#1C2B3A"></div></div>
+    <div class="theme-hex-row"><div class="theme-color-swatch"><input type="color" id="themeBackgroundPicker" aria-label="Background color"></div><div class="theme-hex-field"><label>Background Color (Hex)</label><input type="text" id="themeBackgroundHex" maxlength="7" value="#EEF1F4"></div></div>
+  </div>
+  <div class="theme-style-title" style="margin-top:20px;">Style</div>
+  <div class="theme-style-grid">
+    <div class="theme-select-field"><label>Theme Mode</label><select id="themeModeSelect"><option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option></select></div>
+    <div class="theme-select-field"><label>Font Style</label><select id="themeFontSelect"><option value="system">System</option><option value="modern">Modern Sans</option><option value="classic">Classic</option><option value="compact">Compact</option></select></div>
+    <div class="theme-select-field"><label>Button Style</label><select id="themeButtonSelect"><option value="rounded">Rounded</option><option value="pill">Pill</option><option value="square">Compact Square</option></select></div>
+  </div>
+  <div class="theme-live-title" style="margin-top:20px;">Live Preview</div>
+  <div class="theme-live-preview" id="themeLivePreview"><div class="preview-welcome">Welcome to</div><div class="preview-title">LLR</div><div class="preview-button">BUTTON PREVIEW</div><div class="preview-line"></div></div>
+  <div class="theme-extra-box">
+    <div class="theme-viewer-title">Viewer Color Presets</div>
+    <div class="theme-note">Viewers always get Admin Default plus 7 fixed built-in color combinations. Add custom presets here; only custom presets can be deleted, and add/delete syncs to Viewers automatically.</div>
+    <div class="theme-extra-form"><div class="field"><label>New Preset Name</label><input type="text" id="newViewerPresetName" maxlength="40" placeholder="e.g. Project Orange"></div><button class="btn btn-ghost" id="addViewerPresetBtn" type="button">＋ Add Preset</button></div>
+    <div class="theme-extra-list" id="adminExtraPresetList"></div>
+  </div>
+  <div class="settings-status" id="themeSettingsStatus"></div>
+  <div class="settings-actions"><button class="btn btn-ghost" id="restoreSHLThemeBtn" type="button">↺ Restore SHL Default</button><button class="btn btn-gold" id="saveThemeBtn" type="button">💾 Save Settings</button></div>
+</div></div></div>
+<div class="settings-screen" id="settingsAccessScreen"><div class="settings-section-stack"><div class="settings-card">
           <h3>Change Admin Password</h3>
           <div class="help">For security, enter the current Admin password first. Your Admin email and UID remain unchanged.</div>
           <div class="field"><label>Current Admin Password</label><input type="password" id="adminCurrentPassword" autocomplete="current-password" placeholder="Current password"></div>
@@ -2114,9 +2215,7 @@ body.theme-dark .login-role-tab.active{color:var(--text);}
           <div class="field"><label>Confirm New Password</label><input type="password" id="adminConfirmPassword" autocomplete="new-password" placeholder="Confirm new password"></div>
           <div class="settings-status" id="adminPasswordStatus"></div>
           <div class="settings-actions"><button class="btn btn-gold" id="changeAdminPasswordBtn">Change Admin Password</button></div>
-        </div>
-
-        <div class="settings-card">
+        </div><div class="settings-card">
           <h3>Change Viewer Password</h3>
           <div class="help">Enter the current shared Viewer password, then set a new one. This uses a separate secure Firebase session and does not log the Admin out.</div>
           <div class="field"><label>Current Viewer Password</label><input type="password" id="viewerCurrentPassword" autocomplete="current-password" placeholder="Current viewer password"></div>
@@ -2124,8 +2223,8 @@ body.theme-dark .login-role-tab.active{color:var(--text);}
           <div class="field"><label>Confirm New Password</label><input type="password" id="viewerConfirmPassword" autocomplete="new-password" placeholder="Confirm new viewer password"></div>
           <div class="settings-status" id="viewerPasswordStatus"></div>
           <div class="settings-actions"><button class="btn btn-gold" id="changeViewerPasswordBtn">Change Viewer Password</button></div>
-        </div>
-      </div>
+        </div></div></div>
+</div>
     </div>
   </div>
 </div>
@@ -2188,92 +2287,35 @@ const DEFAULT_ABOUT = {
   mission: 'To capture practical construction lessons, standardize QA/QC knowledge, support better technical decisions and reduce recurrence of avoidable quality issues through shared learning.',
   vision: 'To build a strong culture of continuous learning and quality excellence where proven lessons are easy to access, reuse and convert into better standards across Shanta Holdings Limited.'
 };
-const DEFAULT_THEME_CUSTOM = {
-  gold:'#b8863b',
-  bg:'#eef1f4',
-  card:'#ffffff',
-  navy:'#1c2b3a',
-  text:'#20293a',
-  textMute:'#8993a1',
-  border:'#dde1e6',
-  textDim:'#5b6472'
-};
-
+const DEFAULT_THEME_CORE = {primary:'#b8863b',accent:'#1c2b3a',background:'#eef1f4'};
 const THEME_PRESETS = {
-  shl:{
-    label:'SHL Gold — Default',
-    vars:{
-      bg:'#eef1f4',bg2:'#ffffff',card:'#ffffff',cardHover:'#f7f8fa',
-      border:'#dde1e6',borderStrong:'#c7ccd3',
-      gold:'#b8863b',goldLight:'#c99a52',goldDim:'#8a6a2f',goldBg:'#faf3e6',
-      navy:'#1c2b3a',text:'#20293a',textDim:'#5b6472',textMute:'#8993a1',
-      green:'#1f8a4c',greenBg:'#e7f6ec',red:'#c23b3b',redBg:'#fbeaea'
-    }
-  },
-  light:{
-    label:'Clean Light',
-    vars:{
-      bg:'#f5f7f9',bg2:'#ffffff',card:'#ffffff',cardHover:'#f3f6f8',
-      border:'#dce3e9',borderStrong:'#c5cfd8',
-      gold:'#b8863b',goldLight:'#d0a763',goldDim:'#80602b',goldBg:'#fbf5e9',
-      navy:'#243447',text:'#263241',textDim:'#657180',textMute:'#8b96a3',
-      green:'#21824b',greenBg:'#e9f6ed',red:'#bd4641',redBg:'#faeceb'
-    }
-  },
-  gray:{
-    label:'Soft Gray',
-    vars:{
-      bg:'#e8ebee',bg2:'#f8f9fa',card:'#fdfdfd',cardHover:'#f1f3f5',
-      border:'#d0d5da',borderStrong:'#b9c0c7',
-      gold:'#aa8139',goldLight:'#c19c5b',goldDim:'#775d2e',goldBg:'#f5efe3',
-      navy:'#303b46',text:'#303942',textDim:'#626b75',textMute:'#858e97',
-      green:'#2d8050',greenBg:'#e6f2ea',red:'#b84a48',redBg:'#f6eaea'
-    }
-  },
-  navy:{
-    label:'Navy Professional',
-    vars:{
-      bg:'#e9eef3',bg2:'#ffffff',card:'#ffffff',cardHover:'#f4f7fa',
-      border:'#d5dfe8',borderStrong:'#b8c6d2',
-      gold:'#b58b43',goldLight:'#d0aa67',goldDim:'#7d632f',goldBg:'#faf4e9',
-      navy:'#142b42',text:'#1c3247',textDim:'#536a7e',textMute:'#8193a2',
-      green:'#1f8050',greenBg:'#e7f4ed',red:'#b94343',redBg:'#faeaea'
-    }
-  },
-  dark:{
-    label:'Dark',
-    vars:{
-      bg:'#111820',bg2:'#161f28',card:'#1b2631',cardHover:'#22303c',
-      border:'#31404d',borderStrong:'#465767',
-      gold:'#c39a52',goldLight:'#d7b476',goldDim:'#d1aa64',goldBg:'#2a261d',
-      navy:'#edf2f6',text:'#e4eaf0',textDim:'#b6c0ca',textMute:'#8998a6',
-      green:'#55b77d',greenBg:'#193326',red:'#e16a66',redBg:'#3a2020'
-    }
-  }
+  shl:{label:'SHL Gold',primary:'#b8863b',accent:'#1c2b3a',background:'#eef1f4'},
+  blue:{label:'Professional Blue',primary:'#356f9d',accent:'#23445f',background:'#edf3f8'},
+  green:{label:'Construction Green',primary:'#397b69',accent:'#245247',background:'#edf5f2'},
+  charcoal:{label:'Charcoal',primary:'#4a5158',accent:'#2f3740',background:'#f0f2f3'},
+  copper:{label:'Warm Copper',primary:'#a66a3f',accent:'#5d4436',background:'#f7f1ec'},
+  teal:{label:'Modern Teal',primary:'#2b7d83',accent:'#28535b',background:'#edf6f6'},
+  burgundy:{label:'Burgundy',primary:'#8d4557',accent:'#59313c',background:'#f7eff1'},
+  indigo:{label:'Slate Indigo',primary:'#5c678f',accent:'#37405f',background:'#f1f2f7'}
 };
-
-function hexToRgb(hex){
-  const h=String(hex||'').replace('#','');
-  if(!/^[0-9a-fA-F]{6}$/.test(h))return null;
-  return {r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)};
+function isHexColor(value){return /^#[0-9a-fA-F]{6}$/.test(String(value||'').trim());}
+function normalizeHex(value,fallback){let v=String(value||'').trim();if(/^[0-9a-fA-F]{6}$/.test(v))v='#'+v;return isHexColor(v)?v.toLowerCase():fallback;}
+function hexToRgb(hex){const h=normalizeHex(hex,'#000000').slice(1);return {r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)};}
+function mixHex(a,b,weight=.5){const A=hexToRgb(a),B=hexToRgb(b),w=Math.max(0,Math.min(1,weight));const c=n=>Math.max(0,Math.min(255,Math.round(n))).toString(16).padStart(2,'0');return '#'+c(A.r*(1-w)+B.r*w)+c(A.g*(1-w)+B.g*w)+c(A.b*(1-w)+B.b*w);}
+function normalizeThemeCore(core){const c=core||{};return {primary:normalizeHex(c.primary||c.gold,DEFAULT_THEME_CORE.primary),accent:normalizeHex(c.accent||c.navy,DEFAULT_THEME_CORE.accent),background:normalizeHex(c.background||c.bg,DEFAULT_THEME_CORE.background)};}
+function resolveThemeMode(mode){if(mode==='dark')return 'dark';if(mode==='system'){try{return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}catch(_){return 'light';}}return 'light';}
+function deriveThemeVars(core,mode='light'){
+  const c=normalizeThemeCore(core),resolved=resolveThemeMode(mode);
+  if(resolved==='dark'){
+    const darkBase=mixHex(c.accent,'#0c1117',.68),darkCard=mixHex(c.accent,'#17212a',.72);
+    return {bg:darkBase,bg2:mixHex(darkBase,'#ffffff',.05),card:darkCard,cardHover:mixHex(darkCard,'#ffffff',.07),border:mixHex(c.accent,'#84909b',.42),borderStrong:mixHex(c.accent,'#aab3bb',.50),gold:mixHex(c.primary,'#ffffff',.10),goldLight:mixHex(c.primary,'#ffffff',.28),goldDim:mixHex(c.primary,'#ffffff',.18),goldBg:mixHex(c.primary,darkCard,.84),navy:'#edf2f6',text:'#e6ebf0',textDim:'#bbc5ce',textMute:'#8f9daa',green:'#59bb82',greenBg:'#193429',red:'#e57470',redBg:'#3b2021'};
+  }
+  const bg=c.background,card=mixHex(bg,'#ffffff',.88),bodyText=mixHex(c.accent,'#111820',.28);
+  return {bg,bg2:mixHex(bg,'#ffffff',.96),card,cardHover:mixHex(card,c.primary,.05),border:mixHex(bg,c.accent,.16),borderStrong:mixHex(bg,c.accent,.28),gold:c.primary,goldLight:mixHex(c.primary,'#ffffff',.24),goldDim:mixHex(c.primary,'#000000',.24),goldBg:mixHex(c.primary,card,.88),navy:c.accent,text:bodyText,textDim:mixHex(bodyText,'#ffffff',.30),textMute:mixHex(bodyText,'#ffffff',.52),green:'#1f8a4c',greenBg:mixHex('#1f8a4c',card,.88),red:'#c23b3b',redBg:mixHex('#c23b3b',card,.88)};
 }
-function mixHex(a,b,weight=.5){
-  const A=hexToRgb(a),B=hexToRgb(b);if(!A||!B)return a;
-  const w=Math.max(0,Math.min(1,weight));
-  const c=n=>Math.max(0,Math.min(255,Math.round(n))).toString(16).padStart(2,'0');
-  return '#'+c(A.r*(1-w)+B.r*w)+c(A.g*(1-w)+B.g*w)+c(A.b*(1-w)+B.b*w);
-}
-function customThemeVars(custom){
-  const c={...DEFAULT_THEME_CUSTOM,...(custom||{})};
-  return {
-    bg:c.bg,bg2:mixHex(c.card,'#ffffff',.12),card:c.card,cardHover:mixHex(c.card,c.bg,.28),
-    border:c.border,borderStrong:mixHex(c.border,c.text,.20),
-    gold:c.gold,goldLight:mixHex(c.gold,'#ffffff',.22),goldDim:mixHex(c.gold,'#000000',.25),goldBg:mixHex(c.gold,c.card,.88),
-    navy:c.navy,text:c.text,textDim:c.textDim,textMute:c.textMute,
-    green:'#1f8a4c',greenBg:mixHex('#1f8a4c',c.card,.88),
-    red:'#c23b3b',redBg:mixHex('#c23b3b',c.card,.88)
-  };
-}
+function sanitizeExtraPresets(list){if(!Array.isArray(list))return [];const seen=new Set();return list.map((item,i)=>{const name=String(item?.name||'').trim().slice(0,40);let id=String(item?.id||`extra_${i}`).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,60);if(!id||THEME_PRESETS[id]||seen.has(id))id=`extra_${Date.now()}_${i}`;seen.add(id);const core=normalizeThemeCore(item);return {id,name:name||`Custom ${i+1}`,...core};}).slice(0,30);}
+function getAllThemePresets(){const builtins=Object.entries(THEME_PRESETS).map(([id,p])=>({id,...p,builtin:true}));return builtins.concat(sanitizeExtraPresets(settings.viewerExtraPresets));}
+function getThemePreset(id){if(THEME_PRESETS[id])return {id,...THEME_PRESETS[id],builtin:true};return sanitizeExtraPresets(settings.viewerExtraPresets).find(p=>p.id===id)||null;}
 
 const DEFAULT_WELCOME = {
   welcomeLogo:'',
@@ -2328,20 +2370,18 @@ const DEFAULT_WELCOME = {
 };
 
 let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null') || {
-  logo:'',title:'',subtitle:'',createdBy:'',
-  ...DEFAULT_ABOUT,
-  ...DEFAULT_WELCOME,
-  themePreset:'shl',
-  themeCustom:{...DEFAULT_THEME_CUSTOM}
+  logo:'',title:'',subtitle:'',createdBy:'',...DEFAULT_ABOUT,...DEFAULT_WELCOME,
+  themePreset:'shl',themeCustomCore:{...DEFAULT_THEME_CORE},themeMode:'light',fontStyle:'system',buttonStyle:'rounded',viewerExtraPresets:[]
 };
-settings = {
-  ...DEFAULT_ABOUT,
-  ...DEFAULT_WELCOME,
-  themePreset:'shl',
-  themeCustom:{...DEFAULT_THEME_CUSTOM},
-  ...settings,
-  themeCustom:{...DEFAULT_THEME_CUSTOM,...((settings&&settings.themeCustom)||{})}
-};
+settings = {...DEFAULT_ABOUT,...DEFAULT_WELCOME,themePreset:'shl',themeCustomCore:{...DEFAULT_THEME_CORE},themeMode:'light',fontStyle:'system',buttonStyle:'rounded',viewerExtraPresets:[],...settings};
+if(!settings.themeCustomCore)settings.themeCustomCore=normalizeThemeCore(settings.themeCustom||DEFAULT_THEME_CORE);else settings.themeCustomCore=normalizeThemeCore(settings.themeCustomCore);
+const legacyThemeMap={light:'shl',gray:'charcoal',navy:'blue',dark:'charcoal'};
+if(legacyThemeMap[settings.themePreset]){if(settings.themePreset==='dark'&&!settings.themeMode)settings.themeMode='dark';settings.themePreset=legacyThemeMap[settings.themePreset];}
+if(settings.themePreset!=='custom'&&!getThemePreset(settings.themePreset))settings.themePreset='shl';
+settings.themeMode=['light','dark','system'].includes(settings.themeMode)?settings.themeMode:'light';
+settings.fontStyle=['system','modern','classic','compact'].includes(settings.fontStyle)?settings.fontStyle:'system';
+settings.buttonStyle=['rounded','pill','square'].includes(settings.buttonStyle)?settings.buttonStyle:'rounded';
+settings.viewerExtraPresets=sanitizeExtraPresets(settings.viewerExtraPresets);
 
 // Migrate only untouched legacy defaults into the new cleaner v1.0.30 layout.
 if(settings.welcomeIntro==='Authorized SHL QA users can enter the repository using Viewer or Admin access.') settings.welcomeIntro='';
@@ -2361,63 +2401,16 @@ const ADMIN_UID = 'aqPEtQSgnQb717FrSBZQVnU6weI2';
 const VIEWER_UID = 'XGEAk92tLAUbdYkNym0UxIpWWSi1';
 const VIEWER_EMAIL = 'viewer@gmail.com';
 
-const VIEWER_THEME_KEY='shl_llr_viewer_theme_v1';
-
-function setCssVar(name,value){
-  if(value)document.documentElement.style.setProperty(name,value);
-}
-function applyThemeVars(vars,presetName='shl'){
-  if(!vars)return;
-  setCssVar('--bg',vars.bg);
-  setCssVar('--bg-2',vars.bg2);
-  setCssVar('--card',vars.card);
-  setCssVar('--card-hover',vars.cardHover);
-  setCssVar('--border',vars.border);
-  setCssVar('--border-strong',vars.borderStrong);
-  setCssVar('--gold',vars.gold);
-  setCssVar('--gold-light',vars.goldLight);
-  setCssVar('--gold-dim',vars.goldDim);
-  setCssVar('--gold-bg',vars.goldBg);
-  setCssVar('--navy',vars.navy);
-  setCssVar('--text',vars.text);
-  setCssVar('--text-dim',vars.textDim);
-  setCssVar('--text-mute',vars.textMute);
-  setCssVar('--green',vars.green);
-  setCssVar('--green-bg',vars.greenBg);
-  setCssVar('--red',vars.red);
-  setCssVar('--red-bg',vars.redBg);
-  document.body.classList.toggle('theme-dark',presetName==='dark');
-  const meta=document.querySelector('meta[name="theme-color"]');
-  if(meta)meta.setAttribute('content',vars.gold||'#b8863b');
-}
-function getThemeVarsForPreset(name,custom=null){
-  if(name==='custom')return customThemeVars(custom||settings.themeCustom);
-  return (THEME_PRESETS[name]||THEME_PRESETS.shl).vars;
-}
-function getViewerThemeChoice(){
-  try{return localStorage.getItem(VIEWER_THEME_KEY)||'admin-default';}
-  catch(_){return 'admin-default';}
-}
-function applyEffectiveTheme(){
-  let preset=settings.themePreset||'shl';
-  let custom=settings.themeCustom||DEFAULT_THEME_CUSTOM;
-
-  if(currentRole==='viewer'){
-    const localChoice=getViewerThemeChoice();
-    if(localChoice && localChoice!=='admin-default'){
-      preset=localChoice;
-      custom=DEFAULT_THEME_CUSTOM;
-    }
-  }
-
-  if(!THEME_PRESETS[preset] && preset!=='custom')preset='shl';
-  applyThemeVars(getThemeVarsForPreset(preset,custom),preset);
-}
-function saveViewerThemeChoice(choice){
-  try{localStorage.setItem(VIEWER_THEME_KEY,choice);}catch(_){}
-  applyEffectiveTheme();
-  renderViewerThemeOptions();
-}
+const VIEWER_THEME_KEY='shl_llr_viewer_theme_v2';
+function setCssVar(name,value){if(value)document.documentElement.style.setProperty(name,value);}
+function applyFontAndButtonStyle(){['font-system','font-modern','font-classic','font-compact'].forEach(c=>document.body.classList.remove(c));['button-rounded','button-pill','button-square'].forEach(c=>document.body.classList.remove(c));document.body.classList.add(`font-${settings.fontStyle||'system'}`);document.body.classList.add(`button-${settings.buttonStyle||'rounded'}`);}
+function applyThemeVars(vars,resolvedMode='light'){if(!vars)return;[['--bg',vars.bg],['--bg-2',vars.bg2],['--card',vars.card],['--card-hover',vars.cardHover],['--border',vars.border],['--border-strong',vars.borderStrong],['--gold',vars.gold],['--gold-light',vars.goldLight],['--gold-dim',vars.goldDim],['--gold-bg',vars.goldBg],['--navy',vars.navy],['--text',vars.text],['--text-dim',vars.textDim],['--text-mute',vars.textMute],['--green',vars.green],['--green-bg',vars.greenBg],['--red',vars.red],['--red-bg',vars.redBg]].forEach(([n,v])=>setCssVar(n,v));document.body.classList.toggle('theme-dark',resolvedMode==='dark');applyFontAndButtonStyle();const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',vars.gold||DEFAULT_THEME_CORE.primary);}
+function getViewerThemeChoice(){try{return localStorage.getItem(VIEWER_THEME_KEY)||'admin-default';}catch(_){return 'admin-default';}}
+function getAdminThemeCore(){if(settings.themePreset==='custom')return normalizeThemeCore(settings.themeCustomCore);const p=getThemePreset(settings.themePreset);return p?normalizeThemeCore(p):normalizeThemeCore(settings.themeCustomCore);}
+function getEffectiveThemeCore(){if(currentRole==='viewer'){const choice=getViewerThemeChoice();if(choice&&choice!=='admin-default'){const p=getThemePreset(choice);if(p)return normalizeThemeCore(p);}}return getAdminThemeCore();}
+function applyEffectiveTheme(){const resolvedMode=resolveThemeMode(settings.themeMode||'light');applyThemeVars(deriveThemeVars(getEffectiveThemeCore(),resolvedMode),resolvedMode);}
+function saveViewerThemeChoice(choice){const valid=choice==='admin-default'||Boolean(getThemePreset(choice));try{localStorage.setItem(VIEWER_THEME_KEY,valid?choice:'admin-default');}catch(_){}applyEffectiveTheme();renderViewerThemeOptions();}
+try{const mq=window.matchMedia('(prefers-color-scheme: dark)');const cb=()=>{if(settings.themeMode==='system')applyEffectiveTheme();};if(mq.addEventListener)mq.addEventListener('change',cb);else if(mq.addListener)mq.addListener(cb);}catch(_){}
 
 let cloudUnsubs = [];
 let cloudSyncStarted = false;
@@ -2489,25 +2482,56 @@ if(CLOUD_ENABLED){
   }
 }
 
-const WELCOME_SETTING_KEYS = [...Object.keys(DEFAULT_WELCOME),'themePreset','themeCustom'];
+const WELCOME_SETTING_KEYS = [...Object.keys(DEFAULT_WELCOME),'themePreset','themeCustomCore','themeMode','fontStyle','buttonStyle','viewerExtraPresets'];
 function publicWelcomePayload(){
   const out={};
   WELCOME_SETTING_KEYS.forEach(k=>out[k]=settings[k] ?? DEFAULT_WELCOME[k]);
   return out;
 }
+let publicWelcomeUnsub=null;
+
+function applyPublicWelcomeSnapshot(data){
+  settings={...settings,...(data||{})};
+  settings.themeCustomCore=normalizeThemeCore(settings.themeCustomCore||settings.themeCustom||DEFAULT_THEME_CORE);
+  settings.viewerExtraPresets=sanitizeExtraPresets(settings.viewerExtraPresets);
+
+  // If a Viewer was using an Admin-created preset that was deleted,
+  // immediately return that device to Admin Default.
+  if(currentRole==='viewer'){
+    const choice=getViewerThemeChoice();
+    if(choice!=='admin-default' && !getThemePreset(choice)){
+      try{localStorage.setItem(VIEWER_THEME_KEY,'admin-default');}catch(_){}
+    }
+  }
+
+  try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}catch(e){}
+  applyEffectiveTheme();
+  renderWelcomeScreen();
+
+  // If the Theme picker is currently open, refresh its choices live.
+  if(document.getElementById('themePickerOverlay')?.classList.contains('open')){
+    renderViewerThemeOptions();
+  }
+}
+
 async function loadPublicWelcomeSettings(){
   if(!db)return;
   try{
     const doc=await db.collection('meta').doc('welcome').get();
-    if(doc.exists){
-      settings={...settings,...doc.data()};
-      settings.themeCustom={...DEFAULT_THEME_CUSTOM,...(settings.themeCustom||{})};
-      try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}catch(e){}
-      applyEffectiveTheme();
-      renderWelcomeScreen();
-    }
+    if(doc.exists)applyPublicWelcomeSnapshot(doc.data());
   }catch(e){
     console.warn('Public welcome settings unavailable',e);
+  }
+}
+
+function startPublicWelcomeRealtimeSync(){
+  if(!db || publicWelcomeUnsub)return;
+  try{
+    publicWelcomeUnsub=db.collection('meta').doc('welcome').onSnapshot(doc=>{
+      if(doc.exists)applyPublicWelcomeSnapshot(doc.data());
+    },e=>console.warn('Public welcome realtime sync unavailable',e));
+  }catch(e){
+    console.warn('Could not start public welcome realtime sync',e);
   }
 }
 async function cloudSaveWelcomeSettings(){
@@ -2518,6 +2542,7 @@ async function cloudSaveWelcomeSettings(){
 applyEffectiveTheme();
 renderWelcomeScreen();
 loadPublicWelcomeSettings();
+startPublicWelcomeRealtimeSync();
 
 function cloudBadgeUpdate(state){
   const badge = document.getElementById('storageBadge');
@@ -2629,7 +2654,8 @@ function startCloudSync(){
   db.collection('meta').doc('settings').get().then(doc => {
     if(doc.exists){
       settings = { ...settings, ...doc.data() };
-      settings.themeCustom={...DEFAULT_THEME_CUSTOM,...(settings.themeCustom||{})};
+      settings.themeCustomCore=normalizeThemeCore(settings.themeCustomCore||settings.themeCustom||DEFAULT_THEME_CORE);
+      settings.viewerExtraPresets=sanitizeExtraPresets(settings.viewerExtraPresets);
       applySettings();
     } else if(isAdmin && settings && (settings.title || settings.logo)){
       cloudSaveSettings(); // only Admin may seed cloud settings
@@ -3543,6 +3569,12 @@ document.getElementById('viewerLoginBtn').addEventListener('click',loginViewer);
 document.getElementById('viewerPassword').addEventListener('keydown',e=>{if(e.key==='Enter')loginViewer();});
 document.getElementById('gateAdminLoginBtn').addEventListener('click',loginAdminFromGate);
 document.getElementById('gateAdminPassword').addEventListener('keydown',e=>{if(e.key==='Enter')loginAdminFromGate();});
+
+const PASSWORD_EYE_OPEN=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.8" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>`;
+const PASSWORD_EYE_CLOSED=`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 6.2A10.7 10.7 0 0 1 12 6c6 0 9.5 6 9.5 6a16 16 0 0 1-3.2 3.8M6.1 6.2C3.8 8 2.5 12 2.5 12S6 18 12 18c1.3 0 2.5-.3 3.5-.7M9.9 9.9a3 3 0 0 0 4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+function refreshPasswordToggle(btn){const input=document.getElementById(btn.dataset.passwordToggle);if(!input)return;const visible=input.type==='text';btn.innerHTML=visible?PASSWORD_EYE_CLOSED:PASSWORD_EYE_OPEN;btn.setAttribute('aria-label',visible?'Hide password':'Show password');btn.title=visible?'Hide password':'Show password';}
+document.querySelectorAll('[data-password-toggle]').forEach(btn=>{refreshPasswordToggle(btn);btn.addEventListener('click',()=>{const input=document.getElementById(btn.dataset.passwordToggle);if(!input)return;const cursor=input.selectionStart;input.type=input.type==='password'?'text':'password';refreshPasswordToggle(btn);input.focus();try{input.setSelectionRange(cursor,cursor);}catch(_){}});});
+
 
 // Viewer has an explicit Logout button so persistent Viewer sessions can be ended at any time.
 document.getElementById('viewerLogoutBtn').addEventListener('click', async()=>{
@@ -5707,150 +5739,109 @@ document.getElementById('saveVisibilityBtn').addEventListener('click',async()=>{
   }
 });
 
-// ================== v1.0.30 THEME SETTINGS ==================
-const THEME_INPUT_MAP={
-  themeColorGold:'gold',
-  themeColorBg:'bg',
-  themeColorCard:'card',
-  themeColorNavy:'navy',
-  themeColorText:'text',
-  themeColorMute:'textMute',
-  themeColorBorder:'border',
-  themeColorDim:'textDim'
-};
-
-function themePreviewConfig(){
-  const preset=document.getElementById('adminThemePreset')?.value||'shl';
-  if(preset!=='custom')return getThemeVarsForPreset(preset);
-  const custom={...DEFAULT_THEME_CUSTOM};
-  Object.entries(THEME_INPUT_MAP).forEach(([id,key])=>{
-    const el=document.getElementById(id);if(el&&el.value)custom[key]=el.value;
-  });
-  return customThemeVars(custom);
-}
-function renderThemeAdminPreview(){
-  const cfg=themePreviewConfig();
-  const wrap=document.getElementById('themeAdminPreview');
-  if(!wrap||!cfg)return;
-  wrap.style.background=cfg.bg;
-  wrap.style.borderColor=cfg.border;
-  const card=wrap.querySelector('.theme-preview-card');
-  const title=wrap.querySelector('.theme-preview-title');
-  const textEl=wrap.querySelector('.theme-preview-text');
-  const btn=wrap.querySelector('.theme-preview-btn');
-  if(card){card.style.background=cfg.card;card.style.borderColor=cfg.border;}
-  if(title)title.style.color=cfg.navy;
-  if(textEl)textEl.style.color=cfg.textMute;
-  if(btn)btn.style.background=cfg.gold;
-}
-function toggleCustomThemeFields(){
-  const preset=document.getElementById('adminThemePreset')?.value||'shl';
-  const box=document.getElementById('adminCustomThemeFields');
-  if(box)box.style.display=preset==='custom'?'block':'none';
-  renderThemeAdminPreview();
-}
-function populateThemeSettingsForm(){
-  const select=document.getElementById('adminThemePreset');
-  if(!select)return;
-  select.value=(settings.themePreset==='custom'||THEME_PRESETS[settings.themePreset])?settings.themePreset:'shl';
-  const custom={...DEFAULT_THEME_CUSTOM,...(settings.themeCustom||{})};
-  Object.entries(THEME_INPUT_MAP).forEach(([id,key])=>{
-    const el=document.getElementById(id);if(el)el.value=custom[key];
-  });
-  toggleCustomThemeFields();
-  setStatus('themeSettingsStatus','');
-}
-document.getElementById('adminThemePreset').addEventListener('change',toggleCustomThemeFields);
-Object.keys(THEME_INPUT_MAP).forEach(id=>{
-  document.getElementById(id)?.addEventListener('input',renderThemeAdminPreview);
-});
-document.getElementById('restoreSHLThemeBtn').addEventListener('click',()=>{
-  document.getElementById('adminThemePreset').value='shl';
-  Object.entries(THEME_INPUT_MAP).forEach(([id,key])=>{
-    const el=document.getElementById(id);if(el)el.value=DEFAULT_THEME_CUSTOM[key];
-  });
-  toggleCustomThemeFields();
-  setStatus('themeSettingsStatus','SHL Gold default loaded. Click Save Theme to publish.','');
-});
-document.getElementById('saveThemeBtn').addEventListener('click',async()=>{
-  if(!requireAdmin())return;
-  const preset=document.getElementById('adminThemePreset').value||'shl';
-  const custom={...DEFAULT_THEME_CUSTOM};
-  Object.entries(THEME_INPUT_MAP).forEach(([id,key])=>{
-    const el=document.getElementById(id);if(el&&el.value)custom[key]=el.value;
-  });
-  settings.themePreset=preset;
-  settings.themeCustom=custom;
-  persist();applyEffectiveTheme();
-
-  const btn=document.getElementById('saveThemeBtn');btn.disabled=true;btn.textContent='Saving…';
+// ================== v1.0.32 RELIABLE THEME SETTINGS ==================
+let themeEditorSelectedPreset='shl';
+function themeCoreEquals(a,b){const A=normalizeThemeCore(a),B=normalizeThemeCore(b);return A.primary===B.primary&&A.accent===B.accent&&A.background===B.background;}
+function readThemeEditorCore(){return normalizeThemeCore({primary:document.getElementById('themePrimaryHex')?.value,accent:document.getElementById('themeAccentHex')?.value,background:document.getElementById('themeBackgroundHex')?.value});}
+function writeThemeEditorCore(core,markCustom=false){const c=normalizeThemeCore(core);[['themePrimaryHex','themePrimaryPicker',c.primary],['themeAccentHex','themeAccentPicker',c.accent],['themeBackgroundHex','themeBackgroundPicker',c.background]].forEach(([h,p,v])=>{const he=document.getElementById(h),pi=document.getElementById(p);if(he)he.value=v.toUpperCase();if(pi)pi.value=v;});if(markCustom)themeEditorSelectedPreset='custom';renderAdminThemePresets();renderThemeAdminPreview();}
+function renderAdminThemePresets(){const host=document.getElementById('adminThemePresetList');if(!host)return;host.innerHTML=getAllThemePresets().map(p=>`<button class="theme-preset-chip ${themeEditorSelectedPreset===p.id?'active':''}" type="button" data-admin-preset="${p.id}"><span class="theme-preset-dot" style="background:${p.primary}"></span>${escNotify(p.label||p.name)}</button>`).join('');host.querySelectorAll('[data-admin-preset]').forEach(btn=>btn.addEventListener('click',()=>{const p=getThemePreset(btn.dataset.adminPreset);if(!p)return;themeEditorSelectedPreset=p.id;writeThemeEditorCore(p,false);}));}
+function renderThemeAdminPreview(){const core=readThemeEditorCore(),mode=document.getElementById('themeModeSelect')?.value||'light',resolved=resolveThemeMode(mode),cfg=deriveThemeVars(core,resolved),wrap=document.getElementById('themeLivePreview');if(!wrap)return;wrap.style.background=cfg.bg;wrap.style.borderColor=cfg.border;const font=document.getElementById('themeFontSelect')?.value||'system';wrap.style.fontFamily=font==='classic'?"Georgia,'Times New Roman',serif":font==='modern'?"Arial,Helvetica,sans-serif":font==='compact'?"Tahoma,'Segoe UI',sans-serif":"'Segoe UI',Arial,sans-serif";const w=wrap.querySelector('.preview-welcome'),t=wrap.querySelector('.preview-title'),b=wrap.querySelector('.preview-button'),l=wrap.querySelector('.preview-line');if(w)w.style.color=cfg.text;if(t)t.style.color=cfg.navy;if(b){b.style.background=core.accent;b.style.color='#fff';const st=document.getElementById('themeButtonSelect')?.value||'rounded';b.style.borderRadius=st==='pill'?'999px':st==='square'?'6px':'12px';}if(l)l.style.background=cfg.textMute;}
+function populateThemeSettingsForm(){themeEditorSelectedPreset=settings.themePreset||'shl';let core=getAdminThemeCore();if(themeEditorSelectedPreset!=='custom'&&!getThemePreset(themeEditorSelectedPreset)){themeEditorSelectedPreset='shl';core=THEME_PRESETS.shl;}writeThemeEditorCore(core,false);document.getElementById('themeModeSelect').value=settings.themeMode||'light';document.getElementById('themeFontSelect').value=settings.fontStyle||'system';document.getElementById('themeButtonSelect').value=settings.buttonStyle||'rounded';document.getElementById('newViewerPresetName').value='';renderAdminExtraPresets();renderThemeAdminPreview();setStatus('themeSettingsStatus','');}
+function bindThemeColorPair(hexId,pickerId){const he=document.getElementById(hexId),pi=document.getElementById(pickerId);pi.addEventListener('input',()=>{he.value=pi.value.toUpperCase();themeEditorSelectedPreset='custom';renderAdminThemePresets();renderThemeAdminPreview();});he.addEventListener('input',()=>{let v=he.value.trim();if(/^[0-9a-fA-F]{6}$/.test(v))v='#'+v;if(isHexColor(v)){pi.value=v;themeEditorSelectedPreset='custom';renderAdminThemePresets();renderThemeAdminPreview();}});he.addEventListener('blur',()=>{he.value=normalizeHex(he.value,pi.value).toUpperCase();});}
+bindThemeColorPair('themePrimaryHex','themePrimaryPicker');bindThemeColorPair('themeAccentHex','themeAccentPicker');bindThemeColorPair('themeBackgroundHex','themeBackgroundPicker');
+['themeModeSelect','themeFontSelect','themeButtonSelect'].forEach(id=>document.getElementById(id)?.addEventListener('change',renderThemeAdminPreview));
+async function publishViewerPresetCatalog(successMessage,previousExtras=null){
+  settings.viewerExtraPresets=sanitizeExtraPresets(settings.viewerExtraPresets);
+  persist();
   try{
     await cloudSaveSettings(true);
     await cloudSaveWelcomeSettings();
-    setStatus('themeSettingsStatus','✓ Company default theme published.','ok');
+    renderAdminExtraPresets();
+    renderAdminThemePresets();
+    if(currentRole==='viewer')renderViewerThemeOptions();
+    setStatus('themeSettingsStatus',successMessage,'ok');
+    return true;
   }catch(e){
-    setStatus('themeSettingsStatus','Theme saved locally, but cloud sync failed.','err');
-  }finally{
-    btn.disabled=false;btn.textContent='Save Theme';
+    if(previousExtras){
+      settings.viewerExtraPresets=sanitizeExtraPresets(previousExtras);
+      persist();
+      renderAdminExtraPresets();
+      renderAdminThemePresets();
+    }
+    setStatus('themeSettingsStatus','Could not sync Viewer presets. Previous list was restored.','err');
+    return false;
   }
-});
+}
 
-// Viewer-only local theme picker
-function viewerThemeSwatches(choice){
-  const preset=choice==='admin-default'?(settings.themePreset||'shl'):choice;
-  const cfg=getThemeVarsForPreset(preset,preset==='custom'?settings.themeCustom:null);
-  return [cfg.gold,cfg.bg,cfg.card,cfg.navy];
-}
-function renderViewerThemeOptions(){
-  const host=document.getElementById('viewerThemeOptions');if(!host)return;
-  const current=getViewerThemeChoice();
-  const choices=[
-    ['admin-default','Admin Default'],
-    ['shl','SHL Gold'],
-    ['light','Clean Light'],
-    ['gray','Soft Gray'],
-    ['navy','Navy Professional'],
-    ['dark','Dark']
-  ];
-  host.innerHTML=choices.map(([key,label])=>{
-    const sw=viewerThemeSwatches(key);
-    return `<button class="theme-option ${current===key?'active':''}" type="button" data-viewer-theme="${key}">
-      <div class="theme-option-name">${label}</div>
-      <div class="theme-option-swatches">${sw.map(c=>`<span style="background:${c}"></span>`).join('')}</div>
-    </button>`;
-  }).join('');
-  host.querySelectorAll('[data-viewer-theme]').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      saveViewerThemeChoice(btn.dataset.viewerTheme);
-      setTimeout(closeViewerThemePicker,160);
-    });
-  });
-}
-function openViewerThemePicker(){
-  if(currentRole!=='viewer')return;
-  renderViewerThemeOptions();
-  const overlay=document.getElementById('themePickerOverlay');
-  overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');
-}
-function closeViewerThemePicker(){
-  const overlay=document.getElementById('themePickerOverlay');
-  overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');
-}
-document.getElementById('themePickerCloseBtn').addEventListener('click',closeViewerThemePicker);
-document.getElementById('themePickerOverlay').addEventListener('click',e=>{
-  if(e.target.id==='themePickerOverlay')closeViewerThemePicker();
-});
+function renderAdminExtraPresets(){
+  const host=document.getElementById('adminExtraPresetList');if(!host)return;
+  const extras=sanitizeExtraPresets(settings.viewerExtraPresets);
+  if(!extras.length){
+    host.innerHTML='<div class="theme-note">No extra Viewer presets yet. Built-in presets are fixed and cannot be deleted.</div>';
+    return;
+  }
+  host.innerHTML=extras.map(p=>`
+    <div class="theme-extra-item">
+      <div class="theme-extra-swatches">
+        <span style="background:${p.primary}"></span>
+        <span style="background:${p.accent}"></span>
+        <span style="background:${p.background}"></span>
+      </div>
+      <div class="theme-extra-name">${escNotify(p.name)}</div>
+      <button class="theme-extra-delete" type="button" data-delete-extra="${p.id}" title="Delete custom preset" aria-label="Delete ${escNotify(p.name)}">🗑</button>
+    </div>`).join('');
 
-function openSettings(){
-  if(!requireAdmin())return;
-  clearPasswordFields();
-  populateWelcomeSettingsForm();
-  document.getElementById('settingsOverlay').classList.add('open');
+  host.querySelectorAll('[data-delete-extra]').forEach(btn=>btn.addEventListener('click',async()=>{
+    const id=btn.dataset.deleteExtra;
+    // Only Admin-created extras live in this list; fixed built-ins have no delete action.
+    const previous=sanitizeExtraPresets(settings.viewerExtraPresets);
+    settings.viewerExtraPresets=previous.filter(p=>p.id!==id);
+
+    if(settings.themePreset===id){
+      settings.themePreset='shl';
+      themeEditorSelectedPreset='shl';
+      writeThemeEditorCore(THEME_PRESETS.shl,false);
+    }
+
+    btn.disabled=true;
+    setStatus('themeSettingsStatus','Deleting preset and syncing Viewers…','');
+    await publishViewerPresetCatalog('✓ Custom preset deleted. It is removed from Viewer theme lists automatically.',previous);
+  }));
 }
-function closeSettings(){document.getElementById('settingsOverlay').classList.remove('open');clearPasswordFields();}
-document.getElementById('settingsBtn').addEventListener('click',openSettings);
-document.getElementById('closeSettings').addEventListener('click',closeSettings);
-document.getElementById('settingsOverlay').addEventListener('click',e=>{if(e.target.id==='settingsOverlay')closeSettings();});
+
+document.getElementById('addViewerPresetBtn').addEventListener('click',async()=>{
+  const name=document.getElementById('newViewerPresetName').value.trim();
+  if(!name){
+    setStatus('themeSettingsStatus','Enter a name for the new Viewer preset.','err');
+    return;
+  }
+  const previous=sanitizeExtraPresets(settings.viewerExtraPresets);
+  const core=readThemeEditorCore();
+  const item={id:`extra_${Date.now()}`,name,...core};
+  settings.viewerExtraPresets=sanitizeExtraPresets([...previous,item]);
+  document.getElementById('newViewerPresetName').value='';
+  renderAdminExtraPresets();
+  renderAdminThemePresets();
+  setStatus('themeSettingsStatus','Adding preset and syncing Viewers…','');
+  await publishViewerPresetCatalog('✓ New custom preset published. Viewer theme lists update automatically.',previous);
+});
+document.getElementById('restoreSHLThemeBtn').addEventListener('click',()=>{themeEditorSelectedPreset='shl';writeThemeEditorCore(THEME_PRESETS.shl,false);document.getElementById('themeModeSelect').value='light';document.getElementById('themeFontSelect').value='system';document.getElementById('themeButtonSelect').value='rounded';renderThemeAdminPreview();setStatus('themeSettingsStatus','SHL Gold default loaded. Click Save Settings to publish.','');});
+document.getElementById('saveThemeBtn').addEventListener('click',async()=>{if(!requireAdmin())return;const core=readThemeEditorCore();let selected=themeEditorSelectedPreset;const p=getThemePreset(selected);if(!p||!themeCoreEquals(core,p))selected='custom';settings.themePreset=selected;settings.themeCustomCore=core;settings.themeMode=document.getElementById('themeModeSelect').value||'light';settings.fontStyle=document.getElementById('themeFontSelect').value||'system';settings.buttonStyle=document.getElementById('themeButtonSelect').value||'rounded';settings.viewerExtraPresets=sanitizeExtraPresets(settings.viewerExtraPresets);persist();applyEffectiveTheme();const btn=document.getElementById('saveThemeBtn');btn.disabled=true;btn.textContent='Saving…';try{await cloudSaveSettings(true);await cloudSaveWelcomeSettings();setStatus('themeSettingsStatus','✓ Theme and Viewer presets published to all devices.','ok');}catch(e){setStatus('themeSettingsStatus','Saved locally, but cloud theme sync failed.','err');}finally{btn.disabled=false;btn.textContent='💾 Save Settings';}});
+function viewerThemeSwatches(choice){if(choice==='admin-default'){const c=getAdminThemeCore();return [c.primary,c.accent,c.background];}const p=getThemePreset(choice)||THEME_PRESETS.shl;return [p.primary,p.accent,p.background];}
+function renderViewerThemeOptions(){const host=document.getElementById('viewerThemeOptions');if(!host)return;let current=getViewerThemeChoice();if(current!=='admin-default'&&!getThemePreset(current))current='admin-default';const choices=[{id:'admin-default',label:'Admin Default',...getAdminThemeCore()},...getAllThemePresets().map(p=>({id:p.id,label:p.label||p.name,...p}))];host.innerHTML=choices.map(p=>{const sw=viewerThemeSwatches(p.id);return `<button class="theme-option ${current===p.id?'active':''}" type="button" data-viewer-theme="${p.id}"><div class="theme-option-name">${escNotify(p.label)}</div><div class="theme-option-swatches">${sw.map(c=>`<span style="background:${c}"></span>`).join('')}</div></button>`;}).join('');host.querySelectorAll('[data-viewer-theme]').forEach(btn=>btn.addEventListener('click',()=>{saveViewerThemeChoice(btn.dataset.viewerTheme);setTimeout(closeViewerThemePicker,160);}));}
+function openViewerThemePicker(){if(currentRole!=='viewer')return;renderViewerThemeOptions();const overlay=document.getElementById('themePickerOverlay');overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');}
+function closeViewerThemePicker(){const overlay=document.getElementById('themePickerOverlay');overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');}
+document.getElementById('themePickerCloseBtn').addEventListener('click',closeViewerThemePicker);document.getElementById('themePickerOverlay').addEventListener('click',e=>{if(e.target.id==='themePickerOverlay')closeViewerThemePicker();});
+
+const SETTINGS_PAGES={home:{id:'settingsHomeScreen',title:'Settings'},welcome:{id:'settingsWelcomeScreen',title:'Welcome & Login Settings'},visibility:{id:'settingsVisibilityScreen',title:'Welcome & Login Visibility'},theme:{id:'settingsThemeScreen',title:'Branding & Theme Settings'},access:{id:'settingsAccessScreen',title:'Access & Password Settings'}};
+let currentSettingsPage='home';
+function showSettingsPage(page='home'){const cfg=SETTINGS_PAGES[page]||SETTINGS_PAGES.home;currentSettingsPage=page in SETTINGS_PAGES?page:'home';document.querySelectorAll('#settingsOverlay .settings-screen').forEach(el=>el.classList.toggle('active',el.id===cfg.id));document.getElementById('settingsPageTitle').textContent=cfg.title;document.getElementById('settingsBackBtn').classList.toggle('show',currentSettingsPage!=='home');const body=document.querySelector('#settingsOverlay .modal-body');if(body)body.scrollTop=0;if(currentSettingsPage==='welcome')populateWelcomeSettingsForm();else if(currentSettingsPage==='visibility')populateVisibilitySettings();else if(currentSettingsPage==='theme')populateThemeSettingsForm();else if(currentSettingsPage==='access')clearPasswordFields();}
+function openSettings(){if(!requireAdmin())return;clearPasswordFields();showSettingsPage('home');document.getElementById('settingsOverlay').classList.add('open');}
+function closeSettings(){document.getElementById('settingsOverlay').classList.remove('open');clearPasswordFields();showSettingsPage('home');}
+document.querySelectorAll('[data-settings-page]').forEach(btn=>btn.addEventListener('click',()=>showSettingsPage(btn.dataset.settingsPage)));
+document.getElementById('settingsBackBtn').addEventListener('click',()=>showSettingsPage('home'));
+document.getElementById('settingsAboutShortcut').addEventListener('click',()=>{closeSettings();openAbout();});
+document.getElementById('settingsBtn').addEventListener('click',openSettings);document.getElementById('closeSettings').addEventListener('click',closeSettings);document.getElementById('settingsOverlay').addEventListener('click',e=>{if(e.target.id==='settingsOverlay')closeSettings();});
 
 document.getElementById('changeAdminPasswordBtn').addEventListener('click',async()=>{
   if(!requireAdmin() || !auth?.currentUser || auth.currentUser.uid!==ADMIN_UID)return;
