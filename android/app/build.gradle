@@ -10,8 +10,8 @@ android {
         applicationId 'com.shantaholdings.qa.llr'
         minSdk 24
         targetSdk 35
-        versionCode 29
-        versionName '1.0.29'
+        versionCode 31
+        versionName '1.0.31'
     }
 
     buildTypes {
