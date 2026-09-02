@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>SHL QA — Lesson Learned Repository</title>
-<!-- Cross-platform patch v1.0.28: mobile Viewer Logout restored + announcement detail card from notifications -->
+<!-- Cross-platform patch v1.0.29: reliable header/welcome logo sync + drag/zoom crop editor -->
 <!-- v1.0.11: mobile/web login viewport + keyboard responsiveness fix -->
 <!-- v1.0.7: card view shows both uploaded photos side-by-side -->
 
@@ -82,7 +82,7 @@ header{
   cursor:pointer;overflow:hidden;flex-shrink:0;position:relative;
   border:none;
 }
-.logo-mark img{width:100%;height:100%;object-fit:contain;background:#fff;}
+.logo-mark img{width:100%;height:100%;object-fit:cover;background:transparent;}
 .logo-mark .hint{
   position:absolute;inset:0;background:rgba(0,0,0,0.55);color:#fff;font-size:9px;
   display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;text-align:center;
@@ -841,7 +841,7 @@ header{
 .access-card{width:min(520px,100%);background:#fff;border:1px solid var(--border);border-radius:20px;box-shadow:0 24px 70px rgba(28,43,58,.18);overflow:hidden;}
 .access-brand{padding:34px 28px 24px;text-align:center;background:linear-gradient(135deg,#1c2b3a 0%,#30475f 100%);color:#fff;}
 .access-logo{width:68px;height:68px;margin:0 auto 14px;border-radius:15px;background:linear-gradient(135deg,var(--gold-light),var(--gold-dim));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;box-shadow:0 0 0 4px rgba(255,255,255,.12);overflow:hidden;}
-.access-logo img{width:100%;height:100%;object-fit:contain;background:#fff;padding:5px;}
+.access-logo img{width:100%;height:100%;object-fit:cover;background:transparent;padding:0;}
 .access-brand h1{font-size:22px;margin:0 0 5px;color:#fff;}
 .access-brand p{font-size:12px;color:#d9e1e9;margin:0;}
 .access-tagline{margin-top:9px;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#e5c88f;}
@@ -970,8 +970,60 @@ body.access-keyboard-open .access-foot{display:none;}
 .about-meta{font-size:11.5px;color:var(--text-mute);line-height:1.6;padding-top:4px;}
 .welcome-logo-editor{display:flex;align-items:center;gap:14px;padding:12px;border:1px dashed var(--border-strong);border-radius:10px;background:var(--bg);margin-bottom:12px;}
 .welcome-logo-preview{width:74px;height:74px;flex:0 0 74px;border-radius:14px;background:linear-gradient(135deg,var(--gold-light),var(--gold-dim));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;overflow:hidden;border:1px solid var(--border);}
-.welcome-logo-preview img{width:100%;height:100%;object-fit:contain;background:#fff;padding:5px;}
+.welcome-logo-preview img{width:100%;height:100%;object-fit:cover;background:transparent;padding:0;}
 .welcome-logo-controls{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* ===== v1.0.29 Logo Crop / Position Editor ===== */
+.logo-crop-overlay{
+  position:fixed;inset:0;z-index:6900;background:rgba(9,15,22,.74);display:none;
+  align-items:center;justify-content:center;padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom));
+  backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
+}
+.logo-crop-overlay.open{display:flex;}
+.logo-crop-modal{
+  width:min(520px,100%);max-height:calc(100dvh - 20px);overflow:auto;background:#fff;
+  border-radius:18px;border:1px solid rgba(28,43,58,.12);box-shadow:0 26px 70px rgba(0,0,0,.32);
+}
+.logo-crop-head{
+  padding:15px 17px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+}
+.logo-crop-title{font-size:16px;font-weight:850;color:var(--navy);line-height:1.25;}
+.logo-crop-sub{font-size:10.5px;color:var(--text-mute);margin-top:4px;line-height:1.45;}
+.logo-crop-body{padding:16px;}
+.logo-crop-stage-wrap{display:flex;justify-content:center;}
+.logo-crop-stage{
+  position:relative;width:min(330px,82vw);aspect-ratio:1/1;overflow:hidden;background:#eef1f4;
+  border-radius:17px;border:2px solid #fff;box-shadow:0 0 0 1px #d8dee5,0 10px 28px rgba(28,43,58,.12);
+  touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;
+}
+.logo-crop-stage.dragging{cursor:grabbing;}
+.logo-crop-stage img{
+  position:absolute;left:50%;top:50%;max-width:none;max-height:none;pointer-events:none;
+  transform-origin:center center;will-change:transform;
+}
+.logo-crop-guide{
+  position:absolute;inset:0;pointer-events:none;border-radius:15px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.75);
+  background:
+    linear-gradient(to right,transparent 33.2%,rgba(255,255,255,.38) 33.3%,rgba(255,255,255,.38) 33.6%,transparent 33.7%,transparent 66.2%,rgba(255,255,255,.38) 66.3%,rgba(255,255,255,.38) 66.6%,transparent 66.7%),
+    linear-gradient(to bottom,transparent 33.2%,rgba(255,255,255,.38) 33.3%,rgba(255,255,255,.38) 33.6%,transparent 33.7%,transparent 66.2%,rgba(255,255,255,.38) 66.3%,rgba(255,255,255,.38) 66.6%,transparent 66.7%);
+}
+.logo-crop-controls{margin-top:16px;padding:12px;border:1px solid var(--border);border-radius:13px;background:#f8fafb;}
+.logo-crop-control-row{display:grid;grid-template-columns:48px 1fr 52px;gap:10px;align-items:center;}
+.logo-crop-control-row label{font-size:11px;font-weight:800;color:var(--text-dim);}
+.logo-crop-control-row input[type="range"]{width:100%;accent-color:var(--gold);}
+.logo-crop-zoom-readout{font-size:11px;font-weight:800;color:var(--navy);text-align:right;}
+.logo-crop-actions{display:flex;gap:8px;align-items:center;margin-top:13px;flex-wrap:wrap;}
+.logo-crop-actions .spacer{flex:1;}
+.logo-crop-note{font-size:10.5px;color:var(--text-mute);line-height:1.5;margin-top:10px;}
+.logo-crop-status{font-size:10.5px;min-height:16px;margin-top:8px;color:var(--green);}
+@media(max-width:560px){
+  .logo-crop-modal{border-radius:15px;}
+  .logo-crop-head{padding:13px 14px 10px;}
+  .logo-crop-body{padding:13px;}
+  .logo-crop-stage{width:min(300px,78vw);border-radius:15px;}
+  .logo-crop-actions .btn{font-size:11px;padding:8px 10px;}
+}
 .welcome-settings-subhead{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.55px;color:var(--gold-dim);margin:8px 0 2px;padding-top:8px;border-top:1px solid var(--border);}
 .welcome-settings-subhead:first-of-type{border-top:none;padding-top:0;}
 @media(max-width:700px){
@@ -1626,6 +1678,41 @@ body.access-keyboard-open .access-foot{display:none;}
   <button type="button" id="notificationToastDismissBtn" aria-label="Dismiss">&times;</button>
 </div>
 
+<div class="logo-crop-overlay" id="logoCropOverlay" aria-hidden="true">
+  <div class="logo-crop-modal" role="dialog" aria-modal="true" aria-labelledby="logoCropTitle">
+    <div class="logo-crop-head">
+      <div>
+        <div class="logo-crop-title" id="logoCropTitle">Adjust Logo</div>
+        <div class="logo-crop-sub">Drag the image to position it. Zoom until the logo fills the square exactly.</div>
+      </div>
+      <button class="close-btn" id="logoCropCloseBtn" type="button" aria-label="Close logo editor">&times;</button>
+    </div>
+    <div class="logo-crop-body">
+      <div class="logo-crop-stage-wrap">
+        <div class="logo-crop-stage" id="logoCropStage">
+          <img id="logoCropImage" alt="Logo crop preview" draggable="false">
+          <div class="logo-crop-guide"></div>
+        </div>
+      </div>
+      <div class="logo-crop-controls">
+        <div class="logo-crop-control-row">
+          <label for="logoCropZoom">Zoom</label>
+          <input type="range" id="logoCropZoom" min="100" max="400" step="1" value="100">
+          <div class="logo-crop-zoom-readout" id="logoCropZoomReadout">100%</div>
+        </div>
+        <div class="logo-crop-actions">
+          <button class="btn btn-ghost btn-sm" id="logoCropResetBtn" type="button">↺ Reset</button>
+          <div class="spacer"></div>
+          <button class="btn btn-ghost" id="logoCropCancelBtn" type="button">Cancel</button>
+          <button class="btn btn-gold" id="logoCropApplyBtn" type="button">Use Logo</button>
+        </div>
+        <div class="logo-crop-note">The visible square is the exact logo area. White/empty side margins can be removed by zooming and dragging.</div>
+        <div class="logo-crop-status" id="logoCropStatus"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="settingsOverlay">
   <div class="modal" style="max-width:760px;">
     <div class="modal-header">
@@ -1647,7 +1734,7 @@ body.access-keyboard-open .access-foot{display:none;}
                 <button type="button" class="btn btn-ghost btn-sm" id="removeWelcomeLogoBtn">Remove Logo</button>
               </div>
               <input type="file" id="welcomeLogoInput" accept="image/*" style="display:none;">
-              <div class="help" style="margin:7px 0 0;">PNG/JPG recommended. The app resizes the logo before saving.</div>
+              <div class="help" style="margin:7px 0 0;">PNG/JPG/WebP supported. After upload, drag and zoom the logo to crop it exactly into the square.</div>
             </div>
           </div>
           <div class="welcome-settings-subhead">Branding</div>
@@ -1967,10 +2054,14 @@ async function cloudDeleteLesson(id){
   }
 }
 
-async function cloudSaveSettings(){
+async function cloudSaveSettings(throwOnError=false){
   if(!db) return;
-  try{ await db.collection('meta').doc('settings').set(settings); }
-  catch(e){ console.error('cloudSaveSettings failed', e); }
+  try{
+    await db.collection('meta').doc('settings').set(settings);
+  }catch(e){
+    console.error('cloudSaveSettings failed', e);
+    if(throwOnError) throw e;
+  }
 }
 
 function announcementIsCurrent(a){
@@ -4524,6 +4615,219 @@ document.getElementById('bannerDismissBtn').addEventListener('click', () => {
 });
 updateBackupBanner();
 
+// ================== v1.0.29 LOGO CROP / POSITION EDITOR ==================
+const logoCropOverlay=document.getElementById('logoCropOverlay');
+const logoCropStage=document.getElementById('logoCropStage');
+const logoCropImage=document.getElementById('logoCropImage');
+const logoCropZoom=document.getElementById('logoCropZoom');
+const logoCropZoomReadout=document.getElementById('logoCropZoomReadout');
+const logoCropStatus=document.getElementById('logoCropStatus');
+
+let logoCropMode='';
+let logoCropSource='';
+let logoCropNaturalW=1;
+let logoCropNaturalH=1;
+let logoCropBaseScale=1;
+let logoCropZoomFactor=1;
+let logoCropOffsetX=0;
+let logoCropOffsetY=0;
+let logoCropPointer=null;
+let logoCropResolve=null;
+let logoCropReject=null;
+
+function renderLogoCrop(){
+  if(!logoCropImage||!logoCropStage)return;
+  const stageSize=logoCropStage.clientWidth||300;
+  const scale=logoCropBaseScale*logoCropZoomFactor;
+  const w=logoCropNaturalW*scale;
+  const h=logoCropNaturalH*scale;
+
+  // Clamp the image so the crop square never exposes empty area.
+  const maxX=Math.max(0,(w-stageSize)/2);
+  const maxY=Math.max(0,(h-stageSize)/2);
+  logoCropOffsetX=Math.max(-maxX,Math.min(maxX,logoCropOffsetX));
+  logoCropOffsetY=Math.max(-maxY,Math.min(maxY,logoCropOffsetY));
+
+  logoCropImage.style.width=w+'px';
+  logoCropImage.style.height=h+'px';
+  logoCropImage.style.transform=`translate(calc(-50% + ${logoCropOffsetX}px),calc(-50% + ${logoCropOffsetY}px))`;
+  logoCropZoomReadout.textContent=Math.round(logoCropZoomFactor*100)+'%';
+}
+
+function resetLogoCrop(){
+  const stageSize=logoCropStage.clientWidth||300;
+  // "cover" scale: the image always fills the exact square.
+  logoCropBaseScale=Math.max(stageSize/logoCropNaturalW,stageSize/logoCropNaturalH);
+  logoCropZoomFactor=1;
+  logoCropOffsetX=0;
+  logoCropOffsetY=0;
+  logoCropZoom.value='100';
+  renderLogoCrop();
+}
+
+function closeLogoCropEditor(cancelled=true){
+  logoCropOverlay.classList.remove('open');
+  logoCropOverlay.setAttribute('aria-hidden','true');
+  logoCropStage.classList.remove('dragging');
+  logoCropPointer=null;
+  logoCropStatus.textContent='';
+  if(cancelled && logoCropReject){
+    const reject=logoCropReject;
+    logoCropResolve=null;logoCropReject=null;
+    reject(new Error('Logo editing cancelled'));
+  }
+}
+
+function openLogoCropEditor(file,mode){
+  return new Promise((resolve,reject)=>{
+    if(!file || !file.type.startsWith('image/')){
+      reject(new Error('Please choose an image file.'));
+      return;
+    }
+    if(file.size>15*1024*1024){
+      reject(new Error('Logo file is too large.'));
+      return;
+    }
+    logoCropMode=mode;
+    logoCropResolve=resolve;
+    logoCropReject=reject;
+    logoCropStatus.textContent='Loading image…';
+    document.getElementById('logoCropTitle').textContent=mode==='header'?'Adjust Header Logo':'Adjust Welcome Screen Logo';
+
+    const reader=new FileReader();
+    reader.onerror=()=>reject(new Error('Could not read image.'));
+    reader.onload=()=>{
+      logoCropSource=reader.result;
+      const probe=new Image();
+      probe.onerror=()=>reject(new Error('Invalid image.'));
+      probe.onload=()=>{
+        logoCropNaturalW=probe.naturalWidth||1;
+        logoCropNaturalH=probe.naturalHeight||1;
+        logoCropImage.onload=()=>{
+          logoCropOverlay.classList.add('open');
+          logoCropOverlay.setAttribute('aria-hidden','false');
+          requestAnimationFrame(()=>{
+            resetLogoCrop();
+            logoCropStatus.textContent='Drag to position • use Zoom to remove empty side space.';
+          });
+        };
+        logoCropImage.src=logoCropSource;
+      };
+      probe.src=logoCropSource;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function exportLogoCrop(){
+  const stageSize=logoCropStage.clientWidth||300;
+  const renderedScale=logoCropBaseScale*logoCropZoomFactor;
+  const renderedW=logoCropNaturalW*renderedScale;
+  const renderedH=logoCropNaturalH*renderedScale;
+
+  // Image top-left in stage coordinates.
+  const imageLeft=(stageSize-renderedW)/2+logoCropOffsetX;
+  const imageTop=(stageSize-renderedH)/2+logoCropOffsetY;
+
+  const sx=(0-imageLeft)/renderedScale;
+  const sy=(0-imageTop)/renderedScale;
+  const sw=stageSize/renderedScale;
+  const sh=stageSize/renderedScale;
+
+  // 384x384 is more than enough for 48–74px app logos and keeps Firestore small/reliable.
+  const out=384;
+  const canvas=document.createElement('canvas');
+  canvas.width=out;canvas.height=out;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,out,out);
+  ctx.imageSmoothingEnabled=true;
+  ctx.imageSmoothingQuality='high';
+  ctx.drawImage(logoCropImage,sx,sy,sw,sh,0,0,out,out);
+
+  // WebP preserves transparency and is substantially smaller than raw uploaded images.
+  let data=canvas.toDataURL('image/webp',0.90);
+  if(!data.startsWith('data:image/webp')) data=canvas.toDataURL('image/png');
+  return data;
+}
+
+logoCropZoom.addEventListener('input',()=>{
+  logoCropZoomFactor=(parseInt(logoCropZoom.value,10)||100)/100;
+  renderLogoCrop();
+});
+
+logoCropStage.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  logoCropPointer={id:e.pointerId,x:e.clientX,y:e.clientY,ox:logoCropOffsetX,oy:logoCropOffsetY};
+  logoCropStage.classList.add('dragging');
+  try{logoCropStage.setPointerCapture(e.pointerId);}catch(_){}
+});
+logoCropStage.addEventListener('pointermove',e=>{
+  if(!logoCropPointer || logoCropPointer.id!==e.pointerId)return;
+  e.preventDefault();
+  logoCropOffsetX=logoCropPointer.ox+(e.clientX-logoCropPointer.x);
+  logoCropOffsetY=logoCropPointer.oy+(e.clientY-logoCropPointer.y);
+  renderLogoCrop();
+});
+function endLogoCropPointer(e){
+  if(!logoCropPointer)return;
+  if(e && logoCropPointer.id!==e.pointerId)return;
+  logoCropPointer=null;
+  logoCropStage.classList.remove('dragging');
+}
+logoCropStage.addEventListener('pointerup',endLogoCropPointer);
+logoCropStage.addEventListener('pointercancel',endLogoCropPointer);
+
+logoCropStage.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const next=Math.max(1,Math.min(4,logoCropZoomFactor+(e.deltaY<0?.08:-.08)));
+  logoCropZoomFactor=next;
+  logoCropZoom.value=String(Math.round(next*100));
+  renderLogoCrop();
+},{passive:false});
+
+document.getElementById('logoCropResetBtn').addEventListener('click',resetLogoCrop);
+document.getElementById('logoCropCancelBtn').addEventListener('click',()=>closeLogoCropEditor(true));
+document.getElementById('logoCropCloseBtn').addEventListener('click',()=>closeLogoCropEditor(true));
+logoCropOverlay.addEventListener('click',e=>{if(e.target===logoCropOverlay)closeLogoCropEditor(true);});
+
+document.getElementById('logoCropApplyBtn').addEventListener('click',async()=>{
+  const btn=document.getElementById('logoCropApplyBtn');
+  btn.disabled=true;
+  const oldText=btn.textContent;
+  btn.textContent='Saving…';
+  logoCropStatus.textContent='Preparing cropped logo…';
+  try{
+    const data=exportLogoCrop();
+
+    if(logoCropMode==='header'){
+      settings.logo=data;
+      persist();
+      applySettings();
+      await cloudSaveSettings(true);
+      logoCropStatus.textContent='✓ Header logo saved and synced.';
+    }else{
+      welcomeLogoDraft=data;
+      renderWelcomeLogoPreview();
+      setStatus('welcomeSettingsStatus','✓ Logo cropped. Click “Save Welcome Screen” to publish it.','ok');
+      logoCropStatus.textContent='✓ Welcome logo ready.';
+    }
+
+    const resolve=logoCropResolve;
+    logoCropResolve=null;logoCropReject=null;
+    setTimeout(()=>{
+      logoCropOverlay.classList.remove('open');
+      logoCropOverlay.setAttribute('aria-hidden','true');
+      if(resolve)resolve(data);
+    },250);
+  }catch(err){
+    console.error(err);
+    logoCropStatus.textContent='Could not save this logo. Please try another image.';
+  }finally{
+    btn.disabled=false;
+    btn.textContent=oldText;
+  }
+});
+
 function applySettings(){
   document.getElementById('titleText').textContent = settings.title || 'Lesson Learned Repository';
   document.getElementById('subtitleText').textContent = settings.subtitle || 'Shanta Holdings Limited — Inspection & Analysis';
@@ -4543,18 +4847,19 @@ function applySettings(){
     initials.style.display = 'block';
   }
 }
-document.getElementById('logoMark').addEventListener('click', () => { if(requireAdmin()) document.getElementById('logoInput').click(); });
-document.getElementById('logoInput').addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    settings.logo = ev.target.result;
-    applySettings();
-    persist();
-    cloudSaveSettings();
-  };
-  reader.readAsDataURL(file);
+document.getElementById('logoMark').addEventListener('click', () => {
+  if(requireAdmin()) document.getElementById('logoInput').click();
+});
+document.getElementById('logoInput').addEventListener('change', async e => {
+  const file=e.target.files&&e.target.files[0];
+  e.target.value='';
+  if(!file)return;
+  try{
+    await openLogoCropEditor(file,'header');
+  }catch(err){
+    console.error(err);
+    alert('Could not open this logo image.');
+  }
 });
 ['titleText','subtitleText'].forEach(id => {
   document.getElementById(id).addEventListener('blur', () => {
@@ -4634,31 +4939,17 @@ function populateWelcomeSettingsForm(){
   Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=settings[key]??DEFAULT_WELCOME[key];});
   setStatus('welcomeSettingsStatus','');
 }
-function resizeWelcomeLogo(file){
-  return new Promise((resolve,reject)=>{
-    const reader=new FileReader();
-    reader.onerror=()=>reject(reader.error||new Error('Could not read image'));
-    reader.onload=()=>{
-      const img=new Image();
-      img.onerror=()=>reject(new Error('Invalid image'));
-      img.onload=()=>{
-        const max=360; const scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
-        const w=Math.max(1,Math.round(img.naturalWidth*scale)); const h=Math.max(1,Math.round(img.naturalHeight*scale));
-        const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
-        const ctx=canvas.getContext('2d');ctx.clearRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
-        resolve(canvas.toDataURL('image/png'));
-      };
-      img.src=reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
 document.getElementById('uploadWelcomeLogoBtn').addEventListener('click',()=>document.getElementById('welcomeLogoInput').click());
 document.getElementById('welcomeLogoInput').addEventListener('change',async e=>{
-  const file=e.target.files&&e.target.files[0];if(!file)return;
-  try{welcomeLogoDraft=await resizeWelcomeLogo(file);renderWelcomeLogoPreview();setStatus('welcomeSettingsStatus','Logo ready. Click “Save Welcome Screen” to publish it.','');}
-  catch(err){console.error(err);setStatus('welcomeSettingsStatus','Could not read this logo image.','err');}
+  const file=e.target.files&&e.target.files[0];
   e.target.value='';
+  if(!file)return;
+  try{
+    await openLogoCropEditor(file,'welcome');
+  }catch(err){
+    console.error(err);
+    setStatus('welcomeSettingsStatus','Could not open this logo image.','err');
+  }
 });
 document.getElementById('useHeaderLogoBtn').addEventListener('click',()=>{if(settings.logo){welcomeLogoDraft=settings.logo;renderWelcomeLogoPreview();setStatus('welcomeSettingsStatus','Header logo copied to the Welcome Screen preview. Save to apply.','');}else setStatus('welcomeSettingsStatus','No repository header logo has been uploaded yet.','err');});
 document.getElementById('removeWelcomeLogoBtn').addEventListener('click',()=>{welcomeLogoDraft='';renderWelcomeLogoPreview();setStatus('welcomeSettingsStatus','Logo removed from preview. Save to apply.','');});
@@ -4699,7 +4990,7 @@ document.getElementById('saveWelcomeSettingsBtn').addEventListener('click',async
   persist();renderWelcomeScreen();
   const btn=document.getElementById('saveWelcomeSettingsBtn');btn.disabled=true;btn.textContent='Saving…';
   try{
-    await cloudSaveSettings();
+    await cloudSaveSettings(true);
     await cloudSaveWelcomeSettings();
     setStatus('welcomeSettingsStatus','✓ Welcome screen saved for all users.','ok');
   }catch(e){setStatus('welcomeSettingsStatus','Saved locally, but cloud welcome sync failed. Check Firestore rules for meta/welcome.','err');}

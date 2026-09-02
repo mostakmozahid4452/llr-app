@@ -1,4 +1,4 @@
-const CACHE = 'shl-qa-llr-shell-v1.0.28-viewer-logout-message-card';
+const CACHE = 'shl-qa-llr-shell-v1.0.29-logo-crop-sync';
 const SHELL = [
   './',
   './index.html',
