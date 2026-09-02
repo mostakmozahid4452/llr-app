@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>SHL QA — Lesson Learned Repository</title>
-<!-- Cross-platform patch v1.0.27: softer professional Notification / Message / About icons -->
+<!-- Cross-platform patch v1.0.28: mobile Viewer Logout restored + announcement detail card from notifications -->
 <!-- v1.0.11: mobile/web login viewport + keyboard responsiveness fix -->
 <!-- v1.0.7: card view shows both uploaded photos side-by-side -->
 
@@ -340,6 +340,48 @@ header{
 .announcement-image-preview img{display:block;width:100%;max-height:190px;object-fit:contain;}
 .announcement-image-note{font-size:10.5px;color:var(--text-mute);margin-top:6px;line-height:1.45;}
 .announcement-link-help{font-size:10px;color:var(--text-mute);margin-top:4px;line-height:1.4;}
+
+/* ===== v1.0.28 Notification -> Announcement Detail Card ===== */
+.announcement-detail-overlay{
+  position:fixed;inset:0;z-index:6250;background:rgba(13,20,28,.68);display:none;
+  align-items:center;justify-content:center;padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+.announcement-detail-overlay.open{display:flex;}
+.announcement-detail-card{
+  width:min(620px,100%);max-height:calc(100dvh - 24px);overflow:auto;background:#fff;
+  border:1px solid rgba(28,43,58,.10);border-radius:18px;box-shadow:0 26px 70px rgba(0,0,0,.30);
+}
+.announcement-detail-head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:17px 18px 13px;
+  border-bottom:1px solid var(--border);background:linear-gradient(180deg,#fff 0%,#fcfcfb 100%);
+  position:sticky;top:0;z-index:2;
+}
+.announcement-detail-eyebrow{
+  font-size:10px;font-weight:850;letter-spacing:.55px;text-transform:uppercase;color:var(--gold-dim);margin-bottom:4px;
+}
+.announcement-detail-title{font-size:18px;font-weight:850;line-height:1.3;color:var(--navy);}
+.announcement-detail-body{padding:16px 18px 18px;}
+.announcement-detail-message{font-size:13px;line-height:1.65;color:var(--text-dim);white-space:pre-wrap;word-break:break-word;}
+.announcement-detail-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;color:var(--text-mute);font-size:10.5px;}
+.announcement-detail-image{
+  margin-top:14px;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:#fff;
+}
+.announcement-detail-image img{
+  width:100%;display:block;max-height:420px;object-fit:contain;background:#fff;cursor:zoom-in;
+}
+.announcement-detail-card .message-link-card{margin-top:14px;}
+.announcement-detail-footer{
+  display:flex;justify-content:flex-end;gap:8px;padding:0 18px 18px;
+}
+@media(max-width:680px){
+  .announcement-detail-overlay{padding:8px;}
+  .announcement-detail-card{border-radius:15px;max-height:calc(100dvh - 16px);}
+  .announcement-detail-head{padding:14px 14px 11px;}
+  .announcement-detail-title{font-size:16px;}
+  .announcement-detail-body{padding:13px 14px 15px;}
+  .announcement-detail-footer{padding:0 14px 14px;}
+}
 @media(max-width:680px){
   .message-link-card{align-items:flex-start;flex-wrap:wrap;}
   .message-link-actions{width:100%;justify-content:flex-end;}
@@ -1144,6 +1186,7 @@ body.access-keyboard-open .access-foot{display:none;}
       <button class="mobile-menu-item admin-only" id="mobileSettingsBtn" type="button"><span class="mi-icon">⚙</span><span class="mi-main">Settings<span class="mi-sub">Admin and repository settings</span></span></button>
       <button class="mobile-menu-item admin-only" id="mobileStorageBtn" type="button"><span class="mi-icon">📁</span><span class="mi-main">Storage<span class="mi-sub">Connect local backup folder</span></span></button>
       <button class="mobile-menu-item" id="mobileAccountBtn" type="button"><span class="mi-icon">👤</span><span class="mi-main"><span id="mobileAccountText">Admin Login</span><span class="mi-sub" id="mobileAccountSub">Switch account or sign out</span></span></button>
+      <button class="mobile-menu-item viewer-only" id="mobileViewerLogoutBtn" type="button"><span class="mi-icon">↪</span><span class="mi-main">Viewer Logout<span class="mi-sub">Sign out from this device</span></span></button>
     </div>
   </div>
 </header>
@@ -1473,6 +1516,22 @@ body.access-keyboard-open .access-foot{display:none;}
       <button class="btn btn-gold btn-sm" id="notificationDoneBtn" type="button">Done</button>
     </div>
   </div>
+</div>
+
+<div class="announcement-detail-overlay" id="announcementDetailOverlay" aria-hidden="true">
+  <article class="announcement-detail-card" role="dialog" aria-modal="true" aria-labelledby="announcementDetailTitle">
+    <div class="announcement-detail-head">
+      <div>
+        <div class="announcement-detail-eyebrow">Admin Message</div>
+        <div class="announcement-detail-title" id="announcementDetailTitle">Message</div>
+      </div>
+      <button class="close-btn" id="announcementDetailCloseBtn" type="button" aria-label="Close message">&times;</button>
+    </div>
+    <div class="announcement-detail-body" id="announcementDetailBody"></div>
+    <div class="announcement-detail-footer">
+      <button class="btn btn-gold" id="announcementDetailDoneBtn" type="button">Done</button>
+    </div>
+  </article>
 </div>
 
 <div class="overlay" id="announcementManagerOverlay">
@@ -2122,6 +2181,99 @@ function escNotify(s){
   return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+async function copyMessageLink(url,statusEl=null){
+  let copied=false;
+  try{
+    if(navigator.clipboard?.writeText){
+      await navigator.clipboard.writeText(url);
+      copied=true;
+    }
+  }catch(_){}
+  if(!copied){
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=url;ta.style.position='fixed';ta.style.opacity='0';ta.style.pointerEvents='none';
+      document.body.appendChild(ta);ta.focus();ta.select();
+      copied=document.execCommand('copy');
+      ta.remove();
+    }catch(_){}
+  }
+  if(statusEl){
+    statusEl.textContent=copied?'✓ Link copied':'Copy failed — select the URL manually';
+    setTimeout(()=>{statusEl.textContent='';},2200);
+  }
+  return copied;
+}
+
+function closeAnnouncementDetailCard(){
+  const overlay=document.getElementById('announcementDetailOverlay');
+  if(!overlay) return;
+  overlay.classList.remove('open');
+  overlay.setAttribute('aria-hidden','true');
+}
+
+function openAnnouncementDetailCard(id){
+  const a=announcements.find(x=>x.id===id);
+  if(!a) return;
+
+  markAnnouncementRead(id);
+
+  const titleEl=document.getElementById('announcementDetailTitle');
+  const bodyEl=document.getElementById('announcementDetailBody');
+  titleEl.textContent=a.title||'Admin Message';
+
+  const pr=a.priority||'normal';
+  const priorityLabel=pr==='urgent'?'Urgent':pr==='important'?'Important':'Normal';
+  const imageHtml=a.imageData?`
+    <div class="announcement-detail-image">
+      <img src="${a.imageData}" alt="Message image or QR code" id="announcementDetailImage">
+    </div>`:'';
+
+  const linkHtml=a.linkUrl?`
+    <div class="message-link-card" id="announcementDetailLinkCard">
+      <div class="message-link-icon">🔗</div>
+      <div class="message-link-info">
+        <div class="message-link-label">${escNotify(a.linkLabel||'Update Link')}</div>
+        <div class="message-link-url" title="${escNotify(a.linkUrl)}">${escNotify(a.linkUrl)}</div>
+        <div class="message-copy-status" id="announcementDetailCopyStatus"></div>
+      </div>
+      <div class="message-link-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="announcementDetailOpenLink">Open</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="announcementDetailCopyLink">Copy Link</button>
+      </div>
+    </div>`:'';
+
+  bodyEl.innerHTML=`
+    <div class="announcement-detail-message">${escNotify(a.body||'')}</div>
+    ${imageHtml}
+    ${linkHtml}
+    <div class="announcement-detail-meta">
+      <span class="priority-pill priority-${pr}">${priorityLabel}</span>
+      ${a.createdAt?`<span>${escNotify(formatNotifyTime(a.createdAt))}</span>`:''}
+    </div>`;
+
+  const image=document.getElementById('announcementDetailImage');
+  if(image){
+    image.addEventListener('click',()=>{
+      try{openPhotoViewer(image.src);}
+      catch(_){window.open(image.src,'_blank','noopener,noreferrer');}
+    });
+  }
+
+  document.getElementById('announcementDetailOpenLink')?.addEventListener('click',()=>{
+    if(a.linkUrl) window.open(a.linkUrl,'_blank','noopener,noreferrer');
+  });
+  document.getElementById('announcementDetailCopyLink')?.addEventListener('click',()=>{
+    copyMessageLink(a.linkUrl||'',document.getElementById('announcementDetailCopyStatus'));
+  });
+
+  const overlay=document.getElementById('announcementDetailOverlay');
+  overlay.classList.add('open');
+  overlay.setAttribute('aria-hidden','false');
+  updateNotificationUI(false);
+  renderNotificationCenter();
+}
+
 function renderNotificationCenter(){
   const el=document.getElementById('notificationList');
   if(!el) return;
@@ -2173,11 +2325,7 @@ function renderNotificationCenter(){
         closeNotificationCenter();
         openDetail(id);
       }else{
-        markAnnouncementRead(id);
-        row.classList.remove('unread');
-        const dot=row.querySelector('.notification-dot');
-        if(dot) dot.remove();
-        updateNotificationUI(false);
+        openAnnouncementDetailCard(id);
       }
     });
   });
@@ -2195,27 +2343,8 @@ function renderNotificationCenter(){
       e.preventDefault();e.stopPropagation();
       const url=btn.dataset.link||'';
       const id=btn.dataset.annId||'';
-      let copied=false;
-      try{
-        if(navigator.clipboard?.writeText){
-          await navigator.clipboard.writeText(url);
-          copied=true;
-        }
-      }catch(_){}
-      if(!copied){
-        try{
-          const ta=document.createElement('textarea');
-          ta.value=url; ta.style.position='fixed'; ta.style.opacity='0'; ta.style.pointerEvents='none';
-          document.body.appendChild(ta); ta.focus(); ta.select();
-          copied=document.execCommand('copy');
-          ta.remove();
-        }catch(_){}
-      }
       const status=el.querySelector(`[data-copy-status="${CSS.escape(id)}"]`);
-      if(status){
-        status.textContent=copied?'✓ Link copied':'Copy failed — select the URL manually';
-        setTimeout(()=>{status.textContent='';},2200);
-      }
+      await copyMessageLink(url,status);
     });
   });
 
@@ -2527,6 +2656,12 @@ document.getElementById('notificationToastViewBtn').addEventListener('click',()=
 document.getElementById('notificationToastDismissBtn').addEventListener('click',()=>{
   document.getElementById('notificationToast').classList.remove('show');
 });
+document.getElementById('announcementDetailCloseBtn')?.addEventListener('click',closeAnnouncementDetailCard);
+document.getElementById('announcementDetailDoneBtn')?.addEventListener('click',closeAnnouncementDetailCard);
+document.getElementById('announcementDetailOverlay')?.addEventListener('click',e=>{
+  if(e.target.id==='announcementDetailOverlay') closeAnnouncementDetailCard();
+});
+
 
 document.getElementById('announcementManagerBtn').addEventListener('click',()=>{
   if(!requireAdmin()) return;
@@ -2590,6 +2725,7 @@ document.getElementById('mobileNewLessonBtn')?.addEventListener('click',()=>docu
 document.getElementById('mobileSettingsBtn')?.addEventListener('click',()=>{setMobileMenu(false);document.getElementById('settingsBtn')?.click();});
 document.getElementById('mobileStorageBtn')?.addEventListener('click',()=>{setMobileMenu(false);document.getElementById('connectFolderBtn')?.click();});
 document.getElementById('mobileAccountBtn')?.addEventListener('click',()=>{setMobileMenu(false);document.getElementById('adminLoginBtn')?.click();});
+document.getElementById('mobileViewerLogoutBtn')?.addEventListener('click',()=>{setMobileMenu(false);document.getElementById('viewerLogoutBtn')?.click();});
 
 document.getElementById('mobileExportToggle')?.addEventListener('click',()=>{
   document.getElementById('mobileImportSubmenu')?.classList.remove('open');
@@ -2621,8 +2757,9 @@ function applyRoleUI(){
     loginBtn.textContent = currentRole==='viewer' ? '🔐 Admin Login' : '↪ Logout';
     loginBtn.style.display = currentRole==='locked' ? 'none' : '';
   }
-  const viewerLogoutBtn = document.getElementById('viewerLogoutBtn');
-  if(viewerLogoutBtn) viewerLogoutBtn.classList.toggle('viewer-visible', currentRole==='viewer');
+  document.querySelectorAll('.viewer-only').forEach(el=>{
+    el.classList.toggle('viewer-visible', currentRole==='viewer');
+  });
   const notificationBtn=document.getElementById('notificationBtn');
   if(notificationBtn) notificationBtn.style.display=currentRole==='locked'?'none':'';
   const mobileRole=document.getElementById('mobileRoleBadge');
@@ -2633,7 +2770,7 @@ function applyRoleUI(){
   const mobileAccountText=document.getElementById('mobileAccountText');
   const mobileAccountSub=document.getElementById('mobileAccountSub');
   if(mobileAccountText) mobileAccountText.textContent=currentRole==='admin'?'Logout':currentRole==='viewer'?'Admin Login':'Login';
-  if(mobileAccountSub) mobileAccountSub.textContent=currentRole==='admin'?'Sign out from Admin':currentRole==='viewer'?'Switch from Viewer to Admin':'Open repository access';
+  if(mobileAccountSub) mobileAccountSub.textContent=currentRole==='admin'?'Sign out from Admin':currentRole==='viewer'?'Open Admin sign-in':'Open repository access';
   if(currentRole!=='locked') setTimeout(()=>updateNotificationUI(true),350);
   ['titleText','subtitleText'].forEach(id => { const el=document.getElementById(id); if(el) el.setAttribute('contenteditable', isAdmin ? 'true':'false'); });
   const logo = document.getElementById('logoMark'); if(logo) logo.style.cursor = isAdmin ? 'pointer':'default';
@@ -2660,6 +2797,7 @@ function lockRepository(){
   currentRole='locked'; isAdmin=false; lessons=[];
   document.getElementById('notificationToast')?.classList.remove('show');
   document.getElementById('notificationOverlay')?.classList.remove('open');
+  document.getElementById('announcementDetailOverlay')?.classList.remove('open');
   document.getElementById('announcementManagerOverlay')?.classList.remove('open');
   localStorage.removeItem(LOCAL_KEY);
   applyRoleUI(); renderAll(); showAccessGate(false);
