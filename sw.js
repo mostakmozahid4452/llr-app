@@ -1,4 +1,4 @@
-const CACHE = 'shl-qa-llr-shell-v1.0.29-logo-crop-sync';
+const CACHE = 'shl-qa-llr-shell-v1.0.31-visibility';
 const SHELL = [
   './',
   './index.html',

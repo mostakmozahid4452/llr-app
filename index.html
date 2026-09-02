@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>SHL QA — Lesson Learned Repository</title>
-<!-- Cross-platform patch v1.0.29: reliable header/welcome logo sync + drag/zoom crop editor -->
+<!-- Cross-platform patch v1.0.31: Admin hide/show controls for Welcome/Login branding lines -->
 <!-- v1.0.11: mobile/web login viewport + keyboard responsiveness fix -->
 <!-- v1.0.7: card view shows both uploaded photos side-by-side -->
 
@@ -834,105 +834,261 @@ header{
 .auth-error{font-size:12px;color:var(--red);min-height:18px;margin-top:8px;}
 .role-badge.viewer{background:#eef6ff;border-color:#bfd7ef;color:#315f86;}
 
-/* ===== Secure repository access gate ===== */
+/* ===== Secure repository access gate — v1.0.30 ===== */
 .repository-locked > header,.repository-locked > .backup-banner,.repository-locked > .layout{display:none!important;}
-.access-gate{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:22px;background:linear-gradient(145deg,#eef1f4 0%,#f8fafc 55%,#f4ead9 100%);}
-.access-gate.hidden{display:none;}
-.access-card{width:min(520px,100%);background:#fff;border:1px solid var(--border);border-radius:20px;box-shadow:0 24px 70px rgba(28,43,58,.18);overflow:hidden;}
-.access-brand{padding:34px 28px 24px;text-align:center;background:linear-gradient(135deg,#1c2b3a 0%,#30475f 100%);color:#fff;}
-.access-logo{width:68px;height:68px;margin:0 auto 14px;border-radius:15px;background:linear-gradient(135deg,var(--gold-light),var(--gold-dim));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;box-shadow:0 0 0 4px rgba(255,255,255,.12);overflow:hidden;}
-.access-logo img{width:100%;height:100%;object-fit:cover;background:transparent;padding:0;}
-.access-brand h1{font-size:22px;margin:0 0 5px;color:#fff;}
-.access-brand p{font-size:12px;color:#d9e1e9;margin:0;}
-.access-tagline{margin-top:9px;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#e5c88f;}
-.access-body{padding:26px 28px 28px;}
-.access-intro{text-align:center;}
-.access-intro p{font-size:13px;color:var(--text-dim);line-height:1.65;margin:0 0 18px;}
-.access-login{display:none;}
-.access-login.open{display:block;}
-.access-section{border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:12px;background:#fbfcfd;}
-.access-section-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px;}
-.access-section-sub{font-size:11px;color:var(--text-mute);margin-bottom:12px;line-height:1.45;}
-.access-divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--text-mute);font-size:10px;text-transform:uppercase;letter-spacing:.7px;}
-.access-divider:before,.access-divider:after{content:'';height:1px;background:var(--border);flex:1;}
-.access-row{display:flex;gap:8px;align-items:stretch;}
-.access-row input{flex:1;min-width:0;background:#fff;border:1px solid var(--border);border-radius:9px;padding:11px 12px;font-size:13.5px;}
-.access-row input:focus{outline:none;border-color:var(--gold-dim);box-shadow:0 0 0 3px rgba(184,134,59,.10);}
-.access-stack{display:grid;gap:9px;}
-.access-stack input{width:100%;background:#fff;border:1px solid var(--border);border-radius:9px;padding:11px 12px;font-size:13.5px;}
-.access-stack input:focus{outline:none;border-color:var(--gold-dim);box-shadow:0 0 0 3px rgba(184,134,59,.10);}
-.access-error{font-size:11.5px;color:var(--red);min-height:17px;margin-top:7px;}
-.access-back{margin-top:14px;text-align:center;}
-.access-back button{background:none;border:none;color:var(--text-mute);font-size:11.5px;cursor:pointer;}
-.access-foot{padding:11px 18px;border-top:1px solid var(--border);font-size:10.5px;color:var(--text-mute);text-align:center;background:#fafbfc;}
-@media(max-width:560px){.access-body{padding:20px}.access-brand{padding:28px 18px 20px}.access-row{flex-direction:column}.access-row .btn{justify-content:center}}
 
-/* ===== v1.0.11 Login viewport / mobile keyboard fix ===== */
-:root{--access-viewport-height:100dvh;}
 .access-gate{
+  --access-viewport-height:100dvh;
+  position:fixed;inset:0;z-index:1000;
   height:var(--access-viewport-height,100dvh);
-  min-height:0;
-  overflow-y:auto;
-  overflow-x:hidden;
-  align-items:flex-start;
-  justify-content:center;
-  overscroll-behavior:contain;
-  -webkit-overflow-scrolling:touch;
-  padding-top:max(14px,env(safe-area-inset-top));
-  padding-right:max(14px,env(safe-area-inset-right));
-  padding-bottom:max(14px,env(safe-area-inset-bottom));
-  padding-left:max(14px,env(safe-area-inset-left));
+  min-height:0;overflow-y:auto;overflow-x:hidden;
+  display:flex;align-items:center;justify-content:center;
+  padding:max(14px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right))
+          max(14px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
+  background:
+    radial-gradient(circle at 85% 7%,color-mix(in srgb,var(--gold) 10%,transparent),transparent 31%),
+    linear-gradient(180deg,var(--bg-2) 0%,var(--bg) 100%);
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
 }
+.access-gate.hidden{display:none;}
 .access-card{
-  flex:0 0 auto;
-  margin:auto 0;
-  max-width:520px;
+  width:min(560px,100%);min-height:min(790px,calc(var(--access-viewport-height,100dvh) - 28px));
+  margin:auto 0;background:var(--bg-2);border:1px solid color-mix(in srgb,var(--border) 82%,transparent);
+  border-radius:26px;box-shadow:0 24px 70px rgba(28,43,58,.15);overflow:hidden;position:relative;
 }
-.access-login.open{display:block;}
+.access-intro{
+  min-height:inherit;display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:52px 44px 34px;
+}
+.welcome-kicker{
+  font-size:18px;font-weight:500;letter-spacing:.4px;color:var(--text-dim);margin-top:10px;
+}
+.welcome-main-title{
+  margin-top:12px;font-size:34px;line-height:1.16;font-weight:800;letter-spacing:1.1px;color:var(--navy);
+  text-wrap:balance;
+}
+.welcome-note{
+  margin-top:10px;max-width:430px;font-size:12px;line-height:1.55;color:var(--text-mute);
+}
+.welcome-logo-large{
+  width:154px;height:154px;flex:0 0 154px;margin:50px auto 34px;border-radius:32px;
+  overflow:hidden;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--gold-light),var(--gold-dim));
+  color:#fff;font-size:28px;font-weight:850;box-shadow:0 16px 40px color-mix(in srgb,var(--gold) 18%,transparent);
+}
+.welcome-logo-large img{width:100%;height:100%;display:block;object-fit:cover;background:transparent;}
+.welcome-tagline{
+  font-size:12px;font-weight:800;letter-spacing:2.8px;text-transform:uppercase;color:var(--gold-dim);
+  min-height:18px;
+}
+.enter-repository-btn{
+  width:min(360px,88%);min-height:64px;margin-top:auto;border-radius:999px!important;justify-content:center!important;
+  font-size:15px!important;font-weight:850!important;letter-spacing:1.2px!important;
+  background:linear-gradient(135deg,var(--navy),color-mix(in srgb,var(--navy) 82%,#fff))!important;
+  border-color:transparent!important;color:#fff!important;box-shadow:0 10px 28px color-mix(in srgb,var(--navy) 24%,transparent)!important;
+}
+.enter-repository-btn:hover{transform:translateY(-1px);}
+.welcome-company{
+  margin-top:32px;font-size:13px;font-weight:700;letter-spacing:2.2px;color:var(--text-mute);text-align:center;
+}
+.welcome-developer{
+  margin-top:8px;font-size:10.5px;color:var(--text-mute);
+}
+
+/* Login page */
+.access-login{display:none;min-height:inherit;padding:30px 34px 26px;}
+.access-login.open{display:flex;flex-direction:column;align-items:center;}
+.login-brand-logo{
+  width:94px;height:94px;border-radius:22px;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--gold-light),var(--gold-dim));color:#fff;font-weight:850;font-size:20px;
+  box-shadow:0 12px 30px color-mix(in srgb,var(--gold) 16%,transparent);
+}
+.login-brand-logo img{width:100%;height:100%;display:block;object-fit:cover;background:transparent;}
+.login-company{
+  margin-top:22px;font-size:25px;line-height:1.2;font-weight:850;color:var(--navy);text-align:center;text-wrap:balance;
+}
+.login-app-name{
+  margin-top:7px;font-size:13px;font-weight:800;letter-spacing:2.2px;color:var(--text-dim);text-align:center;
+}
+.login-role-switch{
+  margin-top:28px;width:min(330px,100%);display:grid;grid-template-columns:1fr 1fr;
+  border:1px solid var(--border-strong);border-radius:999px;overflow:hidden;background:var(--card);
+}
+.login-role-tab{
+  min-height:48px;border:0;background:transparent;color:var(--text-dim);font:inherit;font-size:13px;font-weight:750;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.login-role-tab.active{
+  background:color-mix(in srgb,var(--gold) 13%,var(--card));color:var(--navy);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--gold) 34%,transparent);
+}
+.login-role-tab .tab-check{display:none;font-weight:900;color:var(--gold-dim);}
+.login-role-tab.active .tab-check{display:inline;}
+.login-panel-card{
+  width:min(430px,100%);margin-top:26px;background:var(--card);border:1px solid var(--border);
+  border-radius:22px;padding:25px 24px;box-shadow:0 12px 32px rgba(28,43,58,.09);
+}
+.access-section{display:none;}
+.access-section.active{display:block;}
+.access-section-title{font-size:22px;font-weight:850;color:var(--navy);text-align:center;margin-bottom:7px;}
+.access-section-sub{font-size:11.5px;color:var(--text-mute);text-align:center;line-height:1.5;margin:0 auto 18px;max-width:350px;}
+.access-stack{display:grid;gap:12px;}
+.access-row{display:grid;gap:12px;}
+.access-input-wrap{position:relative;}
+.access-input-wrap .access-input-icon{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);width:22px;text-align:center;
+  color:var(--text-mute);font-size:16px;pointer-events:none;
+}
 .access-row input,.access-stack input{
-  font-size:16px; /* prevents mobile browser auto-zoom on focus */
-  scroll-margin-top:18px;
-  scroll-margin-bottom:160px;
+  width:100%;min-width:0;background:var(--bg-2);border:1px solid var(--border-strong);border-radius:14px;
+  padding:14px 15px 14px 46px;color:var(--text);font-size:16px;font-family:inherit;min-height:54px;
+  scroll-margin-top:18px;scroll-margin-bottom:170px;
 }
+.access-row input:focus,.access-stack input:focus{
+  outline:none;border-color:var(--gold-dim);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 12%,transparent);
+}
+.access-login-button{
+  width:100%;min-height:54px!important;margin-top:2px;border-radius:999px!important;justify-content:center!important;
+  background:var(--navy)!important;border-color:var(--navy)!important;color:#fff!important;font-weight:800!important;
+}
+.access-error{font-size:11.5px;color:var(--red);min-height:18px;margin-top:8px;text-align:center;}
+.access-divider{display:none;}
+.login-tagline{
+  margin-top:26px;font-size:15px;font-weight:850;color:var(--navy);text-align:center;
+}
+.login-developer{
+  margin-top:7px;font-size:10.5px;color:var(--text-mute);text-align:center;
+}
+.access-back{margin-top:20px;text-align:center;}
+.access-back button{
+  background:none;border:none;color:var(--text-dim);font-size:12px;font-weight:700;cursor:pointer;padding:8px 12px;
+}
+.access-back button:hover{color:var(--gold-dim);}
+.access-foot{
+  margin-top:5px;padding:0 12px;font-size:10px;color:var(--text-mute);text-align:center;background:transparent;border:0;
+}
+
+/* Viewer theme picker */
+.theme-picker-overlay{
+  position:fixed;inset:0;z-index:6750;background:rgba(10,16,22,.62);display:none;align-items:center;justify-content:center;
+  padding:14px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+.theme-picker-overlay.open{display:flex;}
+.theme-picker-card{
+  width:min(440px,100%);background:var(--bg-2);border:1px solid var(--border);border-radius:18px;
+  box-shadow:0 24px 60px rgba(0,0,0,.24);overflow:hidden;
+}
+.theme-picker-head{padding:16px 17px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:12px;align-items:flex-start;}
+.theme-picker-title{font-size:16px;font-weight:850;color:var(--navy);}
+.theme-picker-sub{font-size:10.5px;color:var(--text-mute);line-height:1.45;margin-top:3px;}
+.theme-picker-options{padding:13px;display:grid;grid-template-columns:repeat(2,1fr);gap:9px;}
+.theme-option{
+  border:1px solid var(--border);background:var(--card);border-radius:13px;padding:11px;cursor:pointer;text-align:left;color:var(--text);
+}
+.theme-option:hover,.theme-option.active{border-color:var(--gold-dim);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 12%,transparent);}
+.theme-option-name{font-size:12px;font-weight:800;color:var(--navy);}
+.theme-option-swatches{display:flex;gap:5px;margin-top:8px;}
+.theme-option-swatches span{width:18px;height:18px;border-radius:5px;border:1px solid rgba(0,0,0,.08);}
+.viewer-theme-desktop{gap:6px;}
+
+/* Admin theme builder */
+.visibility-groups{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+.visibility-group{
+  border:1px solid var(--border);border-radius:13px;background:var(--bg);padding:11px;
+}
+.visibility-group-title{
+  font-size:11px;font-weight:850;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;
+}
+.visibility-list{display:grid;gap:6px;}
+.visibility-item{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  min-height:42px;padding:8px 9px;border:1px solid var(--border);border-radius:10px;background:var(--card);
+}
+.visibility-item-text{min-width:0;}
+.visibility-item-name{font-size:11.5px;font-weight:780;color:var(--text);}
+.visibility-item-note{font-size:9.5px;color:var(--text-mute);margin-top:2px;line-height:1.35;}
+.visibility-switch{position:relative;width:42px;height:24px;flex:0 0 42px;}
+.visibility-switch input{position:absolute;opacity:0;pointer-events:none;}
+.visibility-slider{
+  position:absolute;inset:0;border-radius:999px;background:#cfd6dd;border:1px solid #c3cbd3;cursor:pointer;transition:.18s ease;
+}
+.visibility-slider::after{
+  content:"";position:absolute;width:18px;height:18px;left:2px;top:2px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.18);transition:.18s ease;
+}
+.visibility-switch input:checked + .visibility-slider{
+  background:color-mix(in srgb,var(--gold) 82%,#fff);border-color:var(--gold-dim);
+}
+.visibility-switch input:checked + .visibility-slider::after{transform:translateX(18px);}
+.visibility-warning{
+  margin-top:10px;font-size:10px;line-height:1.45;color:var(--text-mute);
+  padding:9px 10px;border-radius:10px;background:color-mix(in srgb,var(--gold-bg) 72%,var(--card));border:1px solid var(--border);
+}
+.theme-admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.theme-color-field{display:grid;grid-template-columns:1fr 46px;gap:10px;align-items:center;border:1px solid var(--border);border-radius:10px;padding:9px 10px;background:var(--bg);}
+.theme-color-field span{font-size:11px;font-weight:700;color:var(--text-dim);}
+.theme-color-field input[type=color]{width:42px;height:32px;border:1px solid var(--border);border-radius:7px;background:transparent;padding:2px;cursor:pointer;}
+.theme-preview{
+  margin-top:12px;border:1px solid var(--border);border-radius:14px;padding:13px;background:var(--bg);transition:.15s ease;
+}
+.theme-preview-card{border:1px solid var(--border);border-radius:11px;padding:13px;background:var(--card);}
+.theme-preview-title{font-size:13px;font-weight:850;color:var(--navy);}
+.theme-preview-text{font-size:10.5px;color:var(--text-mute);margin-top:3px;}
+.theme-preview-btn{display:inline-flex;margin-top:10px;padding:7px 12px;border-radius:8px;background:var(--gold);color:#fff;font-size:10.5px;font-weight:800;}
+
+/* Dark-theme hard-coded surface corrections */
+body.theme-dark header{background:rgba(24,32,41,.97);}
+body.theme-dark .header-actions,
+body.theme-dark .action-cluster.data,
+body.theme-dark .action-cluster.tools,
+body.theme-dark .action-cluster.account{background:var(--card);}
+body.theme-dark .dropdown-menu,
+body.theme-dark .mobile-more-menu,
+body.theme-dark .mobile-filter-card,
+body.theme-dark .message-link-card{background:var(--card);}
+body.theme-dark .message-media,
+body.theme-dark .announcement-image-preview{background:var(--card);}
+body.theme-dark .message-media img,
+body.theme-dark .announcement-image-preview img{background:var(--card);}
+body.theme-dark .notification-item.unread{background:color-mix(in srgb,var(--gold) 9%,var(--card));}
+body.theme-dark .login-role-tab.active{color:var(--text);}
+
 @media(max-width:560px){
-  .access-card{width:100%;border-radius:16px;}
-  .access-brand{padding:20px 16px 16px;}
-  .access-logo{width:58px;height:58px;margin-bottom:10px;border-radius:13px;}
-  .access-brand h1{font-size:19px;line-height:1.25;}
-  .access-brand p{font-size:11px;line-height:1.35;}
-  .access-tagline{margin-top:6px;font-size:10px;}
-  .access-body{padding:14px;}
-  .access-section{padding:13px;margin-top:8px;}
-  .access-section-sub{margin-bottom:9px;}
-  .access-divider{margin:10px 0;}
-  .access-foot{padding:9px 12px;}
-  .access-back{margin-top:10px;}
+  .visibility-groups{grid-template-columns:1fr;}
+  .access-gate{padding:0;background:var(--bg-2);align-items:flex-start;}
+  .access-card{
+    width:100%;min-height:var(--access-viewport-height,100dvh);border:0;border-radius:0;box-shadow:none;margin:0;
+  }
+  .access-intro{min-height:var(--access-viewport-height,100dvh);padding:45px 22px 26px;}
+  .welcome-kicker{font-size:17px;margin-top:10px;}
+  .welcome-main-title{font-size:29px;letter-spacing:.7px;margin-top:10px;}
+  .welcome-note{font-size:11px;margin-top:7px;}
+  .welcome-logo-large{width:142px;height:142px;flex-basis:142px;margin:44px auto 28px;border-radius:30px;}
+  .welcome-tagline{font-size:10.5px;}
+  .enter-repository-btn{min-height:60px;width:min(350px,90%);font-size:14px!important;}
+  .welcome-company{margin-top:28px;font-size:12px;letter-spacing:1.8px;}
+  .welcome-developer{font-size:10px;}
+
+  .access-login{min-height:var(--access-viewport-height,100dvh);padding:28px 20px 24px;}
+  .login-brand-logo{width:84px;height:84px;border-radius:20px;}
+  .login-company{font-size:23px;margin-top:18px;}
+  .login-app-name{font-size:12px;}
+  .login-role-switch{margin-top:24px;}
+  .login-panel-card{margin-top:22px;padding:22px 18px;border-radius:20px;}
+  .access-section-title{font-size:21px;}
+  .access-section-sub{margin-bottom:15px;}
+  .login-tagline{margin-top:22px;font-size:14px;}
+  .theme-picker-options{grid-template-columns:1fr;}
+  .theme-admin-grid{grid-template-columns:1fr;}
 }
-@media(max-height:700px){
-  .access-gate{padding-top:8px;padding-bottom:8px;}
-  .access-card{margin:0;}
-  .access-brand{padding-top:14px;padding-bottom:12px;}
-  .access-logo{width:50px;height:50px;margin-bottom:8px;}
-  .access-brand h1{font-size:18px;}
-  .access-tagline{margin-top:4px;}
-  .access-body{padding-top:10px;padding-bottom:10px;}
-  .access-section{padding:11px;}
-  .access-section-sub{margin-bottom:7px;}
-  .access-divider{margin:7px 0;}
-  .access-foot{padding:7px 10px;}
-}
-body.access-keyboard-open .access-gate{align-items:flex-start;}
-body.access-keyboard-open .access-card{margin:0;}
-body.access-keyboard-open .access-brand{padding-top:10px;padding-bottom:9px;}
-body.access-keyboard-open .access-logo{width:42px;height:42px;margin-bottom:6px;}
-body.access-keyboard-open .access-brand h1{font-size:16px;}
-body.access-keyboard-open .access-brand p{font-size:10px;}
-body.access-keyboard-open .access-tagline{display:none;}
-body.access-keyboard-open .access-body{padding-top:9px;padding-bottom:9px;}
-body.access-keyboard-open .access-section{padding:10px;}
-body.access-keyboard-open .access-section-sub{margin-bottom:6px;}
-body.access-keyboard-open .access-divider{margin:6px 0;}
-body.access-keyboard-open .access-foot{display:none;}
+.access-keyboard-open .access-login{padding-top:10px;padding-bottom:10px;}
+.access-keyboard-open .login-brand-logo,
+.access-keyboard-open .login-company,
+.access-keyboard-open .login-app-name,
+.access-keyboard-open .login-tagline,
+.access-keyboard-open .login-developer{display:none;}
+.access-keyboard-open .login-role-switch{margin-top:4px;}
+.access-keyboard-open .login-panel-card{margin-top:10px;}
 
 
 /* ===== AI assist ===== */
@@ -970,7 +1126,7 @@ body.access-keyboard-open .access-foot{display:none;}
 .about-meta{font-size:11.5px;color:var(--text-mute);line-height:1.6;padding-top:4px;}
 .welcome-logo-editor{display:flex;align-items:center;gap:14px;padding:12px;border:1px dashed var(--border-strong);border-radius:10px;background:var(--bg);margin-bottom:12px;}
 .welcome-logo-preview{width:74px;height:74px;flex:0 0 74px;border-radius:14px;background:linear-gradient(135deg,var(--gold-light),var(--gold-dim));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;overflow:hidden;border:1px solid var(--border);}
-.welcome-logo-preview img{width:100%;height:100%;object-fit:cover;background:transparent;padding:0;}
+.welcome-logo-preview img{width:100%;height:100%;display:block;object-fit:cover;background:transparent;padding:0;}
 .welcome-logo-controls{display:flex;gap:8px;flex-wrap:wrap;}
 
 /* ===== v1.0.29 Logo Crop / Position Editor ===== */
@@ -1071,42 +1227,77 @@ body.access-keyboard-open .access-foot{display:none;}
 
 <div class="access-gate" id="accessGate">
   <div class="access-card">
-    <div class="access-brand">
-      <div class="access-logo" id="accessWelcomeLogo"><span id="accessWelcomeLogoText">SHL</span></div>
-      <h1 id="welcomeTitleText">QA Lesson Learned Repository</h1>
-      <p id="welcomeSubtitleText">Shanta Holdings Limited — Quality Assurance</p>
-      <div class="access-tagline" id="welcomeTaglineText">Setting Standards</div>
-    </div>
-    <div class="access-body">
-      <div class="access-intro" id="accessIntro">
-        <p id="welcomeIntroText">Authorized SHL QA users can enter the repository using Viewer or Admin access.</p>
-        <button class="btn btn-gold" id="enterRepositoryBtn" style="margin:0 auto;justify-content:center;min-width:190px;">Enter Repository</button>
+    <section class="access-intro" id="accessIntro">
+      <div class="welcome-kicker" id="welcomeKickerText">Welcome to</div>
+      <h1 class="welcome-main-title" id="welcomeTitleText">Lesson Learned Repository</h1>
+      <div class="welcome-note" id="welcomeIntroText"></div>
+
+      <div class="welcome-logo-large" id="accessWelcomeLogo">
+        <span id="accessWelcomeLogoText">SHL</span>
       </div>
-      <div class="access-login" id="accessLogin">
-        <div class="access-section">
-          <div class="access-section-title" id="welcomeViewerTitleText">Viewer Access</div>
-          <div class="access-section-sub" id="welcomeViewerSubtitleText">Enter the shared Viewer password to open the repository in read-only mode.</div>
-          <div class="access-row">
-            <input type="password" id="viewerPassword" autocomplete="current-password" placeholder="Viewer password">
-            <button class="btn btn-gold" id="viewerLoginBtn">Enter as Viewer</button>
-          </div>
-          <div class="access-error" id="viewerLoginError"></div>
-        </div>
-        <div class="access-divider" id="welcomeDividerText">or</div>
-        <div class="access-section">
-          <div class="access-section-title" id="welcomeAdminTitleText">Admin Access</div>
-          <div class="access-section-sub" id="welcomeAdminSubtitleText">Admin login requires both the registered email address and password.</div>
+
+      <div class="welcome-tagline" id="welcomeTaglineText">Setting Standards</div>
+
+      <button class="btn enter-repository-btn" id="enterRepositoryBtn" type="button">ENTER REPOSITORY</button>
+
+      <div class="welcome-company" id="welcomeSubtitleText">Shanta Holdings Limited</div>
+      <div class="welcome-developer" id="welcomeDeveloperText">Developed by: Md. Mostak Mozahid</div>
+    </section>
+
+    <section class="access-login" id="accessLogin">
+      <div class="login-brand-logo" id="accessLoginLogo">
+        <span id="accessLoginLogoText">SHL</span>
+      </div>
+      <div class="login-company" id="loginCompanyText">Shanta Holdings Limited</div>
+      <div class="login-app-name" id="loginAppNameText">Lesson Learned Repository</div>
+
+      <div class="login-role-switch" role="tablist" aria-label="Choose login role">
+        <button class="login-role-tab active" id="accessAdminTab" type="button" role="tab" aria-selected="true">
+          <span class="tab-check">✓</span><span id="loginAdminTabText">Admin</span>
+        </button>
+        <button class="login-role-tab" id="accessViewerTab" type="button" role="tab" aria-selected="false">
+          <span class="tab-check">✓</span><span id="loginViewerTabText">Viewer</span>
+        </button>
+      </div>
+
+      <div class="login-panel-card">
+        <div class="access-section active" id="adminAccessPanel">
+          <div class="access-section-title" id="welcomeAdminTitleText">Admin Login</div>
+          <div class="access-section-sub" id="welcomeAdminSubtitleText">Use the registered Admin email and password.</div>
           <div class="access-stack">
-            <input type="email" id="gateAdminEmail" autocomplete="username" placeholder="Admin email">
-            <input type="password" id="gateAdminPassword" autocomplete="current-password" placeholder="Admin password">
-            <button class="btn btn-gold" id="gateAdminLoginBtn" style="justify-content:center;">Admin Login</button>
+            <div class="access-input-wrap">
+              <span class="access-input-icon">✉</span>
+              <input type="email" id="gateAdminEmail" autocomplete="username" placeholder="Admin email">
+            </div>
+            <div class="access-input-wrap">
+              <span class="access-input-icon">▣</span>
+              <input type="password" id="gateAdminPassword" autocomplete="current-password" placeholder="Admin password">
+            </div>
+            <button class="btn access-login-button" id="gateAdminLoginBtn" type="button">ADMIN LOGIN</button>
           </div>
           <div class="access-error" id="gateAdminLoginError"></div>
         </div>
-        <div class="access-back"><button id="accessBackBtn">← Back</button></div>
+
+        <div class="access-section" id="viewerAccessPanel">
+          <div class="access-section-title" id="welcomeViewerTitleText">Viewer Login</div>
+          <div class="access-section-sub" id="welcomeViewerSubtitleText">Enter the shared Viewer password for read-only access.</div>
+          <div class="access-row">
+            <div class="access-input-wrap">
+              <span class="access-input-icon">◉</span>
+              <input type="password" id="viewerPassword" autocomplete="current-password" placeholder="Viewer password">
+            </div>
+            <button class="btn access-login-button" id="viewerLoginBtn" type="button">VIEWER LOGIN</button>
+          </div>
+          <div class="access-error" id="viewerLoginError"></div>
+        </div>
       </div>
-    </div>
-    <div class="access-foot" id="welcomeFootText">Viewer = read only · Admin = full management access</div>
+
+      <div class="login-tagline" id="loginTaglineText">Setting Standards</div>
+      <div class="login-developer" id="loginDeveloperText">Developed by: Md. Mostak Mozahid</div>
+      <div class="access-back"><button id="accessBackBtn" type="button">← Back to Welcome</button></div>
+      <div class="access-foot" id="welcomeFootText">Authorized internal access</div>
+      <div id="welcomeDividerText" style="display:none;">or</div>
+    </section>
   </div>
 </div>
 
@@ -1173,6 +1364,7 @@ body.access-keyboard-open .access-foot{display:none;}
     <input type="file" id="importExcelFile" accept=".xlsx,.xls" style="display:none;">
 
     <div class="action-cluster account">
+      <button class="btn btn-ghost btn-sm viewer-only viewer-theme-desktop" id="viewerThemeBtn" type="button">◐ Theme</button>
       <span class="role-badge" id="roleBadge">Locked</span>
       <button class="btn btn-ghost btn-sm viewer-only" id="viewerLogoutBtn">↪ Logout</button>
       <button class="btn btn-ghost btn-sm" id="adminLoginBtn">↪ Logout</button>
@@ -1236,6 +1428,7 @@ body.access-keyboard-open .access-foot{display:none;}
     <div class="mobile-menu-section">
       <div class="mobile-menu-section-title">Account &amp; Admin</div>
       <button class="mobile-menu-item admin-only" id="mobileSettingsBtn" type="button"><span class="mi-icon">⚙</span><span class="mi-main">Settings<span class="mi-sub">Admin and repository settings</span></span></button>
+      <button class="mobile-menu-item viewer-only" id="mobileThemeBtn" type="button"><span class="mi-icon">◐</span><span class="mi-main">Theme<span class="mi-sub">Change appearance on this device</span></span></button>
       <button class="mobile-menu-item admin-only" id="mobileStorageBtn" type="button"><span class="mi-icon">📁</span><span class="mi-main">Storage<span class="mi-sub">Connect local backup folder</span></span></button>
       <button class="mobile-menu-item" id="mobileAccountBtn" type="button"><span class="mi-icon">👤</span><span class="mi-main"><span id="mobileAccountText">Admin Login</span><span class="mi-sub" id="mobileAccountSub">Switch account or sign out</span></span></button>
       <button class="mobile-menu-item viewer-only" id="mobileViewerLogoutBtn" type="button"><span class="mi-icon">↪</span><span class="mi-main">Viewer Logout<span class="mi-sub">Sign out from this device</span></span></button>
@@ -1678,6 +1871,19 @@ body.access-keyboard-open .access-foot{display:none;}
   <button type="button" id="notificationToastDismissBtn" aria-label="Dismiss">&times;</button>
 </div>
 
+<div class="theme-picker-overlay" id="themePickerOverlay" aria-hidden="true">
+  <div class="theme-picker-card" role="dialog" aria-modal="true" aria-labelledby="themePickerTitle">
+    <div class="theme-picker-head">
+      <div>
+        <div class="theme-picker-title" id="themePickerTitle">Choose Theme</div>
+        <div class="theme-picker-sub">Viewer theme is saved only on this device and does not change the company default.</div>
+      </div>
+      <button class="close-btn" id="themePickerCloseBtn" type="button">&times;</button>
+    </div>
+    <div class="theme-picker-options" id="viewerThemeOptions"></div>
+  </div>
+</div>
+
 <div class="logo-crop-overlay" id="logoCropOverlay" aria-hidden="true">
   <div class="logo-crop-modal" role="dialog" aria-modal="true" aria-labelledby="logoCropTitle">
     <div class="logo-crop-head">
@@ -1714,7 +1920,7 @@ body.access-keyboard-open .access-foot{display:none;}
 </div>
 
 <div class="overlay" id="settingsOverlay">
-  <div class="modal" style="max-width:760px;">
+  <div class="modal" style="max-width:920px;">
     <div class="modal-header">
       <h2>⚙ Admin Settings</h2>
       <button class="close-btn" id="closeSettings">&times;</button>
@@ -1722,55 +1928,181 @@ body.access-keyboard-open .access-foot{display:none;}
     <div class="modal-body">
       <div class="settings-grid">
         <div class="settings-card">
-          <h3>Welcome Screen</h3>
-          <div class="help">Customize the start screen shown before login. The welcome logo is separate from the repository header logo. Save here to update Web, Android and Windows users through Firebase.</div>
+          <h3>Welcome &amp; Login Screens</h3>
+          <div class="help">Admin controls the public Welcome/Login branding for all users. Both logos use the drag + zoom crop editor and sync through Firebase.</div>
+
+          <div class="welcome-settings-subhead">Welcome Screen Logo</div>
           <div class="welcome-logo-editor">
-            <div class="welcome-logo-preview" id="welcomeLogoPreview"><span id="welcomeLogoPreviewText">SHL</span></div>
+            <div class="welcome-logo-preview" id="welcomeLogoPreview" style="width:104px;height:104px;flex-basis:104px;border-radius:22px;"><span id="welcomeLogoPreviewText">SHL</span></div>
             <div style="flex:1;min-width:0;">
-              <div class="field" style="margin-bottom:8px;"><label>Welcome Screen Logo</label></div>
               <div class="welcome-logo-controls">
-                <button type="button" class="btn btn-ghost btn-sm" id="uploadWelcomeLogoBtn">Upload Logo</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="uploadWelcomeLogoBtn">Upload &amp; Crop</button>
                 <button type="button" class="btn btn-ghost btn-sm" id="useHeaderLogoBtn">Use Header Logo</button>
-                <button type="button" class="btn btn-ghost btn-sm" id="removeWelcomeLogoBtn">Remove Logo</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="removeWelcomeLogoBtn">Remove</button>
               </div>
               <input type="file" id="welcomeLogoInput" accept="image/*" style="display:none;">
-              <div class="help" style="margin:7px 0 0;">PNG/JPG/WebP supported. After upload, drag and zoom the logo to crop it exactly into the square.</div>
+              <div class="help" style="margin:7px 0 0;">This is the large center logo on the Welcome page.</div>
             </div>
           </div>
-          <div class="welcome-settings-subhead">Branding</div>
-          <div class="field"><label>Title</label><input type="text" id="welcomeTitleInput" placeholder="QA Lesson Learned Repository"></div>
-          <div class="field"><label>Subtitle / Company</label><input type="text" id="welcomeSubtitleInput" placeholder="Shanta Holdings Limited — Quality Assurance"></div>
-          <div class="field"><label>Tagline</label><input type="text" id="welcomeTaglineInput" placeholder="Setting Standards"></div>
-          <div class="welcome-settings-subhead">Start View</div>
-          <div class="field"><label>Intro Text</label><textarea id="welcomeIntroInput" style="min-height:72px"></textarea></div>
-          <div class="field"><label>Enter Button Text</label><input type="text" id="welcomeEnterButtonInput"></div>
-          <div class="welcome-settings-subhead">Viewer Access</div>
+
+          <div class="welcome-settings-subhead">Welcome Text</div>
           <div class="row-2">
-            <div class="field"><label>Section Title</label><input type="text" id="welcomeViewerTitleInput"></div>
+            <div class="field"><label>Top Text</label><input type="text" id="welcomeKickerInput" placeholder="Welcome to"></div>
+            <div class="field"><label>Enter Button Text</label><input type="text" id="welcomeEnterButtonInput" placeholder="ENTER REPOSITORY"></div>
+          </div>
+          <div class="field"><label>Main Title</label><input type="text" id="welcomeTitleInput" placeholder="Lesson Learned Repository"></div>
+          <div class="field"><label>Optional Note</label><textarea id="welcomeIntroInput" style="min-height:58px" placeholder="Leave blank for a cleaner Welcome page"></textarea></div>
+          <div class="row-2">
+            <div class="field"><label>Tagline</label><input type="text" id="welcomeTaglineInput" placeholder="Setting Standards"></div>
+            <div class="field"><label>Company / Footer</label><input type="text" id="welcomeSubtitleInput" placeholder="Shanta Holdings Limited"></div>
+          </div>
+          <div class="field"><label>Developed By Line</label><input type="text" id="welcomeDeveloperInput" placeholder="Developed by: Md. Mostak Mozahid"></div>
+
+          <div class="welcome-settings-subhead">Login Screen Logo</div>
+          <div class="welcome-logo-editor">
+            <div class="welcome-logo-preview" id="loginLogoPreview" style="width:86px;height:86px;flex-basis:86px;border-radius:20px;"><span id="loginLogoPreviewText">SHL</span></div>
+            <div style="flex:1;min-width:0;">
+              <div class="welcome-logo-controls">
+                <button type="button" class="btn btn-ghost btn-sm" id="uploadLoginLogoBtn">Upload &amp; Crop</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="useWelcomeLogoForLoginBtn">Use Welcome Logo</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="removeLoginLogoBtn">Remove</button>
+              </div>
+              <input type="file" id="loginLogoInput" accept="image/*" style="display:none;">
+              <div class="help" style="margin:7px 0 0;">If blank, the Welcome logo is used automatically.</div>
+            </div>
+          </div>
+
+          <div class="welcome-settings-subhead">Login Branding</div>
+          <div class="row-2">
+            <div class="field"><label>Company Name</label><input type="text" id="loginCompanyInput" placeholder="Shanta Holdings Limited"></div>
+            <div class="field"><label>App Name</label><input type="text" id="loginAppNameInput" placeholder="Lesson Learned Repository"></div>
+          </div>
+          <div class="row-2">
+            <div class="field"><label>Login Tagline</label><input type="text" id="loginTaglineInput" placeholder="Setting Standards"></div>
+            <div class="field"><label>Developed By Line</label><input type="text" id="loginDeveloperInput"></div>
+          </div>
+          <div class="row-2">
+            <div class="field"><label>Admin Tab Text</label><input type="text" id="loginAdminTabInput" placeholder="Admin"></div>
+            <div class="field"><label>Viewer Tab Text</label><input type="text" id="loginViewerTabInput" placeholder="Viewer"></div>
+          </div>
+
+          <div class="welcome-settings-subhead">Viewer Login</div>
+          <div class="row-2">
+            <div class="field"><label>Panel Title</label><input type="text" id="welcomeViewerTitleInput"></div>
             <div class="field"><label>Password Placeholder</label><input type="text" id="welcomeViewerPlaceholderInput"></div>
           </div>
-          <div class="field"><label>Helper Text</label><textarea id="welcomeViewerSubtitleInput" style="min-height:62px"></textarea></div>
+          <div class="field"><label>Helper Text</label><textarea id="welcomeViewerSubtitleInput" style="min-height:58px"></textarea></div>
           <div class="field"><label>Viewer Button Text</label><input type="text" id="welcomeViewerButtonInput"></div>
-          <div class="welcome-settings-subhead">Admin Access</div>
-          <div class="row-2">
-            <div class="field"><label>Section Title</label><input type="text" id="welcomeAdminTitleInput"></div>
-            <div class="field"><label>Divider Text</label><input type="text" id="welcomeDividerInput"></div>
-          </div>
-          <div class="field"><label>Helper Text</label><textarea id="welcomeAdminSubtitleInput" style="min-height:62px"></textarea></div>
+
+          <div class="welcome-settings-subhead">Admin Login</div>
+          <div class="field"><label>Panel Title</label><input type="text" id="welcomeAdminTitleInput"></div>
+          <div class="field"><label>Helper Text</label><textarea id="welcomeAdminSubtitleInput" style="min-height:58px"></textarea></div>
           <div class="row-2">
             <div class="field"><label>Email Placeholder</label><input type="text" id="welcomeAdminEmailPlaceholderInput"></div>
             <div class="field"><label>Password Placeholder</label><input type="text" id="welcomeAdminPasswordPlaceholderInput"></div>
           </div>
           <div class="field"><label>Admin Button Text</label><input type="text" id="welcomeAdminButtonInput"></div>
-          <div class="welcome-settings-subhead">Footer & Navigation</div>
+
+          <div class="welcome-settings-subhead">Footer &amp; Navigation</div>
           <div class="row-2">
             <div class="field"><label>Back Button Text</label><input type="text" id="welcomeBackInput"></div>
-            <div class="field"><label>Footer Text</label><input type="text" id="welcomeFooterInput"></div>
+            <div class="field"><label>Login Footer Text</label><input type="text" id="welcomeFooterInput"></div>
           </div>
+          <input type="hidden" id="welcomeDividerInput" value="or">
+
           <div class="settings-status" id="welcomeSettingsStatus"></div>
           <div class="settings-actions">
-            <button class="btn btn-ghost" type="button" id="resetWelcomeDefaultsBtn">Restore Defaults</button>
-            <button class="btn btn-gold" type="button" id="saveWelcomeSettingsBtn">Save Welcome Screen</button>
+            <button class="btn btn-ghost" type="button" id="resetWelcomeDefaultsBtn">Restore Branding Defaults</button>
+            <button class="btn btn-gold" type="button" id="saveWelcomeSettingsBtn">Save Welcome &amp; Login</button>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Welcome &amp; Login Visibility</h3>
+          <div class="help">Hide or show individual branding/text lines without deleting their saved text. Turn an item back on anytime and the previous text will reappear.</div>
+
+          <div class="visibility-groups">
+            <div class="visibility-group">
+              <div class="visibility-group-title">Welcome Screen</div>
+              <div class="visibility-list">
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">Large Logo</div><div class="visibility-item-note">Center Welcome logo</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showWelcomeLogo"><span class="visibility-slider"></span></label></div>
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">Top Text</div><div class="visibility-item-note">“Welcome to” line</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showWelcomeKicker"><span class="visibility-slider"></span></label></div>
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">Main Title</div><div class="visibility-item-note">Repository title</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showWelcomeTitle"><span class="visibility-slider"></span></label></div>
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">Optional Note</div><div class="visibility-item-note">Intro/helper line</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showWelcomeIntro"><span class="visibility-slider"></span></label></div>
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">Tagline</div><div class="visibility-item-note">Setting Standards line</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showWelcomeTagline"><span class="visibility-slider"></span></label></div>
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">Company / Footer</div><div class="visibility-item-note">Shanta Holdings Limited line</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showWelcomeCompany"><span class="visibility-slider"></span></label></div>
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">Developed By</div><div class="visibility-item-note">Developer credit line</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showWelcomeDeveloper"><span class="visibility-slider"></span></label></div>
+              </div>
+            </div>
+
+            <div class="visibility-group">
+              <div class="visibility-group-title">Login Screen</div>
+              <div class="visibility-list">
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">Login Logo</div><div class="visibility-item-note">Top logo on Login page</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showLoginLogo"><span class="visibility-slider"></span></label></div>
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">Company Name</div><div class="visibility-item-note">Main company heading</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showLoginCompany"><span class="visibility-slider"></span></label></div>
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">App Name</div><div class="visibility-item-note">Repository/app name line</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showLoginAppName"><span class="visibility-slider"></span></label></div>
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">Login Tagline</div><div class="visibility-item-note">Setting Standards line</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showLoginTagline"><span class="visibility-slider"></span></label></div>
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">Developed By</div><div class="visibility-item-note">Developer credit line</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showLoginDeveloper"><span class="visibility-slider"></span></label></div>
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">Admin Panel Title</div><div class="visibility-item-note">Admin Login heading</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showAdminTitle"><span class="visibility-slider"></span></label></div>
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">Admin Helper Text</div><div class="visibility-item-note">Admin instruction line</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showAdminHelper"><span class="visibility-slider"></span></label></div>
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">Viewer Panel Title</div><div class="visibility-item-note">Viewer Login heading</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showViewerTitle"><span class="visibility-slider"></span></label></div>
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">Viewer Helper Text</div><div class="visibility-item-note">Viewer instruction line</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showViewerHelper"><span class="visibility-slider"></span></label></div>
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">Back to Welcome</div><div class="visibility-item-note">Back navigation line</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showBackToWelcome"><span class="visibility-slider"></span></label></div>
+                <div class="visibility-item"><div class="visibility-item-text"><div class="visibility-item-name">Login Footer</div><div class="visibility-item-note">Authorized access/footer line</div></div><label class="visibility-switch"><input type="checkbox" data-visibility-key="showLoginFooter"><span class="visibility-slider"></span></label></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="visibility-warning">Access-critical controls — ENTER REPOSITORY, Admin/Viewer role selector, login fields and login buttons — always remain visible so nobody can accidentally lock users out.</div>
+
+          <div class="settings-status" id="visibilitySettingsStatus"></div>
+          <div class="settings-actions">
+            <button class="btn btn-ghost" id="showAllBrandingBtn" type="button">Show All</button>
+            <button class="btn btn-gold" id="saveVisibilityBtn" type="button">Save Visibility</button>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Appearance &amp; Theme</h3>
+          <div class="help">The current SHL LLR-QA color combination is the default. Admin sets the company theme for everyone; Viewers may choose a different preset only on their own device.</div>
+
+          <div class="field">
+            <label>Company Default Theme</label>
+            <select id="adminThemePreset">
+              <option value="shl">SHL Gold — Default</option>
+              <option value="light">Clean Light</option>
+              <option value="gray">Soft Gray</option>
+              <option value="navy">Navy Professional</option>
+              <option value="dark">Dark</option>
+              <option value="custom">Custom Colors</option>
+            </select>
+          </div>
+
+          <div id="adminCustomThemeFields">
+            <div class="theme-admin-grid">
+              <label class="theme-color-field"><span>Primary / Gold</span><input type="color" id="themeColorGold"></label>
+              <label class="theme-color-field"><span>Background</span><input type="color" id="themeColorBg"></label>
+              <label class="theme-color-field"><span>Card</span><input type="color" id="themeColorCard"></label>
+              <label class="theme-color-field"><span>Navy / Heading</span><input type="color" id="themeColorNavy"></label>
+              <label class="theme-color-field"><span>Main Text</span><input type="color" id="themeColorText"></label>
+              <label class="theme-color-field"><span>Muted Text</span><input type="color" id="themeColorMute"></label>
+              <label class="theme-color-field"><span>Border</span><input type="color" id="themeColorBorder"></label>
+              <label class="theme-color-field"><span>Secondary Text</span><input type="color" id="themeColorDim"></label>
+            </div>
+          </div>
+
+          <div class="theme-preview" id="themeAdminPreview">
+            <div class="theme-preview-card">
+              <div class="theme-preview-title">Lesson Learned Repository</div>
+              <div class="theme-preview-text">Theme preview — buttons, cards, text and background.</div>
+              <span class="theme-preview-btn">Primary Action</span>
+            </div>
+          </div>
+
+          <div class="settings-status" id="themeSettingsStatus"></div>
+          <div class="settings-actions">
+            <button class="btn btn-ghost" id="restoreSHLThemeBtn" type="button">Restore SHL Default</button>
+            <button class="btn btn-gold" id="saveThemeBtn" type="button">Save Theme</button>
           </div>
         </div>
 
@@ -1856,28 +2188,166 @@ const DEFAULT_ABOUT = {
   mission: 'To capture practical construction lessons, standardize QA/QC knowledge, support better technical decisions and reduce recurrence of avoidable quality issues through shared learning.',
   vision: 'To build a strong culture of continuous learning and quality excellence where proven lessons are easy to access, reuse and convert into better standards across Shanta Holdings Limited.'
 };
+const DEFAULT_THEME_CUSTOM = {
+  gold:'#b8863b',
+  bg:'#eef1f4',
+  card:'#ffffff',
+  navy:'#1c2b3a',
+  text:'#20293a',
+  textMute:'#8993a1',
+  border:'#dde1e6',
+  textDim:'#5b6472'
+};
+
+const THEME_PRESETS = {
+  shl:{
+    label:'SHL Gold — Default',
+    vars:{
+      bg:'#eef1f4',bg2:'#ffffff',card:'#ffffff',cardHover:'#f7f8fa',
+      border:'#dde1e6',borderStrong:'#c7ccd3',
+      gold:'#b8863b',goldLight:'#c99a52',goldDim:'#8a6a2f',goldBg:'#faf3e6',
+      navy:'#1c2b3a',text:'#20293a',textDim:'#5b6472',textMute:'#8993a1',
+      green:'#1f8a4c',greenBg:'#e7f6ec',red:'#c23b3b',redBg:'#fbeaea'
+    }
+  },
+  light:{
+    label:'Clean Light',
+    vars:{
+      bg:'#f5f7f9',bg2:'#ffffff',card:'#ffffff',cardHover:'#f3f6f8',
+      border:'#dce3e9',borderStrong:'#c5cfd8',
+      gold:'#b8863b',goldLight:'#d0a763',goldDim:'#80602b',goldBg:'#fbf5e9',
+      navy:'#243447',text:'#263241',textDim:'#657180',textMute:'#8b96a3',
+      green:'#21824b',greenBg:'#e9f6ed',red:'#bd4641',redBg:'#faeceb'
+    }
+  },
+  gray:{
+    label:'Soft Gray',
+    vars:{
+      bg:'#e8ebee',bg2:'#f8f9fa',card:'#fdfdfd',cardHover:'#f1f3f5',
+      border:'#d0d5da',borderStrong:'#b9c0c7',
+      gold:'#aa8139',goldLight:'#c19c5b',goldDim:'#775d2e',goldBg:'#f5efe3',
+      navy:'#303b46',text:'#303942',textDim:'#626b75',textMute:'#858e97',
+      green:'#2d8050',greenBg:'#e6f2ea',red:'#b84a48',redBg:'#f6eaea'
+    }
+  },
+  navy:{
+    label:'Navy Professional',
+    vars:{
+      bg:'#e9eef3',bg2:'#ffffff',card:'#ffffff',cardHover:'#f4f7fa',
+      border:'#d5dfe8',borderStrong:'#b8c6d2',
+      gold:'#b58b43',goldLight:'#d0aa67',goldDim:'#7d632f',goldBg:'#faf4e9',
+      navy:'#142b42',text:'#1c3247',textDim:'#536a7e',textMute:'#8193a2',
+      green:'#1f8050',greenBg:'#e7f4ed',red:'#b94343',redBg:'#faeaea'
+    }
+  },
+  dark:{
+    label:'Dark',
+    vars:{
+      bg:'#111820',bg2:'#161f28',card:'#1b2631',cardHover:'#22303c',
+      border:'#31404d',borderStrong:'#465767',
+      gold:'#c39a52',goldLight:'#d7b476',goldDim:'#d1aa64',goldBg:'#2a261d',
+      navy:'#edf2f6',text:'#e4eaf0',textDim:'#b6c0ca',textMute:'#8998a6',
+      green:'#55b77d',greenBg:'#193326',red:'#e16a66',redBg:'#3a2020'
+    }
+  }
+};
+
+function hexToRgb(hex){
+  const h=String(hex||'').replace('#','');
+  if(!/^[0-9a-fA-F]{6}$/.test(h))return null;
+  return {r:parseInt(h.slice(0,2),16),g:parseInt(h.slice(2,4),16),b:parseInt(h.slice(4,6),16)};
+}
+function mixHex(a,b,weight=.5){
+  const A=hexToRgb(a),B=hexToRgb(b);if(!A||!B)return a;
+  const w=Math.max(0,Math.min(1,weight));
+  const c=n=>Math.max(0,Math.min(255,Math.round(n))).toString(16).padStart(2,'0');
+  return '#'+c(A.r*(1-w)+B.r*w)+c(A.g*(1-w)+B.g*w)+c(A.b*(1-w)+B.b*w);
+}
+function customThemeVars(custom){
+  const c={...DEFAULT_THEME_CUSTOM,...(custom||{})};
+  return {
+    bg:c.bg,bg2:mixHex(c.card,'#ffffff',.12),card:c.card,cardHover:mixHex(c.card,c.bg,.28),
+    border:c.border,borderStrong:mixHex(c.border,c.text,.20),
+    gold:c.gold,goldLight:mixHex(c.gold,'#ffffff',.22),goldDim:mixHex(c.gold,'#000000',.25),goldBg:mixHex(c.gold,c.card,.88),
+    navy:c.navy,text:c.text,textDim:c.textDim,textMute:c.textMute,
+    green:'#1f8a4c',greenBg:mixHex('#1f8a4c',c.card,.88),
+    red:'#c23b3b',redBg:mixHex('#c23b3b',c.card,.88)
+  };
+}
+
 const DEFAULT_WELCOME = {
   welcomeLogo:'',
-  welcomeTitle:'QA Lesson Learned Repository',
-  welcomeSubtitle:'Shanta Holdings Limited — Quality Assurance',
+  loginLogo:'',
+  welcomeKicker:'Welcome to',
+  welcomeTitle:'Lesson Learned Repository',
+  welcomeSubtitle:'Shanta Holdings Limited',
   welcomeTagline:'Setting Standards',
-  welcomeIntro:'Authorized SHL QA users can enter the repository using Viewer or Admin access.',
-  welcomeEnterButton:'Enter Repository',
-  welcomeViewerTitle:'Viewer Access',
-  welcomeViewerSubtitle:'Enter the shared Viewer password to open the repository in read-only mode.',
+  welcomeIntro:'',
+  welcomeDeveloper:'Developed by: Md. Mostak Mozahid',
+  welcomeEnterButton:'ENTER REPOSITORY',
+
+  loginCompany:'Shanta Holdings Limited',
+  loginAppName:'Lesson Learned Repository',
+  loginTagline:'Setting Standards',
+  loginDeveloper:'Developed by: Md. Mostak Mozahid',
+  loginAdminTab:'Admin',
+  loginViewerTab:'Viewer',
+
+  welcomeViewerTitle:'Viewer Login',
+  welcomeViewerSubtitle:'Enter the shared Viewer password for read-only access.',
   welcomeViewerPlaceholder:'Viewer password',
-  welcomeViewerButton:'Enter as Viewer',
+  welcomeViewerButton:'VIEWER LOGIN',
   welcomeDivider:'or',
-  welcomeAdminTitle:'Admin Access',
-  welcomeAdminSubtitle:'Admin login requires both the registered email address and password.',
+  welcomeAdminTitle:'Admin Login',
+  welcomeAdminSubtitle:'Use the registered Admin email and password.',
   welcomeAdminEmailPlaceholder:'Admin email',
   welcomeAdminPasswordPlaceholder:'Admin password',
-  welcomeAdminButton:'Admin Login',
-  welcomeBack:'← Back',
-  welcomeFooter:'Viewer = read only · Admin = full management access'
+  welcomeAdminButton:'ADMIN LOGIN',
+  welcomeBack:'← Back to Welcome',
+  welcomeFooter:'Authorized internal access',
+
+  showWelcomeLogo:true,
+  showWelcomeKicker:true,
+  showWelcomeTitle:true,
+  showWelcomeIntro:true,
+  showWelcomeTagline:true,
+  showWelcomeCompany:true,
+  showWelcomeDeveloper:true,
+
+  showLoginLogo:true,
+  showLoginCompany:true,
+  showLoginAppName:true,
+  showLoginTagline:true,
+  showLoginDeveloper:true,
+  showAdminTitle:true,
+  showAdminHelper:true,
+  showViewerTitle:true,
+  showViewerHelper:true,
+  showBackToWelcome:true,
+  showLoginFooter:true
 };
-let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null') || { logo:'', title:'', subtitle:'', createdBy:'', ...DEFAULT_ABOUT, ...DEFAULT_WELCOME };
-settings = { ...DEFAULT_ABOUT, ...DEFAULT_WELCOME, ...settings };
+
+let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null') || {
+  logo:'',title:'',subtitle:'',createdBy:'',
+  ...DEFAULT_ABOUT,
+  ...DEFAULT_WELCOME,
+  themePreset:'shl',
+  themeCustom:{...DEFAULT_THEME_CUSTOM}
+};
+settings = {
+  ...DEFAULT_ABOUT,
+  ...DEFAULT_WELCOME,
+  themePreset:'shl',
+  themeCustom:{...DEFAULT_THEME_CUSTOM},
+  ...settings,
+  themeCustom:{...DEFAULT_THEME_CUSTOM,...((settings&&settings.themeCustom)||{})}
+};
+
+// Migrate only untouched legacy defaults into the new cleaner v1.0.30 layout.
+if(settings.welcomeIntro==='Authorized SHL QA users can enter the repository using Viewer or Admin access.') settings.welcomeIntro='';
+if(settings.welcomeEnterButton==='Enter Repository') settings.welcomeEnterButton='ENTER REPOSITORY';
+if(settings.welcomeViewerTitle==='Viewer Access') settings.welcomeViewerTitle='Viewer Login';
+if(settings.welcomeAdminTitle==='Admin Access') settings.welcomeAdminTitle='Admin Login';
 let activeFilters = { type:'all', project:'all', trade:'all', severity:'all' };
 let searchTerm = '';
 let editingId = null;
@@ -1890,6 +2360,65 @@ let currentRole = 'locked';
 const ADMIN_UID = 'aqPEtQSgnQb717FrSBZQVnU6weI2';
 const VIEWER_UID = 'XGEAk92tLAUbdYkNym0UxIpWWSi1';
 const VIEWER_EMAIL = 'viewer@gmail.com';
+
+const VIEWER_THEME_KEY='shl_llr_viewer_theme_v1';
+
+function setCssVar(name,value){
+  if(value)document.documentElement.style.setProperty(name,value);
+}
+function applyThemeVars(vars,presetName='shl'){
+  if(!vars)return;
+  setCssVar('--bg',vars.bg);
+  setCssVar('--bg-2',vars.bg2);
+  setCssVar('--card',vars.card);
+  setCssVar('--card-hover',vars.cardHover);
+  setCssVar('--border',vars.border);
+  setCssVar('--border-strong',vars.borderStrong);
+  setCssVar('--gold',vars.gold);
+  setCssVar('--gold-light',vars.goldLight);
+  setCssVar('--gold-dim',vars.goldDim);
+  setCssVar('--gold-bg',vars.goldBg);
+  setCssVar('--navy',vars.navy);
+  setCssVar('--text',vars.text);
+  setCssVar('--text-dim',vars.textDim);
+  setCssVar('--text-mute',vars.textMute);
+  setCssVar('--green',vars.green);
+  setCssVar('--green-bg',vars.greenBg);
+  setCssVar('--red',vars.red);
+  setCssVar('--red-bg',vars.redBg);
+  document.body.classList.toggle('theme-dark',presetName==='dark');
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta)meta.setAttribute('content',vars.gold||'#b8863b');
+}
+function getThemeVarsForPreset(name,custom=null){
+  if(name==='custom')return customThemeVars(custom||settings.themeCustom);
+  return (THEME_PRESETS[name]||THEME_PRESETS.shl).vars;
+}
+function getViewerThemeChoice(){
+  try{return localStorage.getItem(VIEWER_THEME_KEY)||'admin-default';}
+  catch(_){return 'admin-default';}
+}
+function applyEffectiveTheme(){
+  let preset=settings.themePreset||'shl';
+  let custom=settings.themeCustom||DEFAULT_THEME_CUSTOM;
+
+  if(currentRole==='viewer'){
+    const localChoice=getViewerThemeChoice();
+    if(localChoice && localChoice!=='admin-default'){
+      preset=localChoice;
+      custom=DEFAULT_THEME_CUSTOM;
+    }
+  }
+
+  if(!THEME_PRESETS[preset] && preset!=='custom')preset='shl';
+  applyThemeVars(getThemeVarsForPreset(preset,custom),preset);
+}
+function saveViewerThemeChoice(choice){
+  try{localStorage.setItem(VIEWER_THEME_KEY,choice);}catch(_){}
+  applyEffectiveTheme();
+  renderViewerThemeOptions();
+}
+
 let cloudUnsubs = [];
 let cloudSyncStarted = false;
 
@@ -1960,7 +2489,7 @@ if(CLOUD_ENABLED){
   }
 }
 
-const WELCOME_SETTING_KEYS = Object.keys(DEFAULT_WELCOME);
+const WELCOME_SETTING_KEYS = [...Object.keys(DEFAULT_WELCOME),'themePreset','themeCustom'];
 function publicWelcomePayload(){
   const out={};
   WELCOME_SETTING_KEYS.forEach(k=>out[k]=settings[k] ?? DEFAULT_WELCOME[k]);
@@ -1972,7 +2501,9 @@ async function loadPublicWelcomeSettings(){
     const doc=await db.collection('meta').doc('welcome').get();
     if(doc.exists){
       settings={...settings,...doc.data()};
+      settings.themeCustom={...DEFAULT_THEME_CUSTOM,...(settings.themeCustom||{})};
       try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}catch(e){}
+      applyEffectiveTheme();
       renderWelcomeScreen();
     }
   }catch(e){
@@ -1984,6 +2515,7 @@ async function cloudSaveWelcomeSettings(){
   try{await db.collection('meta').doc('welcome').set(publicWelcomePayload());}
   catch(e){console.error('cloudSaveWelcomeSettings failed',e);throw e;}
 }
+applyEffectiveTheme();
 renderWelcomeScreen();
 loadPublicWelcomeSettings();
 
@@ -2097,6 +2629,7 @@ function startCloudSync(){
   db.collection('meta').doc('settings').get().then(doc => {
     if(doc.exists){
       settings = { ...settings, ...doc.data() };
+      settings.themeCustom={...DEFAULT_THEME_CUSTOM,...(settings.themeCustom||{})};
       applySettings();
     } else if(isAdmin && settings && (settings.title || settings.logo)){
       cloudSaveSettings(); // only Admin may seed cloud settings
@@ -2814,6 +3347,8 @@ document.getElementById('mobileMessageBtn')?.addEventListener('click',()=>docume
 document.getElementById('mobileAboutBtn')?.addEventListener('click',()=>document.getElementById('aboutBtn')?.click());
 document.getElementById('mobileNewLessonBtn')?.addEventListener('click',()=>document.getElementById('addBtn')?.click());
 document.getElementById('mobileSettingsBtn')?.addEventListener('click',()=>{setMobileMenu(false);document.getElementById('settingsBtn')?.click();});
+document.getElementById('mobileThemeBtn')?.addEventListener('click',()=>{setMobileMenu(false);openViewerThemePicker();});
+document.getElementById('viewerThemeBtn')?.addEventListener('click',openViewerThemePicker);
 document.getElementById('mobileStorageBtn')?.addEventListener('click',()=>{setMobileMenu(false);document.getElementById('connectFolderBtn')?.click();});
 document.getElementById('mobileAccountBtn')?.addEventListener('click',()=>{setMobileMenu(false);document.getElementById('adminLoginBtn')?.click();});
 document.getElementById('mobileViewerLogoutBtn')?.addEventListener('click',()=>{setMobileMenu(false);document.getElementById('viewerLogoutBtn')?.click();});
@@ -2836,6 +3371,7 @@ document.querySelectorAll('.mobile-data-submenu [data-proxy-id]').forEach(btn=>{
 
 // ================== ROLE / SECURE ACCESS ==================
 function applyRoleUI(){
+  applyEffectiveTheme();
   document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('role-hidden', !isAdmin));
   const badge = document.getElementById('roleBadge');
   if(badge){
@@ -2871,13 +3407,27 @@ function requireAdmin(){
   alert('Viewer mode is read-only. Admin access is required for this action.');
   return false;
 }
+function setAccessRoleTab(role){
+  const admin=role!=='viewer';
+  document.getElementById('accessAdminTab')?.classList.toggle('active',admin);
+  document.getElementById('accessViewerTab')?.classList.toggle('active',!admin);
+  document.getElementById('accessAdminTab')?.setAttribute('aria-selected',admin?'true':'false');
+  document.getElementById('accessViewerTab')?.setAttribute('aria-selected',!admin?'true':'false');
+  document.getElementById('adminAccessPanel')?.classList.toggle('active',admin);
+  document.getElementById('viewerAccessPanel')?.classList.toggle('active',!admin);
+  document.getElementById('viewerLoginError').textContent='';
+  document.getElementById('gateAdminLoginError').textContent='';
+}
+
 function showAccessGate(showLogin=false){
   document.body.classList.add('repository-locked');
   document.getElementById('accessGate').classList.remove('hidden');
-  document.getElementById('accessIntro').style.display = showLogin ? 'none' : 'block';
+  document.getElementById('accessIntro').style.display = showLogin ? 'none' : '';
   document.getElementById('accessLogin').classList.toggle('open', showLogin);
   document.getElementById('viewerLoginError').textContent='';
   document.getElementById('gateAdminLoginError').textContent='';
+  applyEffectiveTheme();
+  if(showLogin)setAccessRoleTab('admin');
 }
 function hideAccessGate(){
   document.body.classList.remove('repository-locked');
@@ -2888,6 +3438,7 @@ function lockRepository(){
   currentRole='locked'; isAdmin=false; lessons=[];
   document.getElementById('notificationToast')?.classList.remove('show');
   document.getElementById('notificationOverlay')?.classList.remove('open');
+  document.getElementById('themePickerOverlay')?.classList.remove('open');
   document.getElementById('announcementDetailOverlay')?.classList.remove('open');
   document.getElementById('announcementManagerOverlay')?.classList.remove('open');
   localStorage.removeItem(LOCAL_KEY);
@@ -2922,7 +3473,7 @@ async function loginViewer(){
     if(!cred.user || cred.user.uid!==VIEWER_UID){ await auth.signOut(); err.textContent='This password is not authorized for Viewer access.'; return; }
     document.getElementById('viewerPassword').value='';
   }catch(e){console.error(e);err.textContent=friendlyAuthError(e);}
-  finally{btn.disabled=false;btn.textContent='Enter as Viewer';}
+  finally{btn.disabled=false;btn.textContent=settings.welcomeViewerButton||DEFAULT_WELCOME.welcomeViewerButton;}
 }
 async function loginAdminFromGate(){
   const email=document.getElementById('gateAdminEmail').value.trim();
@@ -2935,7 +3486,7 @@ async function loginAdminFromGate(){
     if(!cred.user || cred.user.uid!==ADMIN_UID){ await auth.signOut(); err.textContent='This account is not authorized as Admin.'; return; }
     document.getElementById('gateAdminPassword').value='';
   }catch(e){console.error(e);err.textContent=friendlyAuthError(e);}
-  finally{btn.disabled=false;btn.textContent='Admin Login';}
+  finally{btn.disabled=false;btn.textContent=settings.welcomeAdminButton||DEFAULT_WELCOME.welcomeAdminButton;}
 }
 function openAdminLogin(){
   document.getElementById('adminLoginError').textContent='';
@@ -2945,10 +3496,11 @@ function openAdminLogin(){
 function closeAdminLogin(){ document.getElementById('adminLoginOverlay').classList.remove('open'); }
 
 // Welcome -> login screen
- document.getElementById('enterRepositoryBtn').addEventListener('click',()=>{
+document.getElementById('enterRepositoryBtn').addEventListener('click',()=>{
   document.getElementById('accessIntro').style.display='none';
   document.getElementById('accessLogin').classList.add('open');
-  // v1.0.11: do not auto-open the mobile keyboard; show the full login page first.
+  setAccessRoleTab('admin');
+  // Do not auto-open the mobile keyboard; show the complete login page first.
   const gate=document.getElementById('accessGate');
   if(gate) gate.scrollTo({top:0,behavior:'smooth'});
 });
@@ -2984,6 +3536,8 @@ function closeAdminLogin(){ document.getElementById('adminLoginOverlay').classLi
   });
 })();
 
+document.getElementById('accessAdminTab').addEventListener('click',()=>setAccessRoleTab('admin'));
+document.getElementById('accessViewerTab').addEventListener('click',()=>setAccessRoleTab('viewer'));
 document.getElementById('accessBackBtn').addEventListener('click',()=>showAccessGate(false));
 document.getElementById('viewerLoginBtn').addEventListener('click',loginViewer);
 document.getElementById('viewerPassword').addEventListener('keydown',e=>{if(e.key==='Enter')loginViewer();});
@@ -4692,7 +5246,7 @@ function openLogoCropEditor(file,mode){
     logoCropResolve=resolve;
     logoCropReject=reject;
     logoCropStatus.textContent='Loading image…';
-    document.getElementById('logoCropTitle').textContent=mode==='header'?'Adjust Header Logo':'Adjust Welcome Screen Logo';
+    document.getElementById('logoCropTitle').textContent=mode==='header'?'Adjust Header Logo':mode==='login'?'Adjust Login Screen Logo':'Adjust Welcome Screen Logo';
 
     const reader=new FileReader();
     reader.onerror=()=>reject(new Error('Could not read image.'));
@@ -4805,10 +5359,15 @@ document.getElementById('logoCropApplyBtn').addEventListener('click',async()=>{
       applySettings();
       await cloudSaveSettings(true);
       logoCropStatus.textContent='✓ Header logo saved and synced.';
+    }else if(logoCropMode==='login'){
+      loginLogoDraft=data;
+      renderLoginLogoPreview();
+      setStatus('welcomeSettingsStatus','✓ Login logo cropped. Click “Save Welcome & Login” to publish it.','ok');
+      logoCropStatus.textContent='✓ Login logo ready.';
     }else{
       welcomeLogoDraft=data;
       renderWelcomeLogoPreview();
-      setStatus('welcomeSettingsStatus','✓ Logo cropped. Click “Save Welcome Screen” to publish it.','ok');
+      setStatus('welcomeSettingsStatus','✓ Welcome logo cropped. Click “Save Welcome & Login” to publish it.','ok');
       logoCropStatus.textContent='✓ Welcome logo ready.';
     }
 
@@ -4829,6 +5388,7 @@ document.getElementById('logoCropApplyBtn').addEventListener('click',async()=>{
 });
 
 function applySettings(){
+  applyEffectiveTheme();
   document.getElementById('titleText').textContent = settings.title || 'Lesson Learned Repository';
   document.getElementById('subtitleText').textContent = settings.subtitle || 'Shanta Holdings Limited — Inspection & Analysis';
   renderAboutContent();
@@ -4887,26 +5447,57 @@ function clearPasswordFields(){
 }
 
 let welcomeLogoDraft=settings.welcomeLogo||'';
-function renderWelcomeLogoPreview(){
-  const box=document.getElementById('welcomeLogoPreview');
-  const txt=document.getElementById('welcomeLogoPreviewText');
+let loginLogoDraft=settings.loginLogo||'';
+
+function renderLogoPreviewBox(boxId,textId,data){
+  const box=document.getElementById(boxId);
+  const txt=document.getElementById(textId);
   if(!box||!txt)return;
   let img=box.querySelector('img');
-  if(welcomeLogoDraft){
+  if(data){
     if(!img){img=document.createElement('img');box.insertBefore(img,box.firstChild);}
-    img.src=welcomeLogoDraft; txt.style.display='none';
+    img.src=data;txt.style.display='none';
   }else{
-    if(img)img.remove(); txt.style.display='inline';
+    if(img)img.remove();txt.style.display='inline';
   }
 }
+function renderWelcomeLogoPreview(){renderLogoPreviewBox('welcomeLogoPreview','welcomeLogoPreviewText',welcomeLogoDraft);}
+function renderLoginLogoPreview(){renderLogoPreviewBox('loginLogoPreview','loginLogoPreviewText',loginLogoDraft||welcomeLogoDraft);}
+
+function setAccessLogo(boxId,textId,src){
+  const box=document.getElementById(boxId),txt=document.getElementById(textId);
+  if(!box||!txt)return;
+  let img=box.querySelector('img');
+  if(src){
+    if(!img){img=document.createElement('img');box.insertBefore(img,box.firstChild);}
+    img.src=src;txt.style.display='none';
+  }else{
+    if(img)img.remove();txt.style.display='inline';
+  }
+}
+
 function renderWelcomeScreen(){
   const g=id=>document.getElementById(id);
-  const setText=(id,key)=>{const el=g(id);if(el)el.textContent=settings[key]||DEFAULT_WELCOME[key];};
+  const setText=(id,key)=>{
+    const el=g(id);if(!el)return;
+    el.textContent=(settings[key]??DEFAULT_WELCOME[key]) ?? '';
+  };
+
+  setText('welcomeKickerText','welcomeKicker');
   setText('welcomeTitleText','welcomeTitle');
   setText('welcomeSubtitleText','welcomeSubtitle');
   setText('welcomeTaglineText','welcomeTagline');
   setText('welcomeIntroText','welcomeIntro');
+  setText('welcomeDeveloperText','welcomeDeveloper');
   setText('enterRepositoryBtn','welcomeEnterButton');
+
+  setText('loginCompanyText','loginCompany');
+  setText('loginAppNameText','loginAppName');
+  setText('loginTaglineText','loginTagline');
+  setText('loginDeveloperText','loginDeveloper');
+  setText('loginAdminTabText','loginAdminTab');
+  setText('loginViewerTabText','loginViewerTab');
+
   setText('welcomeViewerTitleText','welcomeViewerTitle');
   setText('welcomeViewerSubtitleText','welcomeViewerSubtitle');
   setText('viewerLoginBtn','welcomeViewerButton');
@@ -4916,86 +5507,340 @@ function renderWelcomeScreen(){
   setText('gateAdminLoginBtn','welcomeAdminButton');
   setText('accessBackBtn','welcomeBack');
   setText('welcomeFootText','welcomeFooter');
+
+  const setVisible=(id,key,extraCondition=true)=>{
+    const el=g(id);if(!el)return;
+    const enabled=(settings[key]??DEFAULT_WELCOME[key])!==false;
+    el.style.display=(enabled && extraCondition)?'':'none';
+  };
+
+  setVisible('accessWelcomeLogo','showWelcomeLogo');
+  setVisible('welcomeKickerText','showWelcomeKicker');
+  setVisible('welcomeTitleText','showWelcomeTitle');
+  setVisible('welcomeIntroText','showWelcomeIntro',Boolean((settings.welcomeIntro||'').trim()));
+  setVisible('welcomeTaglineText','showWelcomeTagline');
+  setVisible('welcomeSubtitleText','showWelcomeCompany');
+  setVisible('welcomeDeveloperText','showWelcomeDeveloper');
+
+  setVisible('accessLoginLogo','showLoginLogo');
+  setVisible('loginCompanyText','showLoginCompany');
+  setVisible('loginAppNameText','showLoginAppName');
+  setVisible('loginTaglineText','showLoginTagline');
+  setVisible('loginDeveloperText','showLoginDeveloper');
+  setVisible('welcomeAdminTitleText','showAdminTitle');
+  setVisible('welcomeAdminSubtitleText','showAdminHelper');
+  setVisible('welcomeViewerTitleText','showViewerTitle');
+  setVisible('welcomeViewerSubtitleText','showViewerHelper');
+  setVisible('accessBackBtn','showBackToWelcome');
+  setVisible('welcomeFootText','showLoginFooter');
+
   const vp=g('viewerPassword');if(vp)vp.placeholder=settings.welcomeViewerPlaceholder||DEFAULT_WELCOME.welcomeViewerPlaceholder;
   const ae=g('gateAdminEmail');if(ae)ae.placeholder=settings.welcomeAdminEmailPlaceholder||DEFAULT_WELCOME.welcomeAdminEmailPlaceholder;
   const ap=g('gateAdminPassword');if(ap)ap.placeholder=settings.welcomeAdminPasswordPlaceholder||DEFAULT_WELCOME.welcomeAdminPasswordPlaceholder;
-  const box=g('accessWelcomeLogo'), txt=g('accessWelcomeLogoText');
-  if(box&&txt){
-    let img=box.querySelector('img');
-    const src=settings.welcomeLogo||'';
-    if(src){if(!img){img=document.createElement('img');box.insertBefore(img,box.firstChild);}img.src=src;txt.style.display='none';}
-    else{if(img)img.remove();txt.style.display='inline';}
-  }
+
+  setAccessLogo('accessWelcomeLogo','accessWelcomeLogoText',settings.welcomeLogo||'');
+  setAccessLogo('accessLoginLogo','accessLoginLogoText',settings.loginLogo||settings.welcomeLogo||'');
+  applyEffectiveTheme();
 }
+
+const WELCOME_FORM_MAP={
+  welcomeKickerInput:'welcomeKicker',
+  welcomeTitleInput:'welcomeTitle',
+  welcomeSubtitleInput:'welcomeSubtitle',
+  welcomeTaglineInput:'welcomeTagline',
+  welcomeIntroInput:'welcomeIntro',
+  welcomeDeveloperInput:'welcomeDeveloper',
+  welcomeEnterButtonInput:'welcomeEnterButton',
+
+  loginCompanyInput:'loginCompany',
+  loginAppNameInput:'loginAppName',
+  loginTaglineInput:'loginTagline',
+  loginDeveloperInput:'loginDeveloper',
+  loginAdminTabInput:'loginAdminTab',
+  loginViewerTabInput:'loginViewerTab',
+
+  welcomeViewerTitleInput:'welcomeViewerTitle',
+  welcomeViewerSubtitleInput:'welcomeViewerSubtitle',
+  welcomeViewerPlaceholderInput:'welcomeViewerPlaceholder',
+  welcomeViewerButtonInput:'welcomeViewerButton',
+
+  welcomeDividerInput:'welcomeDivider',
+  welcomeAdminTitleInput:'welcomeAdminTitle',
+  welcomeAdminSubtitleInput:'welcomeAdminSubtitle',
+  welcomeAdminEmailPlaceholderInput:'welcomeAdminEmailPlaceholder',
+  welcomeAdminPasswordPlaceholderInput:'welcomeAdminPasswordPlaceholder',
+  welcomeAdminButtonInput:'welcomeAdminButton',
+
+  welcomeBackInput:'welcomeBack',
+  welcomeFooterInput:'welcomeFooter'
+};
+
 function populateWelcomeSettingsForm(){
   welcomeLogoDraft=settings.welcomeLogo||'';
+  loginLogoDraft=settings.loginLogo||'';
   renderWelcomeLogoPreview();
-  const map={
-    welcomeTitleInput:'welcomeTitle',welcomeSubtitleInput:'welcomeSubtitle',welcomeTaglineInput:'welcomeTagline',welcomeIntroInput:'welcomeIntro',welcomeEnterButtonInput:'welcomeEnterButton',
-    welcomeViewerTitleInput:'welcomeViewerTitle',welcomeViewerSubtitleInput:'welcomeViewerSubtitle',welcomeViewerPlaceholderInput:'welcomeViewerPlaceholder',welcomeViewerButtonInput:'welcomeViewerButton',
-    welcomeDividerInput:'welcomeDivider',welcomeAdminTitleInput:'welcomeAdminTitle',welcomeAdminSubtitleInput:'welcomeAdminSubtitle',welcomeAdminEmailPlaceholderInput:'welcomeAdminEmailPlaceholder',welcomeAdminPasswordPlaceholderInput:'welcomeAdminPasswordPlaceholder',welcomeAdminButtonInput:'welcomeAdminButton',
-    welcomeBackInput:'welcomeBack',welcomeFooterInput:'welcomeFooter'
-  };
-  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=settings[key]??DEFAULT_WELCOME[key];});
+  renderLoginLogoPreview();
+
+  Object.entries(WELCOME_FORM_MAP).forEach(([id,key])=>{
+    const el=document.getElementById(id);
+    if(el)el.value=settings[key]??DEFAULT_WELCOME[key]??'';
+  });
   setStatus('welcomeSettingsStatus','');
+  populateVisibilitySettings();
+  populateThemeSettingsForm();
 }
+
 document.getElementById('uploadWelcomeLogoBtn').addEventListener('click',()=>document.getElementById('welcomeLogoInput').click());
 document.getElementById('welcomeLogoInput').addEventListener('change',async e=>{
-  const file=e.target.files&&e.target.files[0];
-  e.target.value='';
-  if(!file)return;
-  try{
-    await openLogoCropEditor(file,'welcome');
-  }catch(err){
-    console.error(err);
-    setStatus('welcomeSettingsStatus','Could not open this logo image.','err');
-  }
+  const file=e.target.files&&e.target.files[0];e.target.value='';if(!file)return;
+  try{await openLogoCropEditor(file,'welcome');}
+  catch(err){console.error(err);setStatus('welcomeSettingsStatus','Could not open this Welcome logo image.','err');}
 });
-document.getElementById('useHeaderLogoBtn').addEventListener('click',()=>{if(settings.logo){welcomeLogoDraft=settings.logo;renderWelcomeLogoPreview();setStatus('welcomeSettingsStatus','Header logo copied to the Welcome Screen preview. Save to apply.','');}else setStatus('welcomeSettingsStatus','No repository header logo has been uploaded yet.','err');});
-document.getElementById('removeWelcomeLogoBtn').addEventListener('click',()=>{welcomeLogoDraft='';renderWelcomeLogoPreview();setStatus('welcomeSettingsStatus','Logo removed from preview. Save to apply.','');});
+document.getElementById('useHeaderLogoBtn').addEventListener('click',()=>{
+  if(settings.logo){
+    welcomeLogoDraft=settings.logo;renderWelcomeLogoPreview();renderLoginLogoPreview();
+    setStatus('welcomeSettingsStatus','Header logo copied to Welcome preview. Save to publish.','');
+  }else setStatus('welcomeSettingsStatus','No repository Header logo has been uploaded yet.','err');
+});
+document.getElementById('removeWelcomeLogoBtn').addEventListener('click',()=>{
+  welcomeLogoDraft='';renderWelcomeLogoPreview();renderLoginLogoPreview();
+  setStatus('welcomeSettingsStatus','Welcome logo removed from this draft.','');
+});
+
+document.getElementById('uploadLoginLogoBtn').addEventListener('click',()=>document.getElementById('loginLogoInput').click());
+document.getElementById('loginLogoInput').addEventListener('change',async e=>{
+  const file=e.target.files&&e.target.files[0];e.target.value='';if(!file)return;
+  try{await openLogoCropEditor(file,'login');}
+  catch(err){console.error(err);setStatus('welcomeSettingsStatus','Could not open this Login logo image.','err');}
+});
+document.getElementById('useWelcomeLogoForLoginBtn').addEventListener('click',()=>{
+  loginLogoDraft=welcomeLogoDraft||settings.welcomeLogo||'';
+  renderLoginLogoPreview();
+  setStatus('welcomeSettingsStatus','Welcome logo copied to Login preview. Save to publish.','');
+});
+document.getElementById('removeLoginLogoBtn').addEventListener('click',()=>{
+  loginLogoDraft='';renderLoginLogoPreview();
+  setStatus('welcomeSettingsStatus','Login-specific logo removed. Login will use the Welcome logo.','');
+});
+
 document.getElementById('resetWelcomeDefaultsBtn').addEventListener('click',()=>{
   welcomeLogoDraft='';
-  const map={
-    welcomeTitleInput:'welcomeTitle',welcomeSubtitleInput:'welcomeSubtitle',welcomeTaglineInput:'welcomeTagline',welcomeIntroInput:'welcomeIntro',welcomeEnterButtonInput:'welcomeEnterButton',
-    welcomeViewerTitleInput:'welcomeViewerTitle',welcomeViewerSubtitleInput:'welcomeViewerSubtitle',welcomeViewerPlaceholderInput:'welcomeViewerPlaceholder',welcomeViewerButtonInput:'welcomeViewerButton',
-    welcomeDividerInput:'welcomeDivider',welcomeAdminTitleInput:'welcomeAdminTitle',welcomeAdminSubtitleInput:'welcomeAdminSubtitle',welcomeAdminEmailPlaceholderInput:'welcomeAdminEmailPlaceholder',welcomeAdminPasswordPlaceholderInput:'welcomeAdminPasswordPlaceholder',welcomeAdminButtonInput:'welcomeAdminButton',welcomeBackInput:'welcomeBack',welcomeFooterInput:'welcomeFooter'
-  };
-  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=DEFAULT_WELCOME[key];});
-  renderWelcomeLogoPreview();
-  setStatus('welcomeSettingsStatus','Defaults loaded in the form. Click Save to apply.','');
+  loginLogoDraft='';
+  Object.entries(WELCOME_FORM_MAP).forEach(([id,key])=>{
+    const el=document.getElementById(id);if(el)el.value=DEFAULT_WELCOME[key]??'';
+  });
+  VISIBILITY_KEYS.forEach(key=>{settings[key]=DEFAULT_WELCOME[key];});
+  populateVisibilitySettings();
+  renderWelcomeLogoPreview();renderLoginLogoPreview();
+  setStatus('welcomeSettingsStatus','Branding defaults loaded. Visibility was reset to Show All. Click Save to publish.','');
 });
+
 document.getElementById('saveWelcomeSettingsBtn').addEventListener('click',async()=>{
   if(!requireAdmin())return;
-  const values={
-    welcomeLogo:welcomeLogoDraft,
-    welcomeTitle:document.getElementById('welcomeTitleInput').value.trim()||DEFAULT_WELCOME.welcomeTitle,
-    welcomeSubtitle:document.getElementById('welcomeSubtitleInput').value.trim()||DEFAULT_WELCOME.welcomeSubtitle,
-    welcomeTagline:document.getElementById('welcomeTaglineInput').value.trim()||DEFAULT_WELCOME.welcomeTagline,
-    welcomeIntro:document.getElementById('welcomeIntroInput').value.trim()||DEFAULT_WELCOME.welcomeIntro,
-    welcomeEnterButton:document.getElementById('welcomeEnterButtonInput').value.trim()||DEFAULT_WELCOME.welcomeEnterButton,
-    welcomeViewerTitle:document.getElementById('welcomeViewerTitleInput').value.trim()||DEFAULT_WELCOME.welcomeViewerTitle,
-    welcomeViewerSubtitle:document.getElementById('welcomeViewerSubtitleInput').value.trim()||DEFAULT_WELCOME.welcomeViewerSubtitle,
-    welcomeViewerPlaceholder:document.getElementById('welcomeViewerPlaceholderInput').value.trim()||DEFAULT_WELCOME.welcomeViewerPlaceholder,
-    welcomeViewerButton:document.getElementById('welcomeViewerButtonInput').value.trim()||DEFAULT_WELCOME.welcomeViewerButton,
-    welcomeDivider:document.getElementById('welcomeDividerInput').value.trim()||DEFAULT_WELCOME.welcomeDivider,
-    welcomeAdminTitle:document.getElementById('welcomeAdminTitleInput').value.trim()||DEFAULT_WELCOME.welcomeAdminTitle,
-    welcomeAdminSubtitle:document.getElementById('welcomeAdminSubtitleInput').value.trim()||DEFAULT_WELCOME.welcomeAdminSubtitle,
-    welcomeAdminEmailPlaceholder:document.getElementById('welcomeAdminEmailPlaceholderInput').value.trim()||DEFAULT_WELCOME.welcomeAdminEmailPlaceholder,
-    welcomeAdminPasswordPlaceholder:document.getElementById('welcomeAdminPasswordPlaceholderInput').value.trim()||DEFAULT_WELCOME.welcomeAdminPasswordPlaceholder,
-    welcomeAdminButton:document.getElementById('welcomeAdminButtonInput').value.trim()||DEFAULT_WELCOME.welcomeAdminButton,
-    welcomeBack:document.getElementById('welcomeBackInput').value.trim()||DEFAULT_WELCOME.welcomeBack,
-    welcomeFooter:document.getElementById('welcomeFooterInput').value.trim()||DEFAULT_WELCOME.welcomeFooter
-  };
+
+  const values={welcomeLogo:welcomeLogoDraft,loginLogo:loginLogoDraft};
+  Object.entries(WELCOME_FORM_MAP).forEach(([id,key])=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    const raw=(el.value||'').trim();
+    // Optional welcome note may intentionally be blank.
+    values[key]=key==='welcomeIntro' ? raw : (raw || DEFAULT_WELCOME[key] || '');
+  });
+
   Object.assign(settings,values);
   persist();renderWelcomeScreen();
-  const btn=document.getElementById('saveWelcomeSettingsBtn');btn.disabled=true;btn.textContent='Saving…';
+
+  const btn=document.getElementById('saveWelcomeSettingsBtn');
+  btn.disabled=true;btn.textContent='Saving…';
   try{
     await cloudSaveSettings(true);
     await cloudSaveWelcomeSettings();
-    setStatus('welcomeSettingsStatus','✓ Welcome screen saved for all users.','ok');
-  }catch(e){setStatus('welcomeSettingsStatus','Saved locally, but cloud welcome sync failed. Check Firestore rules for meta/welcome.','err');}
-  finally{btn.disabled=false;btn.textContent='Save Welcome Screen';}
+    setStatus('welcomeSettingsStatus','✓ Welcome & Login screens saved for all users.','ok');
+  }catch(e){
+    setStatus('welcomeSettingsStatus','Saved locally, but cloud branding sync failed.','err');
+  }finally{
+    btn.disabled=false;btn.textContent='Save Welcome & Login';
+  }
 });
+
+// ================== v1.0.31 WELCOME / LOGIN VISIBILITY ==================
+const VISIBILITY_KEYS=[
+  'showWelcomeLogo','showWelcomeKicker','showWelcomeTitle','showWelcomeIntro','showWelcomeTagline','showWelcomeCompany','showWelcomeDeveloper',
+  'showLoginLogo','showLoginCompany','showLoginAppName','showLoginTagline','showLoginDeveloper',
+  'showAdminTitle','showAdminHelper','showViewerTitle','showViewerHelper','showBackToWelcome','showLoginFooter'
+];
+
+function populateVisibilitySettings(){
+  document.querySelectorAll('[data-visibility-key]').forEach(input=>{
+    const key=input.dataset.visibilityKey;
+    input.checked=(settings[key]??DEFAULT_WELCOME[key])!==false;
+  });
+  setStatus('visibilitySettingsStatus','');
+}
+
+document.getElementById('showAllBrandingBtn').addEventListener('click',()=>{
+  document.querySelectorAll('[data-visibility-key]').forEach(input=>{input.checked=true;});
+  setStatus('visibilitySettingsStatus','All branding/text elements set to visible. Click Save Visibility to publish.','');
+});
+
+document.getElementById('saveVisibilityBtn').addEventListener('click',async()=>{
+  if(!requireAdmin())return;
+
+  document.querySelectorAll('[data-visibility-key]').forEach(input=>{
+    const key=input.dataset.visibilityKey;
+    if(VISIBILITY_KEYS.includes(key))settings[key]=Boolean(input.checked);
+  });
+
+  persist();
+  renderWelcomeScreen();
+
+  const btn=document.getElementById('saveVisibilityBtn');
+  btn.disabled=true;btn.textContent='Saving…';
+  try{
+    await cloudSaveSettings(true);
+    await cloudSaveWelcomeSettings();
+    setStatus('visibilitySettingsStatus','✓ Visibility saved for Welcome & Login screens.','ok');
+  }catch(e){
+    setStatus('visibilitySettingsStatus','Saved locally, but cloud visibility sync failed.','err');
+  }finally{
+    btn.disabled=false;btn.textContent='Save Visibility';
+  }
+});
+
+// ================== v1.0.30 THEME SETTINGS ==================
+const THEME_INPUT_MAP={
+  themeColorGold:'gold',
+  themeColorBg:'bg',
+  themeColorCard:'card',
+  themeColorNavy:'navy',
+  themeColorText:'text',
+  themeColorMute:'textMute',
+  themeColorBorder:'border',
+  themeColorDim:'textDim'
+};
+
+function themePreviewConfig(){
+  const preset=document.getElementById('adminThemePreset')?.value||'shl';
+  if(preset!=='custom')return getThemeVarsForPreset(preset);
+  const custom={...DEFAULT_THEME_CUSTOM};
+  Object.entries(THEME_INPUT_MAP).forEach(([id,key])=>{
+    const el=document.getElementById(id);if(el&&el.value)custom[key]=el.value;
+  });
+  return customThemeVars(custom);
+}
+function renderThemeAdminPreview(){
+  const cfg=themePreviewConfig();
+  const wrap=document.getElementById('themeAdminPreview');
+  if(!wrap||!cfg)return;
+  wrap.style.background=cfg.bg;
+  wrap.style.borderColor=cfg.border;
+  const card=wrap.querySelector('.theme-preview-card');
+  const title=wrap.querySelector('.theme-preview-title');
+  const textEl=wrap.querySelector('.theme-preview-text');
+  const btn=wrap.querySelector('.theme-preview-btn');
+  if(card){card.style.background=cfg.card;card.style.borderColor=cfg.border;}
+  if(title)title.style.color=cfg.navy;
+  if(textEl)textEl.style.color=cfg.textMute;
+  if(btn)btn.style.background=cfg.gold;
+}
+function toggleCustomThemeFields(){
+  const preset=document.getElementById('adminThemePreset')?.value||'shl';
+  const box=document.getElementById('adminCustomThemeFields');
+  if(box)box.style.display=preset==='custom'?'block':'none';
+  renderThemeAdminPreview();
+}
+function populateThemeSettingsForm(){
+  const select=document.getElementById('adminThemePreset');
+  if(!select)return;
+  select.value=(settings.themePreset==='custom'||THEME_PRESETS[settings.themePreset])?settings.themePreset:'shl';
+  const custom={...DEFAULT_THEME_CUSTOM,...(settings.themeCustom||{})};
+  Object.entries(THEME_INPUT_MAP).forEach(([id,key])=>{
+    const el=document.getElementById(id);if(el)el.value=custom[key];
+  });
+  toggleCustomThemeFields();
+  setStatus('themeSettingsStatus','');
+}
+document.getElementById('adminThemePreset').addEventListener('change',toggleCustomThemeFields);
+Object.keys(THEME_INPUT_MAP).forEach(id=>{
+  document.getElementById(id)?.addEventListener('input',renderThemeAdminPreview);
+});
+document.getElementById('restoreSHLThemeBtn').addEventListener('click',()=>{
+  document.getElementById('adminThemePreset').value='shl';
+  Object.entries(THEME_INPUT_MAP).forEach(([id,key])=>{
+    const el=document.getElementById(id);if(el)el.value=DEFAULT_THEME_CUSTOM[key];
+  });
+  toggleCustomThemeFields();
+  setStatus('themeSettingsStatus','SHL Gold default loaded. Click Save Theme to publish.','');
+});
+document.getElementById('saveThemeBtn').addEventListener('click',async()=>{
+  if(!requireAdmin())return;
+  const preset=document.getElementById('adminThemePreset').value||'shl';
+  const custom={...DEFAULT_THEME_CUSTOM};
+  Object.entries(THEME_INPUT_MAP).forEach(([id,key])=>{
+    const el=document.getElementById(id);if(el&&el.value)custom[key]=el.value;
+  });
+  settings.themePreset=preset;
+  settings.themeCustom=custom;
+  persist();applyEffectiveTheme();
+
+  const btn=document.getElementById('saveThemeBtn');btn.disabled=true;btn.textContent='Saving…';
+  try{
+    await cloudSaveSettings(true);
+    await cloudSaveWelcomeSettings();
+    setStatus('themeSettingsStatus','✓ Company default theme published.','ok');
+  }catch(e){
+    setStatus('themeSettingsStatus','Theme saved locally, but cloud sync failed.','err');
+  }finally{
+    btn.disabled=false;btn.textContent='Save Theme';
+  }
+});
+
+// Viewer-only local theme picker
+function viewerThemeSwatches(choice){
+  const preset=choice==='admin-default'?(settings.themePreset||'shl'):choice;
+  const cfg=getThemeVarsForPreset(preset,preset==='custom'?settings.themeCustom:null);
+  return [cfg.gold,cfg.bg,cfg.card,cfg.navy];
+}
+function renderViewerThemeOptions(){
+  const host=document.getElementById('viewerThemeOptions');if(!host)return;
+  const current=getViewerThemeChoice();
+  const choices=[
+    ['admin-default','Admin Default'],
+    ['shl','SHL Gold'],
+    ['light','Clean Light'],
+    ['gray','Soft Gray'],
+    ['navy','Navy Professional'],
+    ['dark','Dark']
+  ];
+  host.innerHTML=choices.map(([key,label])=>{
+    const sw=viewerThemeSwatches(key);
+    return `<button class="theme-option ${current===key?'active':''}" type="button" data-viewer-theme="${key}">
+      <div class="theme-option-name">${label}</div>
+      <div class="theme-option-swatches">${sw.map(c=>`<span style="background:${c}"></span>`).join('')}</div>
+    </button>`;
+  }).join('');
+  host.querySelectorAll('[data-viewer-theme]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      saveViewerThemeChoice(btn.dataset.viewerTheme);
+      setTimeout(closeViewerThemePicker,160);
+    });
+  });
+}
+function openViewerThemePicker(){
+  if(currentRole!=='viewer')return;
+  renderViewerThemeOptions();
+  const overlay=document.getElementById('themePickerOverlay');
+  overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');
+}
+function closeViewerThemePicker(){
+  const overlay=document.getElementById('themePickerOverlay');
+  overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');
+}
+document.getElementById('themePickerCloseBtn').addEventListener('click',closeViewerThemePicker);
+document.getElementById('themePickerOverlay').addEventListener('click',e=>{
+  if(e.target.id==='themePickerOverlay')closeViewerThemePicker();
+});
+
 function openSettings(){
   if(!requireAdmin())return;
   clearPasswordFields();
