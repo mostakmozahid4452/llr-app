@@ -1,4 +1,4 @@
-const CACHE = 'shl-qa-llr-shell-v1.0.26-storage-restored';
+const CACHE = 'shl-qa-llr-shell-v1.0.27-soft-icons';
 const SHELL = [
   './',
   './index.html',
