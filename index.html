@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>SHL QA — Lesson Learned Repository</title>
-<!-- Cross-platform patch v1.0.23: rich admin messages with image/QR and copyable link card -->
+<!-- Cross-platform patch v1.0.26: mobile Storage menu restored; same feature as desktop -->
 <!-- v1.0.11: mobile/web login viewport + keyboard responsiveness fix -->
 <!-- v1.0.7: card view shows both uploaded photos side-by-side -->
 
@@ -159,22 +159,65 @@ header{
   .header-actions{width:100%;justify-content:flex-start;}
   .action-cluster.status{margin-right:0;}
 }
+/* ===== v1.0.24 Mobile header ===== */
+.mobile-action-row,.mobile-more-menu{display:none;}
 @media(max-width:760px){
-  header{padding:10px 12px;gap:10px;}
-  .brand{width:100%;}
-  .brand-text .subtitle,.brand-text .created-by{display:none;}
-  .brand-text h1{font-size:15px;}
-  .logo-mark{width:42px;height:42px;}
-  .header-actions{
-    width:100%;flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;
-    padding:6px;border-radius:14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  header{padding:10px 12px 11px;gap:9px;align-items:stretch;}
+  .brand{width:100%;gap:11px;align-items:center;min-width:0;}
+  .brand-text{min-width:0;flex:1;}
+  .brand-text h1{font-size:15px;line-height:1.25;white-space:normal;overflow-wrap:anywhere;}
+  .brand-text .subtitle{display:block;font-size:10.5px;line-height:1.3;margin-top:2px;white-space:normal;}
+  .brand-text .created-by{display:block;font-size:9.8px;line-height:1.25;margin-top:3px;white-space:normal;}
+  .logo-mark{width:48px;height:48px;border-radius:12px;}
+
+  /* The full desktop command bar is replaced by a phone-native action row. */
+  .header-actions{display:none!important;}
+  .mobile-action-row{
+    width:100%;display:grid;grid-template-columns:42px 42px minmax(58px,.9fr) minmax(54px,.75fr) minmax(82px,1.18fr);
+    gap:5px;align-items:center;padding:6px;background:#fff;border:1px solid rgba(28,43,58,.10);
+    border-radius:14px;box-shadow:0 7px 20px rgba(28,43,58,.07);position:relative;
   }
-  .header-actions::-webkit-scrollbar{display:none;}
-  .action-cluster{flex:0 0 auto;}
-  .action-cluster.data,.action-cluster.tools,.action-cluster.account{padding:4px 5px;border-radius:12px;}
-  .header-actions .btn{min-height:38px;font-size:11.5px;padding:0 10px;}
-  .header-actions #addBtn{min-height:40px;}
-  .header-actions .storage-badge{min-height:34px;}
+  .mobile-action-row .m-action{
+    min-width:0;height:40px;border:1px solid transparent;border-radius:10px;background:#f6f8fa;color:#334458;
+    display:flex;align-items:center;justify-content:center;gap:4px;padding:0 6px;font-size:10.5px;font-weight:750;
+    white-space:nowrap;cursor:pointer;position:relative;
+  }
+  .mobile-action-row .m-action:active{transform:translateY(1px);}
+  .mobile-action-row .m-action.icon-only{font-size:18px;padding:0;}
+  .mobile-action-row .m-action.message{background:#fff8e8;border-color:#ecd9ac;color:#795716;}
+  .mobile-action-row .m-action.primary{background:linear-gradient(135deg,#d6a348,#bd8327);color:#fff;border-color:#b67e25;}
+  .mobile-action-row .m-action.role-hidden{display:none!important;}
+  .mobile-action-row .notify-badge{top:-5px;right:-4px;}
+
+  .mobile-more-menu{
+    display:none;position:absolute;left:12px;right:12px;top:calc(100% - 4px);z-index:90;
+    background:#fff;border:1px solid rgba(28,43,58,.12);border-radius:15px;
+    box-shadow:0 18px 42px rgba(28,43,58,.20);padding:10px;
+  }
+  .mobile-more-menu.open{display:block;}
+  .mobile-menu-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 3px 9px;border-bottom:1px solid var(--border);}
+  .mobile-menu-title{font-size:12.5px;font-weight:800;color:var(--navy);}
+  .mobile-menu-role{font-size:10px;font-weight:800;padding:5px 9px;border-radius:999px;background:#eef5fb;color:#315f86;border:1px solid #cbddeb;}
+  .mobile-menu-role.admin{background:#edf8f1;color:#197542;border-color:#bfe1cb;}
+  .mobile-menu-section{padding:9px 2px 2px;}
+  .mobile-menu-section-title{font-size:9px;font-weight:850;letter-spacing:.7px;text-transform:uppercase;color:var(--text-mute);margin:0 5px 6px;}
+  .mobile-menu-item{
+    width:100%;min-height:42px;border:0;border-radius:10px;background:transparent;color:#34465a;
+    display:flex;align-items:center;gap:10px;padding:0 11px;font-size:12px;font-weight:700;text-align:left;cursor:pointer;
+  }
+  .mobile-menu-item:hover,.mobile-menu-item:active{background:#f3f6f8;}
+  .mobile-menu-item .mi-icon{width:24px;text-align:center;font-size:15px;}
+  .mobile-menu-item .mi-main{flex:1;min-width:0;}
+  .mobile-menu-item .mi-sub{font-size:9.5px;color:var(--text-mute);font-weight:600;display:block;margin-top:1px;}
+  .mobile-menu-item.danger{color:#a23b35;}
+  .mobile-menu-item.role-hidden{display:none!important;}
+  .mobile-sync-dot{width:8px;height:8px;border-radius:50%;background:#9aa7b4;display:inline-block;margin-right:2px;}
+  .mobile-sync-dot.live{background:#23995a;box-shadow:0 0 0 3px rgba(35,153,90,.10);}
+
+  .mobile-data-submenu{display:none;margin:1px 4px 7px;padding:5px;background:#f7f9fb;border:1px solid #e7ebef;border-radius:10px;}
+  .mobile-data-submenu.open{display:block;}
+  .mobile-data-submenu button{width:100%;min-height:38px;border:0;background:transparent;border-radius:8px;text-align:left;padding:0 10px;font-size:11px;color:#405166;cursor:pointer;}
+  .mobile-data-submenu button:active{background:#edf2f6;}
 }
 
 
@@ -361,6 +404,32 @@ header{
 .filter-item.active{background:var(--gold-bg);color:var(--gold-dim);font-weight:600;}
 .filter-item .count{font-size:11px;color:var(--text-mute);}
 .filter-item.active .count{color:var(--gold-dim);}
+
+.mobile-filter-panel{display:none;}
+@media(max-width:880px){
+  .layout{padding-top:12px;gap:14px;}
+  .sidebar{display:none!important;}
+  .mobile-filter-panel{
+    width:100%;display:block;background:#fff;border:1px solid rgba(28,43,58,.10);border-radius:15px;
+    padding:12px;box-shadow:0 7px 18px rgba(28,43,58,.055);
+  }
+  .mobile-filter-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .mobile-filter-title{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:850;color:var(--navy);}
+  .mobile-filter-count{font-size:9.5px;font-weight:800;padding:3px 7px;border-radius:999px;background:var(--gold-bg);color:var(--gold-dim);}
+  .mobile-filter-reset{border:0;background:transparent;color:#6b7887;font-size:10.5px;font-weight:750;cursor:pointer;padding:6px 4px;}
+  .mobile-filter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  .mobile-filter-field{min-width:0;}
+  .mobile-filter-field label{display:block;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--text-mute);margin:0 0 5px 3px;}
+  .mobile-filter-field select{
+    width:100%;height:42px;border:1px solid #dfe5ea;border-radius:10px;background:#fbfcfd;color:#334458;
+    padding:0 30px 0 10px;font-size:12px;font-weight:700;outline:none;appearance:auto;
+  }
+  .mobile-filter-field select:focus{border-color:#c69a46;box-shadow:0 0 0 3px rgba(198,154,70,.10);}
+}
+@media(max-width:420px){
+  .mobile-filter-grid{gap:7px;}
+  .mobile-filter-field select{font-size:11px;padding-left:8px;}
+}
 
 .main{flex:1;min-width:0;}
 .toolbar{display:flex;gap:12px;margin-bottom:20px;}
@@ -691,7 +760,7 @@ header{
 
 @media (max-width:880px){
   .layout{flex-direction:column;padding:16px;}
-  .sidebar{width:100%;position:static;display:flex;gap:20px;overflow-x:auto;}
+  .sidebar{display:none;}
   .stats{grid-template-columns:repeat(2,1fr);}
   header{padding:14px 18px;}
   .row-2{grid-template-columns:1fr;}
@@ -993,6 +1062,54 @@ body.access-keyboard-open .access-foot{display:none;}
       <button class="btn btn-gold admin-only" id="addBtn">＋ New Lesson</button>
     </div>
   </div>
+
+  <div class="mobile-action-row" id="mobileActionRow" aria-label="Mobile application actions">
+    <button class="m-action icon-only" id="mobileMenuBtn" type="button" aria-label="Open menu" title="Menu">☰</button>
+    <button class="m-action icon-only" id="mobileNotificationBtn" type="button" aria-label="Notifications" title="Notifications">🔔
+      <span class="notify-badge" id="mobileNotificationBadge">0</span>
+    </button>
+    <button class="m-action message admin-only" id="mobileMessageBtn" type="button">📢 Message</button>
+    <button class="m-action" id="mobileAboutBtn" type="button">ⓘ About</button>
+    <button class="m-action primary admin-only" id="mobileNewLessonBtn" type="button">＋ New Lesson</button>
+  </div>
+
+  <div class="mobile-more-menu" id="mobileMoreMenu" aria-hidden="true">
+    <div class="mobile-menu-head">
+      <div class="mobile-menu-title">Application Menu</div>
+      <span class="mobile-menu-role" id="mobileRoleBadge">Viewer</span>
+    </div>
+
+    <div class="mobile-menu-section">
+      <div class="mobile-menu-section-title">Connection</div>
+      <button class="mobile-menu-item" id="mobileSyncItem" type="button">
+        <span class="mi-icon"><span class="mobile-sync-dot" id="mobileSyncDot"></span></span>
+        <span class="mi-main"><span id="mobileSyncText">Sync Status</span><span class="mi-sub">Repository cloud connection</span></span>
+      </button>
+    </div>
+
+    <div class="mobile-menu-section admin-only">
+      <div class="mobile-menu-section-title">Data &amp; Backup</div>
+      <button class="mobile-menu-item" id="mobileExportToggle" type="button"><span class="mi-icon">↓</span><span class="mi-main">Export<span class="mi-sub">Backup or print repository data</span></span><span>›</span></button>
+      <div class="mobile-data-submenu" id="mobileExportSubmenu">
+        <button type="button" data-proxy-id="exportJson">🗂 JSON full backup</button>
+        <button type="button" data-proxy-id="exportExcel">📊 Excel (.xlsx)</button>
+        <button type="button" data-proxy-id="exportPdf">🖨 Print / Save PDF</button>
+        <button type="button" data-proxy-id="exportFullApp">🌐 Complete App HTML</button>
+      </div>
+      <button class="mobile-menu-item" id="mobileImportToggle" type="button"><span class="mi-icon">↑</span><span class="mi-main">Import<span class="mi-sub">Restore JSON or Excel backup</span></span><span>›</span></button>
+      <div class="mobile-data-submenu" id="mobileImportSubmenu">
+        <button type="button" data-proxy-id="importJsonBtn">🗂 Import JSON</button>
+        <button type="button" data-proxy-id="importExcelBtn">📊 Import Excel</button>
+      </div>
+    </div>
+
+    <div class="mobile-menu-section">
+      <div class="mobile-menu-section-title">Account &amp; Admin</div>
+      <button class="mobile-menu-item admin-only" id="mobileSettingsBtn" type="button"><span class="mi-icon">⚙</span><span class="mi-main">Settings<span class="mi-sub">Admin and repository settings</span></span></button>
+      <button class="mobile-menu-item admin-only" id="mobileStorageBtn" type="button"><span class="mi-icon">📁</span><span class="mi-main">Storage<span class="mi-sub">Connect local backup folder</span></span></button>
+      <button class="mobile-menu-item" id="mobileAccountBtn" type="button"><span class="mi-icon">👤</span><span class="mi-main"><span id="mobileAccountText">Admin Login</span><span class="mi-sub" id="mobileAccountSub">Switch account or sign out</span></span></button>
+    </div>
+  </div>
 </header>
 
 <div class="backup-banner" id="backupBanner">
@@ -1002,6 +1119,19 @@ body.access-keyboard-open .access-foot{display:none;}
 </div>
 
 <div class="layout">
+  <section class="mobile-filter-panel" id="mobileFilterPanel" aria-label="Lesson filters">
+    <div class="mobile-filter-head">
+      <div class="mobile-filter-title">⚙ Filters <span class="mobile-filter-count" id="mobileFilterCount">All</span></div>
+      <button class="mobile-filter-reset" id="mobileFilterReset" type="button">Reset</button>
+    </div>
+    <div class="mobile-filter-grid">
+      <div class="mobile-filter-field"><label for="mobileTypeFilter">Type</label><select id="mobileTypeFilter"></select></div>
+      <div class="mobile-filter-field"><label for="mobileProjectFilter">Type of Item</label><select id="mobileProjectFilter"></select></div>
+      <div class="mobile-filter-field"><label for="mobileTradeFilter">Trade</label><select id="mobileTradeFilter"></select></div>
+      <div class="mobile-filter-field"><label for="mobileSeverityFilter">Severity</label><select id="mobileSeverityFilter"></select></div>
+    </div>
+  </section>
+
   <aside class="sidebar" id="sidebar">
     <div class="filter-group">
       <h3>Type</h3>
@@ -1677,23 +1807,35 @@ loadPublicWelcomeSettings();
 
 function cloudBadgeUpdate(state){
   const badge = document.getElementById('storageBadge');
-  if(!badge) return;
+  const mobileText=document.getElementById('mobileSyncText');
+  const mobileDot=document.getElementById('mobileSyncDot');
+  let label='Sync Status';
+  let live=false;
   if(state === 'live'){
-    badge.textContent = '● Live Sync';
-    badge.classList.add('connected');
-    badge.setAttribute('data-tooltip','এই ডেটা cloud-এ (Firebase) সেভ হচ্ছে। আপনার টিমের সবাই একই ডেটা দেখছে এবং যোগ করতে পারছে, রিয়েল-টাইমে।');
+    label='● Live Sync'; live=true;
+    if(badge){
+      badge.textContent = label;
+      badge.classList.add('connected');
+      badge.setAttribute('data-tooltip','এই ডেটা cloud-এ (Firebase) সেভ হচ্ছে। আপনার টিমের সবাই একই ডেটা দেখছে এবং যোগ করতে পারছে, রিয়েল-টাইমে।');
+    }
   } else if(state === 'connecting'){
-    badge.textContent = '◌ Connecting…';
-    badge.classList.remove('connected');
+    label='◌ Connecting…';
+    if(badge){badge.textContent=label;badge.classList.remove('connected');}
   } else if(state === 'offline'){
-    badge.textContent = '⚠ Offline';
-    badge.classList.remove('connected');
-    badge.setAttribute('data-tooltip','ইন্টারনেট সংযোগ ফিরলে এই ডিভাইসে যা যোগ/এডিট করেছেন তা নিজে থেকেই cloud-এ সিঙ্ক হয়ে যাবে।');
+    label='⚠ Offline';
+    if(badge){
+      badge.textContent=label;badge.classList.remove('connected');
+      badge.setAttribute('data-tooltip','ইন্টারনেট সংযোগ ফিরলে এই ডিভাইসে যা যোগ/এডিট করেছেন তা নিজে থেকেই cloud-এ সিঙ্ক হয়ে যাবে।');
+    }
   } else {
-    badge.textContent = '⚠ Local Only';
-    badge.classList.remove('connected');
-    badge.setAttribute('data-tooltip','firebaseConfig এখনো বসানো হয়নি, তাই ডেটা শুধু এই ব্রাউজারে (localStorage) থাকছে, অন্য কেউ দেখতে পাবে না।');
+    label='⚠ Local Only';
+    if(badge){
+      badge.textContent=label;badge.classList.remove('connected');
+      badge.setAttribute('data-tooltip','firebaseConfig এখনো বসানো হয়নি, তাই ডেটা শুধু এই ব্রাউজারে (localStorage) থাকছে, অন্য কেউ দেখতে পাবে না।');
+    }
   }
+  if(mobileText) mobileText.textContent=state==='live'?'Live Sync':label;
+  if(mobileDot) mobileDot.classList.toggle('live',live);
 }
 
 function lessonDocSizeOk(lesson){
@@ -2102,6 +2244,11 @@ function updateNotificationUI(showToast=true){
     badge.textContent=count>99?'99+':String(count);
     badge.classList.toggle('show',count>0);
   }
+  const mobileBadge=document.getElementById('mobileNotificationBadge');
+  if(mobileBadge){
+    mobileBadge.textContent=count>99?'99+':String(count);
+    mobileBadge.classList.toggle('show',count>0);
+  }
   if(document.getElementById('notificationOverlay')?.classList.contains('open')) renderNotificationCenter();
   if(showToast) setTimeout(showNotificationToastIfNeeded,250);
 }
@@ -2378,6 +2525,52 @@ document.getElementById('announcementImageRemoveBtn').addEventListener('click',(
   setAnnouncementStatus('Image removed from this message draft.');
 });
 
+// ================== v1.0.24 MOBILE HEADER MENU ==================
+function setMobileMenu(open){
+  const menu=document.getElementById('mobileMoreMenu');
+  if(!menu) return;
+  menu.classList.toggle('open',!!open);
+  menu.setAttribute('aria-hidden',open?'false':'true');
+  document.getElementById('mobileMenuBtn')?.setAttribute('aria-expanded',open?'true':'false');
+  if(!open){
+    document.getElementById('mobileExportSubmenu')?.classList.remove('open');
+    document.getElementById('mobileImportSubmenu')?.classList.remove('open');
+  }
+}
+
+document.getElementById('mobileMenuBtn')?.addEventListener('click',e=>{
+  e.stopPropagation();
+  const menu=document.getElementById('mobileMoreMenu');
+  setMobileMenu(!menu?.classList.contains('open'));
+});
+document.getElementById('mobileMoreMenu')?.addEventListener('click',e=>e.stopPropagation());
+document.addEventListener('click',()=>setMobileMenu(false));
+window.addEventListener('resize',()=>{if(window.innerWidth>760)setMobileMenu(false);});
+
+document.getElementById('mobileNotificationBtn')?.addEventListener('click',()=>document.getElementById('notificationBtn')?.click());
+document.getElementById('mobileMessageBtn')?.addEventListener('click',()=>document.getElementById('announcementManagerBtn')?.click());
+document.getElementById('mobileAboutBtn')?.addEventListener('click',()=>document.getElementById('aboutBtn')?.click());
+document.getElementById('mobileNewLessonBtn')?.addEventListener('click',()=>document.getElementById('addBtn')?.click());
+document.getElementById('mobileSettingsBtn')?.addEventListener('click',()=>{setMobileMenu(false);document.getElementById('settingsBtn')?.click();});
+document.getElementById('mobileStorageBtn')?.addEventListener('click',()=>{setMobileMenu(false);document.getElementById('connectFolderBtn')?.click();});
+document.getElementById('mobileAccountBtn')?.addEventListener('click',()=>{setMobileMenu(false);document.getElementById('adminLoginBtn')?.click();});
+
+document.getElementById('mobileExportToggle')?.addEventListener('click',()=>{
+  document.getElementById('mobileImportSubmenu')?.classList.remove('open');
+  document.getElementById('mobileExportSubmenu')?.classList.toggle('open');
+});
+document.getElementById('mobileImportToggle')?.addEventListener('click',()=>{
+  document.getElementById('mobileExportSubmenu')?.classList.remove('open');
+  document.getElementById('mobileImportSubmenu')?.classList.toggle('open');
+});
+document.querySelectorAll('.mobile-data-submenu [data-proxy-id]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const target=document.getElementById(btn.dataset.proxyId);
+    setMobileMenu(false);
+    target?.click();
+  });
+});
+
 // ================== ROLE / SECURE ACCESS ==================
 function applyRoleUI(){
   document.querySelectorAll('.admin-only').forEach(el => el.classList.toggle('role-hidden', !isAdmin));
@@ -2396,6 +2589,15 @@ function applyRoleUI(){
   if(viewerLogoutBtn) viewerLogoutBtn.classList.toggle('viewer-visible', currentRole==='viewer');
   const notificationBtn=document.getElementById('notificationBtn');
   if(notificationBtn) notificationBtn.style.display=currentRole==='locked'?'none':'';
+  const mobileRole=document.getElementById('mobileRoleBadge');
+  if(mobileRole){
+    mobileRole.textContent=currentRole==='admin'?'Admin':currentRole==='viewer'?'Viewer':'Locked';
+    mobileRole.classList.toggle('admin',currentRole==='admin');
+  }
+  const mobileAccountText=document.getElementById('mobileAccountText');
+  const mobileAccountSub=document.getElementById('mobileAccountSub');
+  if(mobileAccountText) mobileAccountText.textContent=currentRole==='admin'?'Logout':currentRole==='viewer'?'Admin Login':'Login';
+  if(mobileAccountSub) mobileAccountSub.textContent=currentRole==='admin'?'Sign out from Admin':currentRole==='viewer'?'Switch from Viewer to Admin':'Open repository access';
   if(currentRole!=='locked') setTimeout(()=>updateNotificationUI(true),350);
   ['titleText','subtitleText'].forEach(id => { const el=document.getElementById(id); if(el) el.setAttribute('contenteditable', isAdmin ? 'true':'false'); });
   const logo = document.getElementById('logoMark'); if(logo) logo.style.cursor = isAdmin ? 'pointer':'default';
@@ -4494,6 +4696,30 @@ function renderFilters(){
   buildGroup('tradeFilters','trade');
   buildGroup('severityFilters','severity');
 
+  // Mobile uses compact native dropdown filters instead of the wide sidebar lists.
+  const setSelect=(id,key,labels=null)=>{
+    const sel=document.getElementById(id); if(!sel) return;
+    let options=[];
+    if(key==='type'){
+      options=[
+        ['all',`All (${lessons.length})`],
+        ['dont',`Don't (${dontCount})`],
+        ['do',`Do (${doCount})`]
+      ];
+    }else{
+      options=[['all',`All (${lessons.length})`],...uniqueValues(key).map(v=>[v,`${v} (${lessons.filter(l=>l[key]===v).length})`])];
+    }
+    sel.innerHTML=options.map(([v,label])=>`<option value="${esc(v)}">${esc(label)}</option>`).join('');
+    sel.value=activeFilters[key] ?? 'all';
+  };
+  setSelect('mobileTypeFilter','type');
+  setSelect('mobileProjectFilter','project');
+  setSelect('mobileTradeFilter','trade');
+  setSelect('mobileSeverityFilter','severity');
+  const activeCount=['type','project','trade','severity'].filter(k=>activeFilters[k]!=='all').length;
+  const mCount=document.getElementById('mobileFilterCount');
+  if(mCount) mCount.textContent=activeCount?`${activeCount} Active`:'All';
+
   document.getElementById('projectList').innerHTML = uniqueValues('project').map(p=>`<option value="${esc(p)}">`).join('');
 }
 
@@ -4503,6 +4729,22 @@ document.getElementById('sidebar').addEventListener('click', (e) => {
   const f = item.dataset.f, v = item.dataset.v;
   if(!f) return;
   activeFilters[f] = v;
+  renderAll();
+});
+
+[
+  ['mobileTypeFilter','type'],
+  ['mobileProjectFilter','project'],
+  ['mobileTradeFilter','trade'],
+  ['mobileSeverityFilter','severity']
+].forEach(([id,key])=>{
+  document.getElementById(id)?.addEventListener('change',e=>{
+    activeFilters[key]=e.target.value||'all';
+    renderAll();
+  });
+});
+document.getElementById('mobileFilterReset')?.addEventListener('click',()=>{
+  activeFilters={type:'all',project:'all',trade:'all',severity:'all'};
   renderAll();
 });
 

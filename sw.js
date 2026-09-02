@@ -1,4 +1,4 @@
-const CACHE = 'shl-qa-llr-shell-v1.0.23-rich-messages';
+const CACHE = 'shl-qa-llr-shell-v1.0.26-storage-restored';
 const SHELL = [
   './',
   './index.html',
