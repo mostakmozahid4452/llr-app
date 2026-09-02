@@ -1,6 +1,6 @@
 {
   "name": "shl-llr-qa",
-  "version": "1.0.29",
+  "version": "1.0.31",
   "private": true,
   "description": "SHL LLR-QA Lesson Learned Repository",
   "main": "main.cjs",
